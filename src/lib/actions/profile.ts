@@ -1,0 +1,130 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { isValidImageType, MAX_IMAGE_SIZE } from "@/lib/utils";
+import type { PostVisibility } from "@/lib/supabase/types";
+
+export async function updateProfile(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const displayName = (formData.get("display_name") as string)?.trim();
+  const username = (formData.get("username") as string)?.trim().toLowerCase();
+  const bio = (formData.get("bio") as string)?.trim();
+  const website = (formData.get("website") as string)?.trim();
+  const location = (formData.get("location") as string)?.trim();
+  const interestsRaw = (formData.get("interests") as string)?.trim();
+  const profileVisibility = formData.get("profile_visibility") as string;
+
+  if (!displayName || displayName.length < 2) return { error: "Display name must be at least 2 characters." };
+  if (!username || !/^[a-z0-9_]{3,30}$/.test(username)) return { error: "Username must be 3–30 chars: letters, numbers, underscore." };
+
+  // Check username uniqueness
+  const { data: taken } = await supabase.from("profiles")
+    .select("id").eq("username", username).neq("id", user.id).single();
+  if (taken) return { error: "Username is already taken." };
+
+  const interests = interestsRaw ? interestsRaw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 20) : [];
+
+  await supabase.from("profiles").update({
+    display_name: displayName,
+    username,
+    bio: bio || null,
+    website: website || null,
+    location: location || null,
+    interests,
+    profile_visibility: (profileVisibility || "public") as "public" | "friends" | "private",
+  }).eq("id", user.id);
+
+  revalidatePath(`/profile/${username}`);
+  revalidatePath("/settings");
+  return { success: true, username };
+}
+
+export async function uploadAvatar(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const file = formData.get("avatar") as File;
+  if (!file || !file.size) return { error: "No file provided." };
+  if (!isValidImageType(file.type)) return { error: "Only JPEG, PNG, or WebP images allowed." };
+  if (file.size > MAX_IMAGE_SIZE) return { error: "Image must be under 10 MB." };
+
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const path = `${user.id}/avatar_${Date.now()}.${ext}`;
+
+  const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+  if (error) return { error: "Upload failed." };
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
+
+  revalidatePath("/settings");
+  revalidatePath("/profile");
+  return { url: data.publicUrl };
+}
+
+export async function uploadCover(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const file = formData.get("cover") as File;
+  if (!file || !file.size) return { error: "No file provided." };
+  if (!isValidImageType(file.type)) return { error: "Only JPEG, PNG, or WebP images allowed." };
+  if (file.size > MAX_IMAGE_SIZE) return { error: "Image must be under 10 MB." };
+
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const path = `${user.id}/cover_${Date.now()}.${ext}`;
+
+  const { error } = await supabase.storage.from("covers").upload(path, file, { upsert: true });
+  if (error) return { error: "Upload failed." };
+
+  const { data } = supabase.storage.from("covers").getPublicUrl(path);
+  await supabase.from("profiles").update({ cover_url: data.publicUrl }).eq("id", user.id);
+
+  revalidatePath("/settings");
+  revalidatePath("/profile");
+  return { url: data.publicUrl };
+}
+
+export async function updatePreferences(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const bool = (key: string) => formData.get(key) === "true";
+
+  await supabase.from("user_preferences").upsert({
+    user_id: user.id,
+    theme: ((formData.get("theme") as string) || "system") as "light" | "dark" | "system",
+    notify_friend_requests: bool("notify_friend_requests"),
+    notify_reactions: bool("notify_reactions"),
+    notify_comments: bool("notify_comments"),
+    notify_messages: bool("notify_messages"),
+    notify_group_activity: bool("notify_group_activity"),
+    default_post_visibility: ((formData.get("default_post_visibility") as string) || "public") as PostVisibility,
+  }, { onConflict: "user_id" });
+
+  revalidatePath("/settings");
+  return { success: true };
+}
+
+export async function requestAccountDeletion() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  await supabase.from("moderation_actions").insert({
+    admin_id: user.id,
+    target_user_id: user.id,
+    action: "deletion_requested",
+    reason: "User requested account deletion",
+  });
+
+  // Client should call signOut() after receiving success
+  return { success: true };
+}
