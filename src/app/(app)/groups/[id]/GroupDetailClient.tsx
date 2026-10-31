@@ -55,7 +55,7 @@ export function GroupDetailClient({ group, membership: initMembership, posts, me
     <div className="space-y-4">
       {/* Header */}
       <div className="card overflow-hidden">
-        <div className="h-32 relative" style={{ background: "linear-gradient(135deg, #12372A, #1f573a)" }}>
+        <div className="h-32 relative" style={{ background: "linear-gradient(135deg, rgb(var(--a-800)), rgb(var(--a-700)))" }}>
           {group.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={group.image_url} alt={group.name} className="w-full h-full object-cover absolute inset-0" />
@@ -64,12 +64,12 @@ export function GroupDetailClient({ group, membership: initMembership, posts, me
         <div className="p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden -mt-10 border-4" style={{ borderColor: "var(--bg-card)", background: "rgba(18,55,42,0.1)" }}>
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden -mt-10 border-4" style={{ borderColor: "var(--bg-card)", background: "rgb(var(--a-800) / 0.1)" }}>
                 {group.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" />
                 ) : (
-                  <Users className="w-7 h-7" style={{ color: "#12372A" }} />
+                  <Users className="w-7 h-7" style={{ color: "rgb(var(--a-800))" }} />
                 )}
               </div>
             </div>

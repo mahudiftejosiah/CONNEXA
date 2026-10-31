@@ -18,7 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             borderRadius: "0.75rem",
             fontSize: "0.875rem",
           },
-          success: { iconTheme: { primary: "#12372A", secondary: "#D6B875" } },
+          success: { iconTheme: { primary: "rgb(var(--a-800))", secondary: "rgb(var(--b-400))" } },
           error:   { iconTheme: { primary: "#ef4444", secondary: "#fff" } },
         }}
       />

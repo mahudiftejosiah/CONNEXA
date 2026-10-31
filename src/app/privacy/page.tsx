@@ -1,16 +1,21 @@
 import { Footer } from "@/components/layout/Footer";
 import { Logo } from "@/components/brand/Logo";
+import { getSiteContentMap } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Privacy Policy" };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const content = (await getSiteContentMap())["privacy"];
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg)]">
       <div className="max-w-3xl mx-auto px-4 py-16 flex-1 w-full">
         <div className="flex justify-center mb-8"><Logo size="md" href="/" /></div>
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] mb-2">Privacy Policy</h1>
-        <p className="text-sm text-[var(--text-secondary)] mb-8">Last updated: October 2026</p>
+        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] mb-2">{content?.title || "Privacy Policy"}</h1>
+        <p className="text-sm text-[var(--text-secondary)] mb-8">Last updated: {content ? new Date(content.updated_at).toLocaleDateString() : "October 2026"}</p>
+        {content ? (
+          <div className="card p-6 text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">{content.body}</div>
+        ) : (
         <div className="card p-6 space-y-6 text-sm text-[var(--text-secondary)] leading-relaxed">
           {[
             { title: "1. Information We Collect", body: "We collect information you provide directly (name, email, profile details, posts, messages) and information generated through your use of the platform (activity logs, device information)." },
@@ -27,6 +32,7 @@ export default function PrivacyPage() {
             </div>
           ))}
         </div>
+        )}
       </div>
       <Footer />
     </div>

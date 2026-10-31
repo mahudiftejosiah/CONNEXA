@@ -78,7 +78,7 @@ export function CreatePost({ profile, onCreated, groupId }: CreatePostProps) {
           <textarea
             placeholder={`What's on your mind, ${profile.display_name.split(" ")[0]}?`}
             className={cn(
-              "w-full rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#12372A] transition-all duration-200",
+              "w-full rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[rgb(var(--a-800))] transition-all duration-200",
               expanded ? "min-h-[100px]" : "min-h-[44px]"
             )}
             style={{ backgroundColor: "var(--bg)", color: "var(--text-primary)" }}

@@ -68,9 +68,9 @@ export function Navbar({ profile }: NavbarProps) {
                 href="/messages"
                 className={cn(
                   "relative p-2 rounded-xl transition-colors",
-                  pathname.startsWith("/messages") ? "bg-[rgba(18,55,42,0.1)]" : "hover:bg-[var(--border)]"
+                  pathname.startsWith("/messages") ? "bg-brand-green-800/10 text-brand-green-800 dark:text-brand-gold-400" : "hover:bg-[var(--border)]"
                 )}
-                style={{ color: pathname.startsWith("/messages") ? "#12372A" : "var(--text-secondary)" }}
+                style={{ color: pathname.startsWith("/messages") ? undefined : "var(--text-secondary)" }}
                 aria-label={`Messages${unreadMessages > 0 ? `, ${unreadMessages} unread` : ""}`}
               >
                 <MessageCircle className="w-5 h-5" />
@@ -85,9 +85,9 @@ export function Navbar({ profile }: NavbarProps) {
                 href="/notifications"
                 className={cn(
                   "relative p-2 rounded-xl transition-colors",
-                  pathname === "/notifications" ? "bg-[rgba(18,55,42,0.1)]" : "hover:bg-[var(--border)]"
+                  pathname === "/notifications" ? "bg-brand-green-800/10 text-brand-green-800 dark:text-brand-gold-400" : "hover:bg-[var(--border)]"
                 )}
-                style={{ color: pathname === "/notifications" ? "#12372A" : "var(--text-secondary)" }}
+                style={{ color: pathname === "/notifications" ? undefined : "var(--text-secondary)" }}
                 aria-label={`Notifications${unreadNotifications > 0 ? `, ${unreadNotifications} unread` : ""}`}
               >
                 <Bell className="w-5 h-5" />
@@ -102,9 +102,9 @@ export function Navbar({ profile }: NavbarProps) {
                 href="/settings"
                 className={cn(
                   "p-2 rounded-xl transition-colors",
-                  pathname.startsWith("/settings") ? "bg-[rgba(18,55,42,0.1)]" : "hover:bg-[var(--border)]"
+                  pathname.startsWith("/settings") ? "bg-brand-green-800/10 text-brand-green-800 dark:text-brand-gold-400" : "hover:bg-[var(--border)]"
                 )}
-                style={{ color: pathname.startsWith("/settings") ? "#12372A" : "var(--text-secondary)" }}
+                style={{ color: pathname.startsWith("/settings") ? undefined : "var(--text-secondary)" }}
                 aria-label="Settings"
               >
                 <Settings className="w-5 h-5" />

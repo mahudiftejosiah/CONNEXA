@@ -64,7 +64,7 @@ export function Overlay({ title, sub, actionLabel, onAction }: { title: string; 
         type="button"
         onClick={onAction}
         className="mt-1 px-5 py-2 rounded-xl font-semibold text-sm text-white"
-        style={{ backgroundColor: "#12372A" }}
+        style={{ backgroundColor: "rgb(var(--a-800))" }}
       >
         {actionLabel}
       </button>

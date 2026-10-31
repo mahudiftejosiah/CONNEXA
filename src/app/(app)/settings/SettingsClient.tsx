@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Shield, Bell, User, Trash2, Lock, LogOut, Eye } from "lucide-react";
+import {
+  Shield, Bell, User, Trash2, LogOut, Eye, Palette,
+  FileText, Users, BookOpen, Info, ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { toggleBlock } from "@/lib/actions/friends";
 import { updatePreferences, requestAccountDeletion } from "@/lib/actions/profile";
-import type { Profile, UserPreferences, UserBlock } from "@/lib/supabase/types";
+import type { Profile, UserPreferences, UserBlock, SiteContent, ColorTheme } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -20,11 +23,26 @@ interface SettingsClientProps {
   preferences: UserPreferences | null;
   blockedUsers: BlockWithProfile[];
   email: string;
+  siteContent: Record<string, SiteContent>;
+  globalTheme: string;
 }
 
-type Section = "account" | "notifications" | "privacy" | "blocked" | "danger";
+type Section = "account" | "notifications" | "privacy" | "appearance" | "blocked" | "terms" | "rules" | "privacy_policy" | "about" | "danger";
 
-export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: initBlocked, email }: SettingsClientProps) {
+const THEME_OPTIONS: { key: ColorTheme | "follow_site"; label: string; a: string; b: string }[] = [
+  { key: "follow_site",   label: "Site default",  a: "var(--a-800)", b: "var(--b-400)" },
+  { key: "connexa",       label: "Connexa",       a: "#12372A", b: "#D6B875" },
+  { key: "crimson",       label: "Crimson",       a: "#B1161C", b: "#F97066" },
+  { key: "ocean",         label: "Ocean",         a: "#03557A", b: "#67C3EC" },
+  { key: "violet",        label: "Violet",        a: "#290776", b: "#B7A5F7" },
+  { key: "amber",         label: "Amber",         a: "#7A4103", b: "#F5C242" },
+];
+
+function previewThemeColor(key: string, globalTheme: string) {
+  return key === "follow_site" ? globalTheme : key;
+}
+
+export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: initBlocked, email, siteContent, globalTheme }: SettingsClientProps) {
   const router = useRouter();
   const [section, setSection] = useState<Section>("account");
   const [blocked, setBlocked] = useState(initBlocked);
@@ -37,8 +55,9 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
     default_post_visibility: "public" as "public" | "friends" | "only_me",
     theme: "system" as "light" | "dark" | "system",
   };
-  const [prefs, setPrefs] = useState<typeof defaultPrefs>(
-    initPrefs
+  const [prefs, setPrefs] = useState({
+    ...defaultPrefs,
+    ...(initPrefs
       ? {
           notify_friend_requests: initPrefs.notify_friend_requests,
           notify_reactions: initPrefs.notify_reactions,
@@ -48,28 +67,46 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
           default_post_visibility: initPrefs.default_post_visibility as "public" | "friends" | "only_me",
           theme: initPrefs.theme as "light" | "dark" | "system",
         }
-      : defaultPrefs
-  );
+      : {}),
+  });
+  const [colorTheme, setColorTheme] = useState<ColorTheme>((initPrefs?.color_theme as ColorTheme) || "follow_site");
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
-  const navItems: { key: Section; label: string; icon: React.ReactNode }[] = [
-    { key: "account",       label: "Account",       icon: <User className="w-4 h-4" /> },
-    { key: "notifications", label: "Notifications", icon: <Bell className="w-4 h-4" /> },
-    { key: "privacy",       label: "Privacy",       icon: <Eye className="w-4 h-4" /> },
-    { key: "blocked",       label: "Blocked users", icon: <Shield className="w-4 h-4" /> },
-    { key: "danger",        label: "Danger zone",   icon: <Trash2 className="w-4 h-4 text-red-500" /> },
+  const mainNav: { key: Section; label: string; icon: React.ReactNode }[] = [
+    { key: "account",       label: "Account",         icon: <User className="w-4 h-4" /> },
+    { key: "notifications", label: "Notifications",   icon: <Bell className="w-4 h-4" /> },
+    { key: "privacy",       label: "Privacy",         icon: <Eye className="w-4 h-4" /> },
+    { key: "appearance",    label: "Appearance",      icon: <Palette className="w-4 h-4" /> },
+    { key: "blocked",       label: "Blocked users",   icon: <Shield className="w-4 h-4" /> },
+    { key: "danger",        label: "Danger zone",     icon: <Trash2 className="w-4 h-4 text-red-500" /> },
+  ];
+  const infoNav: { key: Section; label: string; icon: React.ReactNode; contentKey: string }[] = [
+    { key: "terms",          label: "Terms of Service", icon: <FileText className="w-4 h-4" />,    contentKey: "terms" },
+    { key: "rules",          label: "Community Rules",  icon: <Users className="w-4 h-4" />,        contentKey: "rules" },
+    { key: "privacy_policy", label: "Privacy Policy",   icon: <BookOpen className="w-4 h-4" />,     contentKey: "privacy" },
+    { key: "about",          label: "About CONNEXA",    icon: <Info className="w-4 h-4" />,         contentKey: "about" },
   ];
 
-  async function handleSavePrefs() {
+  async function handleSavePrefs(extra?: Record<string, string>) {
     setSavingPrefs(true);
     const fd = new FormData();
     Object.entries(prefs).forEach(([k, v]) => fd.set(k, String(v)));
+    fd.set("color_theme", colorTheme);
+    if (extra) Object.entries(extra).forEach(([k, v]) => fd.set(k, v));
     const res = await updatePreferences(fd);
     setSavingPrefs(false);
     if (res.error) toast.error(res.error);
-    else toast.success("Preferences saved!");
+    else {
+      toast.success("Preferences saved!");
+      router.refresh();
+    }
+  }
+
+  function pickTheme(t: ColorTheme) {
+    setColorTheme(t);
+    document.documentElement.dataset.theme = previewThemeColor(t, globalTheme);
   }
 
   async function handleUnblock(userId: string) {
@@ -89,10 +126,26 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
     setDeletingAccount(true);
     const res = await requestAccountDeletion();
     if (res.error) { toast.error(res.error); setDeletingAccount(false); return; }
-    // Sign out client-side after deletion request
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
+  }
+
+  function renderContent(contentKey: string, fallbackTitle: string) {
+    const c = siteContent[contentKey];
+    return (
+      <div className="card p-6 space-y-4">
+        <h2 className="font-bold text-lg text-[var(--text-primary)]">{c?.title || fallbackTitle}</h2>
+        {c ? (
+          <div className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">{c.body}</div>
+        ) : (
+          <p className="text-sm text-[var(--text-secondary)]">Content coming soon.</p>
+        )}
+        {c && (
+          <p className="text-xs text-[var(--text-secondary)]">Last updated {new Date(c.updated_at).toLocaleDateString()}</p>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -101,16 +154,28 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
 
       <div className="flex flex-col md:flex-row gap-4">
         {/* Sidebar nav */}
-        <nav className="md:w-52 flex-shrink-0">
+        <nav className="md:w-60 flex-shrink-0">
           <div className="card p-2 space-y-0.5">
-            {navItems.map((item) => (
+            {mainNav.map((item) => (
               <button key={item.key} onClick={() => setSection(item.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${section === item.key ? "bg-brand-green-800/10 text-brand-green-800 dark:text-brand-gold-400" : "text-[var(--text-secondary)] hover:bg-[var(--border)]"}`}>
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${section === item.key ? "bg-[rgb(var(--a-800)/0.1)] text-[rgb(var(--a-800))] dark:text-[rgb(var(--b-400))]" : "text-[var(--text-secondary)] hover:bg-[var(--border)]"}`}>
                 {item.icon} {item.label}
               </button>
             ))}
+          </div>
+          <div className="card p-2 mt-3 space-y-0.5">
+            <p className="px-3 pt-1 pb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Info & legal</p>
+            {infoNav.map((item) => (
+              <button key={item.key} onClick={() => setSection(item.key)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${section === item.key ? "bg-[rgb(var(--a-800)/0.1)] text-[rgb(var(--a-800))] dark:text-[rgb(var(--b-400))]" : "text-[var(--text-secondary)] hover:bg-[var(--border)]"}`}>
+                {item.icon} <span className="flex-1 text-left">{item.label}</span>
+                <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+              </button>
+            ))}
+          </div>
+          <div className="card p-2 mt-3">
             <button onClick={handleLogout}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors mt-2">
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
               <LogOut className="w-4 h-4" /> Log out
             </button>
           </div>
@@ -145,17 +210,16 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
                 { key: "notify_messages" as const,         label: "New messages" },
                 { key: "notify_group_activity" as const,   label: "Group activity" },
               ].map(({ key, label }) => (
-                <label key={key} className="flex items-center justify-between gap-4 cursor-pointer">
+                <div key={key} className="flex items-center justify-between gap-4 py-1">
                   <span className="text-sm text-[var(--text-primary)]">{label}</span>
-                  <div
-                    className={`relative w-10 h-6 rounded-full transition-colors cursor-pointer ${prefs[key] ? "bg-brand-green-800" : "bg-[var(--border)]"}`}
-                    onClick={() => setPrefs((p) => ({ ...p, [key]: !p[key] }))}
-                  >
+                  <button type="button" aria-pressed={prefs[key]}
+                    className={`relative w-10 h-6 rounded-full transition-colors cursor-pointer ${prefs[key] ? "bg-[rgb(var(--a-800))]" : "bg-[var(--border)]"}`}
+                    onClick={() => setPrefs((p) => ({ ...p, [key]: !p[key] }))}>
                     <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${prefs[key] ? "translate-x-4" : ""}`} />
-                  </div>
-                </label>
+                  </button>
+                </div>
               ))}
-              <Button onClick={handleSavePrefs} loading={savingPrefs}>Save</Button>
+              <Button onClick={() => handleSavePrefs()} loading={savingPrefs}>Save</Button>
             </div>
           )}
 
@@ -166,16 +230,51 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
                 <label className="label">Default post visibility</label>
                 <select className="input" value={prefs.default_post_visibility}
                   onChange={(e) => setPrefs((p) => ({ ...p, default_post_visibility: e.target.value as "public" | "friends" | "only_me" }))}>
-                  <option value="public">Public</option>
+                  <option value="public">Public — anyone can see my posts</option>
                   <option value="friends">Friends only</option>
                   <option value="only_me">Only me</option>
                 </select>
               </div>
               <div>
                 <label className="label">Profile visibility</label>
-                <p className="text-sm text-[var(--text-secondary)] mb-2">Change in <Link href="/settings/profile" className="text-brand-green-800 dark:text-brand-gold-400 hover:underline">Edit Profile</Link>.</p>
+                <p className="text-sm text-[var(--text-secondary)] mb-2">Change in <Link href="/settings/profile" className="text-[rgb(var(--a-800))] dark:text-[rgb(var(--b-400))] hover:underline">Edit Profile</Link>.</p>
               </div>
-              <Button onClick={handleSavePrefs} loading={savingPrefs}>Save</Button>
+              <Button onClick={() => handleSavePrefs()} loading={savingPrefs}>Save</Button>
+            </div>
+          )}
+
+          {section === "appearance" && (
+            <div className="card p-6 space-y-4">
+              <h2 className="font-bold text-lg text-[var(--text-primary)]">Appearance</h2>
+              <div>
+                <label className="label">Color theme</label>
+                <p className="text-sm text-[var(--text-secondary)] mb-3">Pick a color theme for CONNEXA. It adapts to both light and dark mode.</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {THEME_OPTIONS.map((t) => (
+                    <button key={t.key} type="button" onClick={() => pickTheme(t.key)}
+                      className={`card p-3 text-left transition-all ${colorTheme === t.key ? "ring-2 ring-[rgb(var(--a-600))]" : "hover:ring-1 hover:ring-[var(--border)]"}`}>
+                      <span className="flex items-center gap-1.5 mb-2">
+                        <span className="w-6 h-6 rounded-lg" style={{ backgroundColor: t.a === "var(--a-800)" ? "rgb(var(--a-800))" : t.a }} />
+                        <span className="w-6 h-6 rounded-lg" style={{ backgroundColor: t.b === "var(--b-400)" ? "rgb(var(--b-400))" : t.b }} />
+                      </span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="label">Mode</label>
+                <div className="flex gap-2">
+                  {(["light", "dark", "system"] as const).map((m) => (
+                    <button key={m} type="button" onClick={() => setPrefs((p) => ({ ...p, theme: m }))}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-colors ${prefs.theme === m ? "bg-[rgb(var(--a-800))] text-white" : "bg-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}>
+                      {m}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-[var(--text-secondary)] mt-2">Use the sun/moon toggle in the header to switch instantly.</p>
+              </div>
+              <Button onClick={() => handleSavePrefs()} loading={savingPrefs}>Save</Button>
             </div>
           )}
 
@@ -200,6 +299,11 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
               )}
             </div>
           )}
+
+          {section === "terms"          && renderContent("terms", "Terms of Service")}
+          {section === "rules"          && renderContent("rules", "Community Rules")}
+          {section === "privacy_policy" && renderContent("privacy", "Privacy Policy")}
+          {section === "about"          && renderContent("about", "About CONNEXA")}
 
           {section === "danger" && (
             <div className="card p-6 space-y-4 border border-red-200 dark:border-red-800">

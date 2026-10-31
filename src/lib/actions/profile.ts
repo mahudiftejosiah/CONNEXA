@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { isValidImageType, MAX_IMAGE_SIZE } from "@/lib/utils";
-import type { PostVisibility } from "@/lib/supabase/types";
+import type { PostVisibility, ColorTheme } from "@/lib/supabase/types";
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient();
@@ -107,6 +107,7 @@ export async function updatePreferences(formData: FormData) {
     notify_messages: bool("notify_messages"),
     notify_group_activity: bool("notify_group_activity"),
     default_post_visibility: ((formData.get("default_post_visibility") as string) || "public") as PostVisibility,
+    color_theme: ((formData.get("color_theme") as string) || "follow_site") as ColorTheme,
   }, { onConflict: "user_id" });
 
   revalidatePath("/settings");

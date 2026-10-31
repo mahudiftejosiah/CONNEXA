@@ -4,8 +4,30 @@
 
 @layer base {
   :root {
-    --brand-green: #12372A;
-    --brand-gold: #D6B875;
+    /* Default theme: connexa (green/gold) */
+    --a-50: 232 240 236;
+    --a-100: 197 216 204;
+    --a-200: 158 191 171;
+    --a-300: 119 166 138;
+    --a-400: 85 147 112;
+    --a-500: 58 127 90;
+    --a-600: 45 107 74;
+    --a-700: 31 87 58;
+    --a-800: 18 55 42;
+    --a-900: 10 32 25;
+    --b-50: 253 248 238;
+    --b-100: 249 237 207;
+    --b-200: 243 221 160;
+    --b-300: 236 201 108;
+    --b-400: 214 184 117;
+    --b-500: 201 164 77;
+    --b-600: 176 136 51;
+    --b-700: 141 106 39;
+    --b-800: 110 81 32;
+    --b-900: 80 60 25;
+
+    --brand-green: rgb(var(--a-800));
+    --brand-gold: rgb(var(--b-400));
     --bg: #f4f6f5;
     --bg-card: #ffffff;
     --text-primary: #111827;
@@ -47,6 +69,131 @@
   }
 }
 
+/* ===== Theme palettes (data-theme on <html>) ===== */
+[data-theme="crimson"] {
+  --a-50: 252 235 235;
+  --a-100: 249 213 214;
+  --a-200: 243 172 175;
+  --a-300: 236 121 125;
+  --a-400: 228 65 70;
+  --a-500: 210 30 36;
+  --a-600: 176 25 30;
+  --a-700: 143 20 24;
+  --a-800: 109 16 19;
+  --a-900: 76 11 13;
+  --b-50: 254 239 238;
+  --b-100: 254 221 218;
+  --b-200: 252 188 184;
+  --b-300: 251 154 147;
+  --b-400: 249 120 110;
+  --b-500: 248 78 66;
+  --b-600: 246 33 17;
+  --b-700: 204 21 8;
+  --b-800: 162 17 6;
+  --b-900: 118 12 5;
+  --bg: #faf4f4;
+  --border: #e6d5d5;
+}
+
+.dark[data-theme="crimson"] {
+  --bg: #1c0e0f;
+  --bg-card: #2b1517;
+  --border: #402024;
+}
+
+[data-theme="ocean"] {
+  --a-50: 233 248 254;
+  --a-100: 208 239 254;
+  --a-200: 163 225 253;
+  --a-300: 106 206 251;
+  --a-400: 44 186 250;
+  --a-500: 6 163 234;
+  --a-600: 5 137 196;
+  --a-700: 4 111 159;
+  --a-800: 3 85 122;
+  --a-900: 2 59 85;
+  --b-50: 239 249 253;
+  --b-100: 221 242 251;
+  --b-200: 189 229 247;
+  --b-300: 155 216 243;
+  --b-400: 121 202 238;
+  --b-500: 80 186 233;
+  --b-600: 35 168 228;
+  --b-700: 24 137 188;
+  --b-800: 19 109 150;
+  --b-900: 14 79 109;
+  --bg: #f2f6fa;
+  --border: #d5e0ec;
+}
+
+.dark[data-theme="ocean"] {
+  --bg: #0c1620;
+  --bg-card: #132435;
+  --border: #1f3a55;
+}
+
+[data-theme="violet"] {
+  --a-50: 240 233 254;
+  --a-100: 222 209 252;
+  --a-200: 191 166 250;
+  --a-300: 152 110 247;
+  --a-400: 109 50 244;
+  --a-500: 78 13 227;
+  --a-600: 66 11 191;
+  --a-700: 53 9 155;
+  --a-800: 41 7 118;
+  --a-900: 28 5 82;
+  --b-50: 242 239 254;
+  --b-100: 227 220 252;
+  --b-200: 201 187 249;
+  --b-300: 173 152 246;
+  --b-400: 144 117 243;
+  --b-500: 111 75 239;
+  --b-600: 73 28 235;
+  --b-700: 56 17 194;
+  --b-800: 45 14 155;
+  --b-900: 32 10 112;
+  --bg: #f6f4fb;
+  --border: #e0d9ef;
+}
+
+.dark[data-theme="violet"] {
+  --bg: #130f20;
+  --bg-card: #1e1832;
+  --border: #312a4e;
+}
+
+[data-theme="amber"] {
+  --a-50: 254 244 233;
+  --a-100: 254 232 208;
+  --a-200: 253 210 163;
+  --a-300: 251 182 106;
+  --a-400: 250 152 44;
+  --a-500: 234 126 6;
+  --a-600: 196 106 5;
+  --a-700: 159 86 4;
+  --a-800: 122 65 3;
+  --a-900: 85 45 2;
+  --b-50: 254 250 238;
+  --b-100: 253 243 219;
+  --b-200: 251 232 185;
+  --b-300: 249 221 148;
+  --b-400: 247 209 112;
+  --b-500: 245 195 69;
+  --b-600: 243 179 20;
+  --b-700: 201 147 11;
+  --b-800: 160 117 8;
+  --b-900: 116 85 6;
+  --bg: #faf6ef;
+  --border: #eadcc4;
+}
+
+.dark[data-theme="amber"] {
+  --bg: #191207;
+  --bg-card: #281e10;
+  --border: #40301a;
+}
+
 @layer components {
   .card {
     background-color: var(--bg-card);
@@ -56,23 +203,31 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 bg-[#12372A] hover:bg-[#1f573a] text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#12372A] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--a-800))] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
+    background-color: rgb(var(--a-800));
   }
+  .btn-primary:hover { background-color: rgb(var(--a-700)); }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 bg-[#D6B875] hover:bg-[#c9a44d] text-[#12372A] font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#D6B875] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--b-400))] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
+    background-color: rgb(var(--b-400));
+    color: rgb(var(--a-800));
   }
+  .btn-secondary:hover { background-color: rgb(var(--b-500)); }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 bg-transparent hover:bg-[var(--border)] text-[var(--text-primary)] font-medium px-4 py-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#12372A] focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 font-medium px-4 py-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--a-800))] focus:ring-offset-2;
+    background-color: transparent;
+    color: var(--text-primary);
   }
+  .btn-ghost:hover { background-color: var(--border); }
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .input {
-    @apply w-full rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#12372A] focus:border-transparent transition-all duration-200;
+    @apply w-full rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--a-800))] focus:border-transparent transition-all duration-200;
     background-color: var(--bg-card);
     border: 1px solid var(--border);
     color: var(--text-primary);
@@ -99,13 +254,13 @@
 
   .nav-link-active {
     @apply flex items-center gap-3 px-4 py-3 rounded-xl font-semibold;
-    color: #12372A;
-    background-color: rgba(18, 55, 42, 0.08);
+    color: rgb(var(--a-800));
+    background-color: rgb(var(--a-800) / 0.08);
   }
 
   .dark .nav-link-active {
-    color: #D6B875;
-    background-color: rgba(214, 184, 117, 0.08);
+    color: rgb(var(--b-400));
+    background-color: rgb(var(--b-400) / 0.08);
   }
 
   .badge {
@@ -121,7 +276,7 @@
 
 /* Story ring gradient */
 .story-ring {
-  background: linear-gradient(135deg, #12372A, #D6B875);
+  background: linear-gradient(135deg, rgb(var(--a-800)), rgb(var(--b-400)));
   padding: 2px;
   border-radius: 9999px;
 }
@@ -173,7 +328,7 @@
 .stagger-in > *:nth-child(7) { animation-delay: 0.53s; }
 
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(214, 184, 117, 0.0); }
-  50%      { box-shadow: 0 0 28px 4px rgba(214, 184, 117, 0.28); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--b-400) / 0); }
+  50%      { box-shadow: 0 0 28px 4px rgb(var(--b-400) / 0.28); }
 }
 .animate-glow-pulse { animation: glowPulse 3.2s ease-in-out infinite; }

@@ -22,7 +22,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       className={cn(
-        "p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#12372A]",
+        "p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--a-800))]",
         className
       )}
       style={{ color: "var(--text-secondary)" }}

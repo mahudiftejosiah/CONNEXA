@@ -114,7 +114,7 @@ export function ProfileClient({
       {/* Cover + profile header card */}
       <div className="card overflow-hidden">
         {/* Cover */}
-        <div className="relative h-48" style={{ background: "linear-gradient(135deg, #12372A, #1f573a)" }}>
+        <div className="relative h-48" style={{ background: "linear-gradient(135deg, rgb(var(--a-800)), rgb(var(--a-700)))" }}>
           {profile.cover_url && (
             <Image src={profile.cover_url} alt="Cover photo" fill className="object-cover" sizes="100vw" priority />
           )}
@@ -148,7 +148,7 @@ export function ProfileClient({
                 <Link
                   href="/settings/profile"
                   className="absolute bottom-1 right-1 w-7 h-7 rounded-full flex items-center justify-center text-white transition-colors"
-                  style={{ background: "#12372A" }}
+                  style={{ background: "rgb(var(--a-800))" }}
                 >
                   <Camera className="w-3.5 h-3.5" />
                 </Link>
@@ -218,7 +218,7 @@ export function ProfileClient({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-xs hover:underline"
-                  style={{ color: "#12372A" }}
+                  style={{ color: "rgb(var(--a-800))" }}
                 >
                   <LinkIcon className="w-3.5 h-3.5" /> {profile.website.replace(/^https?:\/\//, "")}
                 </a>
@@ -234,7 +234,7 @@ export function ProfileClient({
                   <span
                     key={i}
                     className="px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    style={{ background: "rgba(18,55,42,0.1)", color: "#12372A" }}
+                    style={{ background: "rgb(var(--a-800) / 0.1)", color: "rgb(var(--a-800))" }}
                   >
                     {i}
                   </span>
@@ -269,10 +269,10 @@ export function ProfileClient({
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex-1 py-3 text-sm font-semibold capitalize transition-colors ${
-                activeTab === tab ? "border-b-2 border-[#12372A]" : ""
+                activeTab === tab ? "border-b-2 border-[rgb(var(--a-800))]" : ""
               }`}
               style={{
-                color: activeTab === tab ? "#12372A" : "var(--text-secondary)",
+                color: activeTab === tab ? "rgb(var(--a-800))" : "var(--text-secondary)",
               }}
             >
               {tab}
@@ -314,7 +314,7 @@ export function ProfileClient({
           {profile.website && (
             <p className="text-sm" style={{ color: "var(--text-primary)" }}>
               <span className="font-medium">Website: </span>
-              <a href={profile.website} className="hover:underline" style={{ color: "#12372A" }} target="_blank" rel="noopener noreferrer">
+              <a href={profile.website} className="hover:underline" style={{ color: "rgb(var(--a-800))" }} target="_blank" rel="noopener noreferrer">
                 {profile.website}
               </a>
             </p>
@@ -327,7 +327,7 @@ export function ProfileClient({
                   <span
                     key={i}
                     className="px-3 py-1 rounded-full text-xs font-medium"
-                    style={{ background: "rgba(18,55,42,0.1)", color: "#12372A" }}
+                    style={{ background: "rgb(var(--a-800) / 0.1)", color: "rgb(var(--a-800))" }}
                   >
                     {i}
                   </span>

@@ -36,7 +36,7 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
       {suggestedPeople.length > 0 && (
         <section>
           <h2 className="text-lg font-bold mb-3 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-            <Users className="w-5 h-5" style={{ color: "#12372A" }} /> People you may know
+            <Users className="w-5 h-5" style={{ color: "rgb(var(--a-800))" }} /> People you may know
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {suggestedPeople.map((person) => (
@@ -81,20 +81,20 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-              <Globe className="w-5 h-5" style={{ color: "#12372A" }} /> Public communities
+              <Globe className="w-5 h-5" style={{ color: "rgb(var(--a-800))" }} /> Public communities
             </h2>
-            <Link href="/groups" className="text-sm hover:underline" style={{ color: "#12372A" }}>See all</Link>
+            <Link href="/groups" className="text-sm hover:underline" style={{ color: "rgb(var(--a-800))" }}>See all</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {publicGroups.slice(0, 4).map((g) => (
               <Link key={g.id} href={`/groups/${g.id}`} className="card p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden"
-                  style={{ background: "rgba(18,55,42,0.1)" }}>
+                  style={{ background: "rgb(var(--a-800) / 0.1)" }}>
                   {g.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={g.image_url} alt={g.name} className="w-full h-full object-cover" />
                   ) : (
-                    <Users className="w-6 h-6" style={{ color: "#12372A" }} />
+                    <Users className="w-6 h-6" style={{ color: "rgb(var(--a-800))" }} />
                   )}
                 </div>
                 <div className="min-w-0">
@@ -113,7 +113,7 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
       {trendingPosts.length > 0 && (
         <section>
           <h2 className="text-lg font-bold mb-3 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-            <TrendingUp className="w-5 h-5" style={{ color: "#12372A" }} /> Trending posts
+            <TrendingUp className="w-5 h-5" style={{ color: "rgb(var(--a-800))" }} /> Trending posts
           </h2>
           <div className="space-y-4">
             {trendingPosts.map((post) => (

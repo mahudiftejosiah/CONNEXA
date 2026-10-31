@@ -280,6 +280,7 @@ export interface Database {
           notify_messages: boolean
           notify_group_activity: boolean
           default_post_visibility: PostVisibility
+          color_theme: ColorTheme
           created_at: string
           updated_at: string
         }
@@ -299,6 +300,38 @@ export interface Database {
         }
         Insert: Partial<Omit<Database["public"]["Tables"]["moderation_actions"]["Row"], "id" | "created_at">>
         Update: never
+      }
+      site_content: {
+        Row: {
+          key: "terms" | "rules" | "privacy" | "about"
+          title: string
+          body: string
+          updated_at: string
+        }
+        Insert: Omit<Database["public"]["Tables"]["site_content"]["Row"], "updated_at">
+        Update: Partial<Pick<Database["public"]["Tables"]["site_content"]["Row"], "title" | "body">>
+      }
+      site_settings: {
+        Row: {
+          key: string
+          value: string
+          updated_at: string
+        }
+        Insert: { key: string; value: string }
+        Update: Partial<Pick<Database["public"]["Tables"]["site_settings"]["Row"], "value">>
+      }
+      external_games: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          play_url: string
+          cover_url: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: Omit<Database["public"]["Tables"]["external_games"]["Row"], "id" | "created_at" | "created_by"> & { created_by?: string | null }
+        Update: Partial<Omit<Database["public"]["Tables"]["external_games"]["Row"], "id" | "created_at">>
       }
     }
     Views: {
@@ -335,6 +368,11 @@ export type UserBlock = Database["public"]["Tables"]["user_blocks"]["Row"]
 export type ContentReport = Database["public"]["Tables"]["content_reports"]["Row"]
 export type UserPreferences = Database["public"]["Tables"]["user_preferences"]["Row"]
 export type ModerationAction = Database["public"]["Tables"]["moderation_actions"]["Row"]
+export type SiteContent = Database["public"]["Tables"]["site_content"]["Row"]
+export type SiteSetting = Database["public"]["Tables"]["site_settings"]["Row"]
+export type ExternalGame = Database["public"]["Tables"]["external_games"]["Row"]
+
+export type ColorTheme = "follow_site" | "connexa" | "crimson" | "ocean" | "violet" | "amber"
 
 // Extended types with joins
 export type MiniProfile = Pick<Profile, "id" | "username" | "display_name" | "avatar_url">

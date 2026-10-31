@@ -87,7 +87,7 @@ export function CommentSection({ postId, currentProfile }: CommentSectionProps) 
               type="submit"
               disabled={!input.trim() || submitting}
               className="absolute right-2 top-1/2 -translate-y-1/2 disabled:opacity-40 transition-opacity"
-              style={{ color: "#12372A" }}
+              style={{ color: "rgb(var(--a-800))" }}
               aria-label="Post comment"
             >
               <Send className="w-4 h-4" />
@@ -145,7 +145,7 @@ export function CommentSection({ postId, currentProfile }: CommentSectionProps) 
         <button
           onClick={() => loadComments(page + 1)}
           className="flex items-center gap-1 text-sm hover:underline mx-auto"
-          style={{ color: "#12372A" }}
+          style={{ color: "rgb(var(--a-800))" }}
         >
           <ChevronDown className="w-4 h-4" /> Load more comments
         </button>

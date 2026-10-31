@@ -103,12 +103,12 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
           aria-label="Create story"
         >
           <div className="w-16 h-24 rounded-2xl border-2 border-dashed flex items-center justify-center relative overflow-hidden transition-colors"
-            style={{ backgroundColor: "var(--bg-card)", borderColor: "rgba(18,55,42,0.3)" }}>
+            style={{ backgroundColor: "var(--bg-card)", borderColor: "rgb(var(--a-800) / 0.3)" }}>
             {profile.avatar_url && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={profile.avatar_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
             )}
-            <div className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "#12372A" }}>
+            <div className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgb(var(--a-800))" }}>
               <Plus className="w-4 h-4 text-white" />
             </div>
           </div>
@@ -127,7 +127,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
               className="flex-shrink-0 flex flex-col items-center gap-1.5"
             >
               <div className="w-16 h-24 rounded-2xl overflow-hidden relative"
-                style={{ outline: `2px solid ${hasUnviewed ? "#12372A" : "var(--border)"}`, outlineOffset: "2px" }}>
+                style={{ outline: `2px solid ${hasUnviewed ? "rgb(var(--a-800))" : "var(--border)"}`, outlineOffset: "2px" }}>
                 {firstStory.media_type === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={firstStory.media_url} alt={g.author.display_name} className="w-full h-full object-cover" />

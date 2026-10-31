@@ -13,6 +13,8 @@ import WhackAMole from "@/components/games/WhackAMole";
 import SimonSays from "@/components/games/SimonSays";
 import Minesweeper from "@/components/games/Minesweeper";
 import Flappy from "@/components/games/Flappy";
+import { ExternalLink } from "lucide-react";
+import type { ExternalGame } from "@/lib/supabase/types";
 
 const GAMES: { id: string; name: string; desc: string; icon: React.ReactNode; color: string; play: React.ReactNode }[] = [
   { id: "snake",      name: "Snake",         desc: "Eat, grow, don't bite yourself.",   icon: <Bug className="w-7 h-7" />,            color: "#22c55e", play: <Snake /> },
@@ -28,7 +30,7 @@ const GAMES: { id: string; name: string; desc: string; icon: React.ReactNode; co
   { id: "mines",      name: "Minesweeper",   desc: "Clear the field, avoid bombs.",     icon: <Bomb className="w-7 h-7" />,           color: "#64748b", play: <Minesweeper /> },
 ];
 
-export default function GamesClient() {
+export default function GamesClient({ externalGames = [] }: { externalGames?: ExternalGame[] }) {
   const [active, setActive] = useState<string | null>(null);
   const game = GAMES.find((g) => g.id === active);
 
@@ -58,7 +60,7 @@ export default function GamesClient() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Gamepad2 className="w-6 h-6" style={{ color: "#12372A" }} />
+        <Gamepad2 className="w-6 h-6" style={{ color: "rgb(var(--a-800))" }} />
         <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Games &amp; Fun</h1>
       </div>
       <p className="text-sm -mt-2" style={{ color: "var(--text-secondary)" }}>
@@ -83,6 +85,43 @@ export default function GamesClient() {
           </button>
         ))}
       </div>
+
+      {externalGames.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 pt-2">
+            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Featured outside</h2>
+            <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: "rgb(var(--a-800) / 0.1)", color: "rgb(var(--a-800))" }}>
+              Curated
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {externalGames.map((g) => (
+              <a key={g.id} href={g.play_url} target="_blank" rel="noopener noreferrer"
+                className="rounded-2xl border overflow-hidden transition-transform hover:scale-[1.02]"
+                style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+                {g.cover_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={g.cover_url} alt={g.title} className="w-full h-28 object-cover" />
+                ) : (
+                  <div className="w-full h-28 flex items-center justify-center" style={{ backgroundColor: "var(--border)" }}>
+                    <Gamepad2 className="w-8 h-8" style={{ color: "var(--text-secondary)" }} />
+                  </div>
+                )}
+                <div className="p-3">
+                  <p className="font-bold text-sm flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
+                    <span className="flex-1 truncate">{g.title}</span>
+                    <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--text-secondary)" }} />
+                  </p>
+                  {g.description && (
+                    <p className="text-xs mt-0.5 line-clamp-2" style={{ color: "var(--text-secondary)" }}>{g.description}</p>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
