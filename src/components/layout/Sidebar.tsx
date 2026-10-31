@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Home, Users, Bell, Bookmark, Settings, LogOut,
   Compass, MessageCircle, Film, UsersRound, Shield,
-  UserCircle, HelpCircle, Clapperboard,
+  UserCircle, HelpCircle, Clapperboard, Gamepad2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
@@ -38,6 +38,7 @@ export function Sidebar({ profile, unreadNotifications = 0, unreadMessages = 0, 
     { href: "/notifications", label: "Notifications", icon: <Bell className="w-5 h-5" />,           badge: unreadNotifications },
     { href: "/stories",       label: "Stories",       icon: <Film className="w-5 h-5" /> },
     { href: "/reels",         label: "Reels",         icon: <Clapperboard className="w-5 h-5" /> },
+    { href: "/games",         label: "Games",         icon: <Gamepad2 className="w-5 h-5" /> },
     { href: "/groups",        label: "Groups",        icon: <UsersRound className="w-5 h-5" /> },
     { href: "/discover",      label: "Discover",      icon: <Compass className="w-5 h-5" /> },
     { href: "/saved",         label: "Saved",         icon: <Bookmark className="w-5 h-5" /> },

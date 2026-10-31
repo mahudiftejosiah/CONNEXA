@@ -26,9 +26,11 @@ export async function adminUpdatePost(postId: string, content: string, visibilit
   if (!trimmed && !post.is_shared) return { error: "Invalid content." };
   if (trimmed.length > 5000) return { error: "Content too long." };
 
-  await supabase.from("posts")
+  const { data: updated, error } = await supabase.from("posts")
     .update({ content: trimmed, visibility, updated_at: new Date().toISOString() })
-    .eq("id", postId);
+    .eq("id", postId)
+    .select("id");
+  if (error || !updated?.length) return { error: "Failed to update post. Has the 008 migration been applied?" };
   await supabase.from("moderation_actions").insert({
     admin_id: adminId, target_user_id: post.author_id, entity_id: postId, entity_type: "post",
     action: "admin_edit_post", reason: "Content edited by admin",

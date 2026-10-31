@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, Compass, Bell, MessageCircle } from "lucide-react";
+import { Home, Users, Compass, Bell, MessageCircle, Gamepad2 } from "lucide-react";
 
 interface MobileNavProps {
   unreadNotifications?: number;
@@ -16,8 +16,9 @@ export function MobileNav({ unreadNotifications = 0, unreadMessages = 0 }: Mobil
     { href: "/feed",          label: "Home",    icon: <Home className="w-6 h-6" /> },
     { href: "/friends",       label: "Friends", icon: <Users className="w-6 h-6" /> },
     { href: "/discover",      label: "Discover",icon: <Compass className="w-6 h-6" /> },
+    { href: "/games",         label: "Games",   icon: <Gamepad2 className="w-6 h-6" /> },
     { href: "/messages",      label: "Messages",icon: <MessageCircle className="w-6 h-6" />, badge: unreadMessages },
-    { href: "/notifications", label: "Alerts",  icon: <Bell className="w-6 h-6" />,          badge: unreadNotifications },
+    { href: "/notifications", label: "Notifications", icon: <Bell className="w-6 h-6" />,    badge: unreadNotifications },
   ];
 
   return (

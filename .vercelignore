@@ -1,0 +1,7 @@
+.env
+.env.local
+.env.production
+*.log
+.next
+node_modules
+supabase/.temp
