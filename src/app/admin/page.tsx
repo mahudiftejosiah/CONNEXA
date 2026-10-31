@@ -15,7 +15,7 @@ export default async function AdminPage() {
   const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
   if (!profile?.is_admin) redirect("/feed");
 
-  const [usersRes, reportsRes, postsRes, actionsRes, contentRes, gamesRes] = await Promise.all([
+  const [usersRes, reportsRes, postsRes, actionsRes, contentRes, gamesRes, reelsRes, upgradesRes, shortcutsRes] = await Promise.all([
     supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(20),
     supabase.from("content_reports").select("*, reporter:profiles!content_reports_reporter_id_fkey(*)")
       .eq("status", "pending").order("created_at", { ascending: false }).limit(20),
@@ -24,6 +24,11 @@ export default async function AdminPage() {
       .order("created_at", { ascending: false }).limit(10),
     supabase.from("site_content").select("*"),
     supabase.from("external_games").select("*").order("created_at", { ascending: false }),
+    supabase.from("reel_embeds").select("*").order("created_at", { ascending: false }),
+    supabase.from("account_upgrades")
+      .select("*, user:profiles!account_upgrades_user_id_fkey(id, username, display_name, avatar_url, is_verified)")
+      .order("created_at", { ascending: false }).limit(40),
+    supabase.from("site_shortcuts").select("*").order("sort", { ascending: true }),
   ]);
 
   const [totalUsers, totalPosts, totalReports] = await Promise.all([
@@ -48,7 +53,10 @@ export default async function AdminPage() {
         currentAdminId={user.id}
         siteContent={(contentRes.data || []) as any}
         externalGames={(gamesRes.data || []) as any}
+        reelEmbeds={(reelsRes.data || []) as any}
         globalTheme={globalTheme}
+        upgrades={(upgradesRes.data || []) as any}
+        siteShortcuts={(shortcutsRes.data || []) as any}
       />
     </AppLayout>
   );

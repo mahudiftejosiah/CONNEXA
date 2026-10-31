@@ -2,28 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Heart, MessageCircle, Volume2, VolumeX, Play, Pause, Clapperboard } from "lucide-react";
+import { Heart, MessageCircle, Volume2, VolumeX, Play, Clapperboard } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { toggleReaction } from "@/lib/actions/posts";
 import { formatRelativeTime, cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-interface Reel {
-  id: string;
-  content: string;
-  created_at: string;
-  reaction_count: number;
-  video_url: string;
-  user_liked?: boolean;
-  author: { id: string; username: string; display_name: string; avatar_url: string | null };
-}
+type Reel =
+  | { kind: "embed"; id: string; platform: "tiktok" | "youtube"; external_id: string; caption: string | null }
+  | {
+      kind: "post";
+      id: string;
+      content: string;
+      created_at: string;
+      reaction_count: number;
+      video_url: string;
+      user_liked?: boolean;
+      author: { id: string; username: string; display_name: string; avatar_url: string | null };
+    };
 
 export function ReelsViewer() {
   const [reels, setReels] = useState<Reel[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [muted, setMuted] = useState(true);
+  const [active, setActive] = useState(0);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const activeIdx = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,12 +45,13 @@ export function ReelsViewer() {
         entries.forEach((entry) => {
           const idx = Number((entry.target as HTMLElement).dataset.idx);
           const video = (entry.target as HTMLElement).querySelector("video");
-          if (!video) return;
           if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-            activeIdx.current = idx;
-            video.muted = muted;
-            video.play().catch(() => {});
-          } else {
+            setActive(idx);
+            if (video) {
+              video.muted = muted;
+              video.play().catch(() => {});
+            }
+          } else if (video) {
             video.pause();
           }
         });
@@ -64,14 +68,15 @@ export function ReelsViewer() {
 
   function toggleLike(idx: number) {
     const reel = reels![idx];
+    if (reel.kind !== "post") return;
     setReels((prev) => prev!.map((r, i) =>
-      i === idx ? { ...r, reaction_count: r.reaction_count + (r.user_liked ? -1 : 1), user_liked: !r.user_liked } : r
+      i === idx && r.kind === "post" ? { ...r, reaction_count: r.reaction_count + (r.user_liked ? -1 : 1), user_liked: !r.user_liked } : r
     ));
     toggleReaction(reel.id, "like").then((res: any) => {
       if (res?.error) toast.error(res.error);
       else if (res?.changed === false) {
         setReels((prev) => prev!.map((r, i) =>
-          i === idx ? { ...r, reaction_count: r.reaction_count - 1, user_liked: false } : r
+          i === idx && r.kind === "post" ? { ...r, reaction_count: r.reaction_count - 1, user_liked: false } : r
         ));
       }
     });
@@ -115,54 +120,112 @@ export function ReelsViewer() {
           <div key={reel.id} data-idx={idx}
             ref={(el) => { itemRefs.current[idx] = el; }}
             className="relative h-full snap-start snap-always overflow-hidden">
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-            <video
-              data-reel-video
-              src={reel.video_url}
-              loop
-              playsInline
-              muted={muted}
-              className="h-full w-full object-cover"
-              onClick={() => {
-                tapVideo(idx);
-                setPlaying((p) => ({ ...p, [idx]: !(p[idx] ?? true) }));
-              }}
-            />
-            {(playing[idx] === false) && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-16 h-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
-                  <Play className="w-8 h-8 text-white fill-white" />
+
+            {reel.kind === "post" ? (
+              <>
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <video
+                  data-reel-video
+                  src={reel.video_url}
+                  loop
+                  playsInline
+                  muted={muted}
+                  className="h-full w-full object-cover"
+                  onClick={() => {
+                    tapVideo(idx);
+                    setPlaying((p) => ({ ...p, [idx]: !(p[idx] ?? true) }));
+                  }}
+                />
+                {(playing[idx] === false) && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-16 h-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+                      <Play className="w-8 h-8 text-white fill-white" />
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : active === idx ? (
+              reel.platform === "youtube" ? (
+                <iframe
+                  // remount on mute change so autoplay-with-sound works after unmute
+                  key={`yt-${reel.external_id}-${muted}`}
+                  src={`https://www.youtube-nocookie.com/embed/${reel.external_id}?autoplay=1&mute=${muted ? 1 : 0}&playsinline=1&rel=0&controls=0&loop=1&playlist=${reel.external_id}`}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  className="h-full w-full"
+                  title="YouTube reel"
+                />
+              ) : (
+                <iframe
+                  key={`tt-${reel.external_id}`}
+                  src={`https://www.tiktok.com/embed/v2/${reel.external_id}`}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  className="h-full w-full bg-black"
+                  title="TikTok reel"
+                />
+              )
+            ) : (
+              reel.platform === "youtube" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`https://img.youtube.com/vi/${reel.external_id}/hqdefault.jpg`}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-gradient-to-b from-black via-[#111827] to-black">
+                  <Clapperboard className="w-10 h-10 text-white/30" />
                 </div>
+              )
+            )}
+
+            {/* Right action rail — uploaded posts only */}
+            {reel.kind === "post" && (
+              <div className="absolute right-3 bottom-24 flex flex-col items-center gap-4 text-white">
+                <button onClick={() => toggleLike(idx)} className="flex flex-col items-center gap-1">
+                  <span className="w-11 h-11 rounded-full bg-black/40 backdrop-blur flex items-center justify-center active:scale-90 transition-transform">
+                    <Heart className={cn("w-6 h-6", reel.user_liked && "fill-red-500 text-red-500")} />
+                  </span>
+                  <span className="text-xs font-semibold">{reel.reaction_count}</span>
+                </button>
+                <Link href={`/feed`} className="flex flex-col items-center gap-1" aria-label="Open comments in feed">
+                  <span className="w-11 h-11 rounded-full bg-black/40 backdrop-blur flex items-center justify-center">
+                    <MessageCircle className="w-6 h-6" />
+                  </span>
+                </Link>
               </div>
             )}
 
-            {/* Right action rail */}
-            <div className="absolute right-3 bottom-24 flex flex-col items-center gap-4 text-white">
-              <button onClick={() => toggleLike(idx)} className="flex flex-col items-center gap-1">
-                <span className="w-11 h-11 rounded-full bg-black/40 backdrop-blur flex items-center justify-center active:scale-90 transition-transform">
-                  <Heart className={cn("w-6 h-6", reel.user_liked && "fill-red-500 text-red-500")} />
-                </span>
-                <span className="text-xs font-semibold">{reel.reaction_count}</span>
-              </button>
-              <Link href={`/feed`} className="flex flex-col items-center gap-1" aria-label="Open comments in feed">
-                <span className="w-11 h-11 rounded-full bg-black/40 backdrop-blur flex items-center justify-center">
-                  <MessageCircle className="w-6 h-6" />
-                </span>
-              </Link>
-            </div>
-
             {/* Bottom overlay */}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
-              <div className="flex items-center gap-2 mb-2">
-                <Avatar src={reel.author.avatar_url} name={reel.author.display_name} size={36} />
-                <div>
-                  <Link href={`/profile/${reel.author.username}`} className="font-semibold text-sm text-white hover:underline block leading-tight">
-                    {reel.author.display_name}
-                  </Link>
-                  <p className="text-xs text-white/70">@{reel.author.username} · {formatRelativeTime(reel.created_at)}</p>
+            <div className={cn(
+              "absolute inset-x-0 bottom-0 p-4 pt-12 pointer-events-none",
+              reel.kind === "post"
+                ? "bg-gradient-to-t from-black/80 via-black/40 to-transparent"
+                : "bg-gradient-to-t from-black/90 via-black/60 to-transparent"
+            )}>
+              {reel.kind === "post" ? (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Avatar src={reel.author.avatar_url} name={reel.author.display_name} size={36} />
+                    <div>
+                      <Link href={`/profile/${reel.author.username}`} className="font-semibold text-sm text-white hover:underline block leading-tight pointer-events-auto">
+                        {reel.author.display_name}
+                      </Link>
+                      <p className="text-xs text-white/70">@{reel.author.username} · {formatRelativeTime(reel.created_at)}</p>
+                    </div>
+                  </div>
+                  {reel.content && <p className="text-sm text-white/90 line-clamp-2">{reel.content}</p>}
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-white/15 text-white">
+                    {reel.platform === "tiktok" ? "TikTok" : "YouTube"}
+                  </span>
+                  {reel.caption && <p className="text-sm text-white/90 line-clamp-2">{reel.caption}</p>}
                 </div>
-              </div>
-              {reel.content && <p className="text-sm text-white/90 line-clamp-2">{reel.content}</p>}
+              )}
             </div>
           </div>
         ))}
@@ -170,7 +233,7 @@ export function ReelsViewer() {
 
       <button
         onClick={() => setMuted((m) => !m)}
-        className="absolute top-3 right-3 w-10 h-10 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center"
+        className="absolute top-3 right-3 w-10 h-10 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center z-10"
         aria-label={muted ? "Unmute" : "Mute"}
       >
         {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}

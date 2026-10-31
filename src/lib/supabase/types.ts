@@ -22,6 +22,8 @@ export type NotificationType =
   | "group_invite"
   | "group_joined"
   | "story_view"
+  | "game_request"
+  | "game_turn"
 
 export interface Database {
   public: {
@@ -42,6 +44,7 @@ export interface Database {
           profile_visibility: "public" | "friends" | "private"
           created_at: string
           updated_at: string
+          last_seen?: string | null
         }
         Insert: Partial<Omit<Database["public"]["Tables"]["profiles"]["Row"], "created_at" | "updated_at">>
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>
@@ -333,6 +336,108 @@ export interface Database {
         Insert: Omit<Database["public"]["Tables"]["external_games"]["Row"], "id" | "created_at" | "created_by"> & { created_by?: string | null }
         Update: Partial<Omit<Database["public"]["Tables"]["external_games"]["Row"], "id" | "created_at">>
       }
+      study_resources: {
+        Row: {
+          id: string
+          title: string
+          url: string
+          cover_url: string | null
+          description: string | null
+          added_by: string | null
+          created_at: string
+        }
+        Insert: Omit<Database["public"]["Tables"]["study_resources"]["Row"], "id" | "created_at">
+        Update: Partial<Omit<Database["public"]["Tables"]["study_resources"]["Row"], "id" | "created_at">>
+      }
+      reel_embeds: {
+        Row: {
+          id: string
+          platform: "tiktok" | "youtube"
+          external_id: string
+          caption: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: Omit<Database["public"]["Tables"]["reel_embeds"]["Row"], "id" | "created_at">
+        Update: Partial<Omit<Database["public"]["Tables"]["reel_embeds"]["Row"], "id" | "created_at">>
+      }
+      site_shortcuts: {
+        Row: {
+          id: string
+          category: "study" | "sports" | "betting"
+          name: string
+          url: string
+          logo_url: string | null
+          description: string | null
+          sort: number
+          created_by: string | null
+          created_at: string
+        }
+        Insert: Omit<Database["public"]["Tables"]["site_shortcuts"]["Row"], "id" | "created_at" | "logo_url" | "description" | "created_by" | "sort"> & { logo_url?: string | null; description?: string | null; created_by?: string | null; sort?: number }
+        Update: Partial<Omit<Database["public"]["Tables"]["site_shortcuts"]["Row"], "id" | "created_at">>
+      }
+      study_books: {
+        Row: {
+          id: string
+          category: "educational" | "story" | "inspirational" | "holy"
+          title: string
+          author: string | null
+          pdf_url: string
+          cover_url: string | null
+          created_at: string
+        }
+        Insert: Omit<Database["public"]["Tables"]["study_books"]["Row"], "id" | "created_at">
+        Update: Partial<Omit<Database["public"]["Tables"]["study_books"]["Row"], "id" | "created_at">>
+      }
+      game_scores: {
+        Row: {
+          id: string
+          user_id: string
+          game_id: string
+          best: number
+          points: number
+          state: Json | null
+          updated_at: string
+        }
+        Insert: { user_id: string; game_id: string; best?: number; points?: number; state?: Json | null }
+        Update: Partial<{ best: number; points: number; state: Json | null; updated_at: string }>
+      }
+      game_requests: {
+        Row: {
+          id: string
+          game: "whot" | "chess" | "ludo"
+          challenger_id: string
+          opponent_id: string
+          status: "pending" | "accepted" | "declined" | "cancelled" | "done"
+          state: Json | null
+          turn: string | null
+          winner_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database["public"]["Tables"]["game_requests"]["Row"], "id" | "created_at" | "updated_at" | "status" | "state" | "turn" | "winner_id"> & {
+          status?: "pending" | "accepted" | "declined" | "cancelled" | "done"
+          state?: Json | null
+          turn?: string | null
+          winner_id?: string | null
+        }
+        Update: Partial<Omit<Database["public"]["Tables"]["game_requests"]["Row"], "id" | "challenger_id" | "opponent_id" | "created_at">>
+      }
+      account_upgrades: {
+        Row: {
+          id: string
+          user_id: string
+          amount: number
+          reference: string
+          status: "pending" | "approved" | "rejected"
+          note: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_at: string
+        }
+        Insert: Omit<Database["public"]["Tables"]["account_upgrades"]["Row"], "id" | "created_at" | "reviewed_by" | "reviewed_at"> & { status?: "pending" | "approved" | "rejected" }
+        Update: Partial<Omit<Database["public"]["Tables"]["account_upgrades"]["Row"], "id" | "user_id" | "reference" | "created_at">>
+      }
     }
     Views: {
       [_ in never]: never
@@ -374,6 +479,13 @@ export type ModerationAction = Database["public"]["Tables"]["moderation_actions"
 export type SiteContent = Database["public"]["Tables"]["site_content"]["Row"]
 export type SiteSetting = Database["public"]["Tables"]["site_settings"]["Row"]
 export type ExternalGame = Database["public"]["Tables"]["external_games"]["Row"]
+export type StudyResource = Database["public"]["Tables"]["study_resources"]["Row"]
+export type ReelEmbed = Database["public"]["Tables"]["reel_embeds"]["Row"]
+export type SiteShortcut = Database["public"]["Tables"]["site_shortcuts"]["Row"]
+export type StudyBook = Database["public"]["Tables"]["study_books"]["Row"]
+export type GameScore = Database["public"]["Tables"]["game_scores"]["Row"]
+export type GameRequest = Database["public"]["Tables"]["game_requests"]["Row"]
+export type AccountUpgrade = Database["public"]["Tables"]["account_upgrades"]["Row"]
 
 export type ColorTheme = "follow_site" | "connexa" | "crimson" | "ocean" | "violet" | "amber"
 

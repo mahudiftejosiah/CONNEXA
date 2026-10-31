@@ -12,8 +12,9 @@ import { signPostMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
 import { attachFeedActivity } from "@/lib/feed-activity";
 import type { PostWithAuthor, Profile, StoryWithAuthor } from "@/lib/supabase/types";
-import { Users, Clapperboard, Newspaper } from "lucide-react";
+import { Users, Clapperboard, Newspaper, Play } from "lucide-react";
 import { ReelsViewer } from "@/components/reels/ReelsViewer";
+import type { PoolReel } from "@/lib/reel-pool";
 
 interface FeedClientProps {
   initialPosts: PostWithAuthor[];
@@ -22,15 +23,21 @@ interface FeedClientProps {
   currentUserId: string;
   friendIds: string[];
   manyFriends: boolean;
+  reelSpotlights: PoolReel[];
 }
 
-export function FeedClient({ initialPosts, stories, profile, currentUserId, friendIds, manyFriends }: FeedClientProps) {
+export function FeedClient({ initialPosts, stories, profile, currentUserId, friendIds, manyFriends, reelSpotlights }: FeedClientProps) {
   const [tab, setTab] = useState<"feed" | "reels">("feed");
   const [posts, setPosts] = useState<PostWithAuthor[]>(initialPosts);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialPosts.length === 20);
   const [activeComments, setActiveComments] = useState<string | null>(null);
   const pageRef = useRef(1);
+
+  // /feed?tab=reels opens straight on the reels viewer (spotlight cards link here)
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("tab") === "reels") setTab("reels");
+  }, []);
 
   const buildFilter = useCallback(() =>
     manyFriends
@@ -149,7 +156,7 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
         />
       )}
 
-      {posts.map((post) => (
+      {posts.map((post, i) => (
         <div key={post.id}>
           <PostCard
             post={post}
@@ -163,8 +170,13 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
               <CommentSection postId={post.id} currentProfile={profile} />
             </div>
           )}
+          {i === Math.min(2, posts.length - 1) && (
+            <ReelSpotlight spotlights={reelSpotlights} onOpen={() => { setTab("reels"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+          )}
         </div>
       ))}
+
+      {posts.length === 0 && <ReelSpotlight spotlights={reelSpotlights} onOpen={() => setTab("reels")} />}
 
       {loading && (
         <div className="space-y-4">
@@ -180,6 +192,50 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
       )}
         </>
       )}
+    </div>
+  );
+}
+
+function ReelSpotlight({ spotlights, onOpen }: { spotlights: PoolReel[]; onOpen: () => void }) {
+  if (!spotlights || spotlights.length === 0) return null;
+  return (
+    <div className="card p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-semibold text-sm flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+          <Clapperboard className="w-4 h-4" style={{ color: "rgb(var(--a-800))" }} /> Reels trending right now
+        </p>
+        <button onClick={onOpen} className="text-xs font-bold px-3 py-1.5 rounded-full text-white"
+          style={{ backgroundColor: "rgb(var(--a-800))" }}>
+          Watch all
+        </button>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-1 snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {spotlights.slice(0, 8).map((s) => (
+          <button key={`${s.platform}-${s.external_id}`} onClick={onOpen}
+            className="min-w-[132px] max-w-[132px] snap-start text-left group">
+            <div className="relative h-44 rounded-xl overflow-hidden bg-black">
+              {s.platform === "youtube" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={`https://img.youtube.com/vi/${s.external_id}/hqdefault.jpg`} alt={s.caption}
+                  loading="lazy" className="h-full w-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-black via-[#10151f] to-black">
+                  <Clapperboard className="w-8 h-8 text-white/40" />
+                </div>
+              )}
+              <span className="absolute inset-0 flex items-center justify-center">
+                <span className="w-10 h-10 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+                  <Play className="w-5 h-5 text-white fill-white" />
+                </span>
+              </span>
+              <span className="absolute bottom-1.5 left-1.5 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-black/60 text-white">
+                {s.platform === "tiktok" ? "TikTok" : "YouTube"}
+              </span>
+            </div>
+            <p className="text-xs mt-1.5 line-clamp-2" style={{ color: "var(--text-secondary)" }}>{s.caption}</p>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

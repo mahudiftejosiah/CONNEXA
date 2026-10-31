@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Shield, Bell, User, Trash2, LogOut, Eye, Palette,
-  FileText, Users, BookOpen, Info, ChevronRight,
+  FileText, Users, BookOpen, Info, ChevronRight, Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -27,7 +27,7 @@ interface SettingsClientProps {
   globalTheme: string;
 }
 
-type Section = "account" | "notifications" | "privacy" | "appearance" | "blocked" | "terms" | "rules" | "privacy_policy" | "about" | "danger";
+type Section = "account" | "notifications" | "privacy" | "appearance" | "blocked" | "terms" | "rules" | "privacy_policy" | "about" | "credits" | "danger";
 
 const THEME_OPTIONS: { key: ColorTheme | "follow_site"; label: string; a: string; b: string }[] = [
   { key: "follow_site",   label: "Site default",  a: "var(--a-800)", b: "var(--b-400)" },
@@ -87,6 +87,7 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
     { key: "rules",          label: "Community Rules",  icon: <Users className="w-4 h-4" />,        contentKey: "rules" },
     { key: "privacy_policy", label: "Privacy Policy",   icon: <BookOpen className="w-4 h-4" />,     contentKey: "privacy" },
     { key: "about",          label: "About CONNEXA",    icon: <Info className="w-4 h-4" />,         contentKey: "about" },
+    { key: "credits",        label: "Credits",          icon: <Heart className="w-4 h-4" />,        contentKey: "credits" },
   ];
 
   async function handleSavePrefs(extra?: Record<string, string>) {
@@ -304,6 +305,7 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
           {section === "rules"          && renderContent("rules", "Community Rules")}
           {section === "privacy_policy" && renderContent("privacy", "Privacy Policy")}
           {section === "about"          && renderContent("about", "About CONNEXA")}
+          {section === "credits"        && renderContent("credits", "Credits")}
 
           {section === "danger" && (
             <div className="card p-6 space-y-4 border border-red-200 dark:border-red-800">

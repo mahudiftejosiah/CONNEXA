@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Heart, UserPlus, MessageCircle, Users, UserCheck } from "lucide-react";
+import { Bell, Heart, UserPlus, MessageCircle, Users, UserCheck, Swords } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatRelativeTime, cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ const icons: Record<string, React.ReactNode> = {
   comment_reply:   <MessageCircle className="w-4 h-4 text-purple-500" />,
   new_message:     <MessageCircle className="w-4 h-4 text-indigo-500" />,
   group_invite:    <Users className="w-4 h-4 text-orange-500" />,
+  game_request:    <Swords className="w-4 h-4 text-brand-green-800 dark:text-brand-gold-400" />,
 };
 
 function getNotificationLink(n: NotificationWithActor): string {
@@ -31,6 +32,7 @@ function getNotificationLink(n: NotificationWithActor): string {
     case "post_comment":    return n.entity_id ? `/feed#${n.entity_id}` : "/feed";
     case "new_message":     return "/messages";
     case "group_invite":    return n.entity_id ? `/groups/${n.entity_id}` : "/groups";
+    case "game_request":    return n.entity_id ? `/games/live/${n.entity_id}` : "/games";
     default:                return "/feed";
   }
 }

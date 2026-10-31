@@ -1,28 +1,42 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageCircle, Search, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
+import { VerifiedTick } from "@/components/ui/VerifiedTick";
 import { createClient } from "@/lib/supabase/client";
 import type { ConversationWithDetails, Profile, Message } from "@/lib/supabase/types";
 import { formatMessageTime, formatRelativeTime } from "@/lib/utils";
 import toast from "react-hot-toast";
 
+type FriendLite = Pick<Profile, "id" | "username" | "display_name" | "avatar_url" | "is_verified"> & { last_seen?: string | null };
+
+const ONLINE_WINDOW_MS = 5 * 60_000;
+function isOnline(lastSeen?: string | null) {
+  return !!lastSeen && Date.now() - new Date(lastSeen).getTime() < ONLINE_WINDOW_MS;
+}
+
 interface MessagesClientProps {
   conversations: ConversationWithDetails[];
   profile: Profile;
   currentUserId: string;
+  friends: FriendLite[];
+  openPeerId: string | null;
 }
 
-export function MessagesClient({ conversations: initConvs, profile: _profile, currentUserId }: MessagesClientProps) {
+export function MessagesClient({ conversations: initConvs, profile: _profile, currentUserId, friends, openPeerId }: MessagesClientProps) {
   const [conversations, setConversations] = useState(initConvs);
   const [active, setActive] = useState<ConversationWithDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [tab, setTab] = useState<"all" | "active" | "offline">("all");
+  const [search, setSearch] = useState("");
+  const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
@@ -86,6 +100,55 @@ export function MessagesClient({ conversations: initConvs, profile: _profile, cu
     return conv.participants.find((p) => p.user_id !== currentUserId)?.profile;
   }
 
+  // Threads first, then friends we have never messaged (clicking one opens / creates the thread).
+  const chattedIds = new Set(
+    conversations.map((c) => getOtherParticipant(c)?.id).filter((id): id is string => Boolean(id))
+  );
+  type Row =
+    | { kind: "thread"; key: string; conv: ConversationWithDetails; person: Profile }
+    | { kind: "friend"; key: string; friend: FriendLite };
+
+  const threadRows: Row[] = conversations
+    .map((conv) => {
+      const person = getOtherParticipant(conv);
+      return person ? ({ kind: "thread", key: conv.id, conv, person } as Row) : null;
+    })
+    .filter((r): r is Row => r !== null);
+
+  const friendRows: Row[] = friends
+    .filter((f) => !chattedIds.has(f.id) && f.id !== currentUserId)
+    .sort((a, b) => Number(isOnline(b.last_seen)) - Number(isOnline(a.last_seen)) || a.display_name.localeCompare(b.display_name))
+    .map((f) => ({ kind: "friend", key: f.id, friend: f } as Row));
+
+  const allRows: Row[] = [...threadRows, ...friendRows];
+  const matchesSearch = (r: Row) => {
+    if (!search.trim()) return true;
+    const p = r.kind === "thread" ? r.person : r.friend;
+    return `${p.display_name} @${p.username}`.toLowerCase().includes(search.trim().toLowerCase());
+  };
+  const counts = {
+    all: allRows.filter(matchesSearch).length,
+    active: allRows.filter((r) => matchesSearch(r) && isOnline(r.kind === "thread" ? r.person.last_seen : r.friend.last_seen)).length,
+    offline: 0,
+  };
+  counts.offline = counts.all - counts.active;
+
+  const rows = allRows.filter((r) => {
+    if (!matchesSearch(r)) return false;
+    const online = isOnline(r.kind === "thread" ? r.person.last_seen : r.friend.last_seen);
+    if (tab === "active" && !online) return false;
+    if (tab === "offline" && online) return false;
+    return true;
+  });
+
+  // /messages?with=<id> opens that thread straight away.
+  const autoOpened = useRef<string | null>(null);
+  useEffect(() => {
+    if (!openPeerId || active || autoOpened.current === openPeerId) return;
+    const conv = conversations.find((c) => getOtherParticipant(c)?.id === openPeerId);
+    if (conv) { autoOpened.current = openPeerId; void openConversation(conv); }
+  }, [openPeerId, conversations, active]);
+
   return (
     <div className="flex h-[calc(100vh-5rem)] -mx-4 -mt-6">
       {/* Conversation list */}
@@ -94,27 +157,66 @@ export function MessagesClient({ conversations: initConvs, profile: _profile, cu
           <h2 className="font-bold text-lg text-[var(--text-primary)]">Messages</h2>
           <div className="mt-2 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
-            <input type="search" placeholder="Search conversations…" className="input pl-9 text-sm" />
+            <input type="search" placeholder="Search conversations…" value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9 text-sm" />
+          </div>
+          <div className="flex gap-1 mt-3">
+            {([
+              { key: "all", label: "All", icon: <Users className="w-3.5 h-3.5" /> },
+              { key: "active", label: "Active", icon: <Zap className="w-3.5 h-3.5" /> },
+              { key: "offline", label: "Offline", icon: <Moon className="w-3.5 h-3.5" /> },
+            ] as const).map((t) => (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${tab === t.key ? "bg-brand-green-800 text-white border-brand-green-800" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}
+                style={tab === t.key ? undefined : { backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+                {t.icon} {t.label}
+                <span className="opacity-70">{counts[t.key]}</span>
+              </button>
+            ))}
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {conversations.length === 0 ? (
-            <EmptyState icon={<MessageCircle className="w-8 h-8" />} title="No messages" description="Start a conversation from someone's profile." />
+          {rows.length === 0 ? (
+            <EmptyState icon={<MessageCircle className="w-8 h-8" />} title="No messages"
+              description={tab === "active" ? "No one is online right now." : tab === "offline" ? "No offline friends yet." : "Start a conversation from someone's profile."} />
           ) : (
-            conversations.map((conv) => {
-              const other = getOtherParticipant(conv);
-              if (!other) return null;
+            rows.map((row) => {
+              if (row.kind === "friend") {
+                const f = row.friend;
+                const online = isOnline(f.last_seen);
+                return (
+                  <button key={row.key} onClick={() => router.push(`/messages?with=${f.id}`)}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--border)] transition-colors text-left">
+                    <Avatar src={f.avatar_url} name={f.display_name} size={48} online={online} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate text-[var(--text-primary)] flex items-center gap-1.5">
+                        {f.display_name}{f.is_verified && <VerifiedTick size={14} />}
+                      </p>
+                      <p className="text-xs truncate" style={{ color: online ? "#22c55e" : "var(--text-secondary)" }}>
+                        {online ? "Online now" : f.last_seen ? `Active ${formatRelativeTime(f.last_seen)}` : "Not active yet"}
+                      </p>
+                    </div>
+                    <MessageCircle className="w-4 h-4 text-[var(--text-secondary)] flex-shrink-0" />
+                  </button>
+                );
+              }
+
+              const conv = row.conv;
+              const other = row.person;
+              const online = isOnline(other.last_seen);
               return (
                 <button
-                  key={conv.id}
+                  key={row.key}
                   onClick={() => openConversation(conv)}
                   className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--border)] transition-colors text-left ${active?.id === conv.id ? "bg-brand-green-800/5 dark:bg-brand-gold-400/5" : ""}`}
                 >
-                  <Avatar src={other.avatar_url} name={other.display_name} size={48} />
+                  <Avatar src={other.avatar_url} name={other.display_name} size={48} online={online} />
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
-                      <p className="font-semibold text-sm truncate text-[var(--text-primary)]">{other.display_name}</p>
+                      <p className="font-semibold text-sm truncate text-[var(--text-primary)] flex items-center gap-1.5">
+                        {other.display_name}
+                        {(other as Profile).is_verified && <VerifiedTick size={14} />}
+                      </p>
                       {conv.last_message && (
                         <span className="text-xs text-[var(--text-secondary)] flex-shrink-0 ml-2">
                           {formatRelativeTime(conv.last_message.created_at)}
@@ -152,10 +254,12 @@ export function MessagesClient({ conversations: initConvs, profile: _profile, cu
                 const other = getOtherParticipant(active);
                 return other ? (
                   <>
-                    <Avatar src={other.avatar_url} name={other.display_name} size={40} />
+                    <Avatar src={other.avatar_url} name={other.display_name} size={40} online={isOnline(other.last_seen)} />
                     <div>
                       <p className="font-semibold text-[var(--text-primary)]">{other.display_name}</p>
-                      <p className="text-xs text-[var(--text-secondary)]">@{other.username}</p>
+                      <p className="text-xs" style={{ color: isOnline(other.last_seen) ? "#22c55e" : "var(--text-secondary)" }}>
+                        {isOnline(other.last_seen) ? "Online now" : other.last_seen ? `Active ${formatRelativeTime(other.last_seen)}` : `@${other.username}`}
+                      </p>
                     </div>
                   </>
                 ) : null;

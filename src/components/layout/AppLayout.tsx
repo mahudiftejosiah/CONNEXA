@@ -2,6 +2,7 @@ import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { UnreadProvider } from "./UnreadProvider";
+import { PresenceHeartbeat } from "./PresenceHeartbeat";
 import { getUnreadCounts } from "@/lib/unread-counts";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/supabase/types";
@@ -28,6 +29,7 @@ export async function AppLayout({ children, rightSidebar }: AppLayoutProps) {
 
     return (
       <UnreadProvider userId={user.id} initial={counts}>
+        <PresenceHeartbeat userId={user.id} />
         <Shell signedIn profile={profile} isAdmin={isAdmin} rightSidebar={rightSidebar}>
           {children}
         </Shell>

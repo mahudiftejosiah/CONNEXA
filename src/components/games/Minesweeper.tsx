@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { GameBtn, Stat, useBest } from "./shared";
+import { useRef, useState } from "react";
+import { GameBtn, Stat, readSaved, useBest, useGameSave } from "./shared";
 
 const SIZE = 9;
 const MINES = 10;
 
 type Sq = { mine: boolean; open: boolean; flag: boolean; adj: number };
+type Saved = { board: Sq[][] };
 
 function makeBoard(safeR: number, safeC: number): Sq[][] {
   const b: Sq[][] = Array.from({ length: SIZE }, () =>
@@ -56,37 +57,55 @@ function floodOpen(b: Sq[][], r: number, c: number) {
 const NUM_COLORS = ["", "#2563eb", "#16a34a", "#dc2626", "#7c3aed", "#b45309", "#0891b2", "#111827", "#6b7280"];
 
 export default function Minesweeper() {
-  const [board, setBoard] = useState<Sq[][] | null>(null);
+  const resumeRef = useRef<Saved | null>(readSaved<Saved>("mines"));
+  const [board, setBoard] = useState<Sq[][] | null>(resumeRef.current?.board ?? null);
   const [lost, setLost] = useState(false);
   const [won, setWon] = useState(false);
   const [flagMode, setFlagMode] = useState(false);
+  // A server copy is only applied while this device has not played yet.
+  const settled = useRef(Boolean(resumeRef.current));
+  const save = useGameSave<Saved>("mines", (snap) => {
+    if (settled.current) return;
+    settled.current = true;
+    setBoard(snap.board);
+  });
 
   const cleared = board ? board.flat().filter((s) => s.open && !s.mine).length : 0;
   const best = useBest("mines", won ? cleared : 0);
 
   function act(r: number, c: number, flag: boolean) {
     if (lost || won) return;
-    setBoard((cur) => {
-      const b = cur ? cur.map((row) => row.map((s) => ({ ...s }))) : makeBoard(r, c);
-      const sq = b[r][c];
-      if (flag) {
-        if (!sq.open) sq.flag = !sq.flag;
-        return b;
-      }
-      if (sq.flag || sq.open) return b;
-      if (sq.mine) {
-        b.forEach((row) => row.forEach((s) => { if (s.mine) s.open = true; }));
-        setLost(true);
-        return b;
-      }
-      floodOpen(b, r, c);
-      const safeOpen = b.flat().filter((s) => !s.mine && s.open).length;
-      if (safeOpen === SIZE * SIZE - MINES) setWon(true);
-      return b;
-    });
+    settled.current = true;
+    const b = board ? board.map((row) => row.map((s) => ({ ...s }))) : makeBoard(r, c);
+    const sq = b[r][c];
+    if (flag) {
+      if (!sq.open) sq.flag = !sq.flag;
+      setBoard(b);
+      save({ board: b });
+      return;
+    }
+    if (sq.flag || sq.open) return;
+    if (sq.mine) {
+      b.forEach((row) => row.forEach((s) => { if (s.mine) s.open = true; }));
+      setBoard(b);
+      setLost(true);
+      save(null);
+      return;
+    }
+    floodOpen(b, r, c);
+    setBoard(b);
+    const safeOpen = b.flat().filter((s) => !s.mine && s.open).length;
+    if (safeOpen === SIZE * SIZE - MINES) {
+      setWon(true);
+      save(null);
+    } else {
+      save({ board: b });
+    }
   }
 
   function reset() {
+    settled.current = true;
+    save(null);
     setBoard(null);
     setLost(false);
     setWon(false);

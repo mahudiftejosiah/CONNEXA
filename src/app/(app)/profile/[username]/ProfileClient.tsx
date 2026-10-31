@@ -18,6 +18,8 @@ import {
   removeFriend, toggleFollow, toggleBlock,
 } from "@/lib/actions/friends";
 import { formatJoinDate } from "@/lib/utils";
+import { VerifiedTick } from "@/components/ui/VerifiedTick";
+import { UpgradePanel, type UpgradeStatus } from "@/components/profile/UpgradePanel";
 import type { Profile, PostWithAuthor } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 
@@ -34,6 +36,9 @@ interface ProfileClientProps {
   followingCount: number;
   friendsCount: number;
   initialPosts: PostWithAuthor[];
+  upgradeConfigText: string;
+  upgradeStatus: UpgradeStatus;
+  upgradeReference: string | null;
 }
 
 export function ProfileClient({
@@ -41,6 +46,7 @@ export function ProfileClient({
   isFriend: initFriend, isFollowing: initFollowing, isBlocked: initBlocked,
   friendRequestStatus: initReqStatus, friendRequestId: initReqId,
   followersCount, followingCount, friendsCount, initialPosts,
+  upgradeConfigText, upgradeStatus, upgradeReference,
 }: ProfileClientProps) {
   const [isFriend, setIsFriend] = useState(initFriend);
   const [isFollowing, setIsFollowing] = useState(initFollowing);
@@ -50,7 +56,7 @@ export function ProfileClient({
   const [loading, setLoading] = useState(false);
   const [confirmUnfriend, setConfirmUnfriend] = useState(false);
   const [confirmBlock, setConfirmBlock] = useState(false);
-  const [activeTab, setActiveTab] = useState<"posts" | "about">("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "about" | "upgrade">("posts");
 
   async function handleFriendAction() {
     setLoading(true);
@@ -196,8 +202,9 @@ export function ProfileClient({
 
           {/* Name + info */}
           <div className="mt-4">
-            <h1 className="text-xl font-extrabold" style={{ color: "var(--text-primary)" }}>
+            <h1 className="text-xl font-extrabold flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
               {profile.display_name}
+              {profile.is_verified && <VerifiedTick size={18} />}
             </h1>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>@{profile.username}</p>
             {profile.bio && (
@@ -264,18 +271,22 @@ export function ProfileClient({
 
         {/* Tabs */}
         <div className="flex" style={{ borderTop: "1px solid var(--border)" }}>
-          {(["posts", "about"] as const).map((tab) => (
+          {([
+            { id: "posts", label: "Posts" },
+            { id: "about", label: "About" },
+            ...(isOwn ? [{ id: "upgrade", label: "Upgrade account" }] : []),
+          ] as { id: "posts" | "about" | "upgrade"; label: string }[]).map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-3 text-sm font-semibold capitalize transition-colors ${
-                activeTab === tab ? "border-b-2 border-[rgb(var(--a-800))]" : ""
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+                activeTab === tab.id ? "border-b-2 border-[rgb(var(--a-800))]" : ""
               }`}
               style={{
-                color: activeTab === tab ? "rgb(var(--a-800))" : "var(--text-secondary)",
+                color: activeTab === tab.id ? "rgb(var(--a-800))" : "var(--text-secondary)",
               }}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -336,6 +347,17 @@ export function ProfileClient({
             </div>
           )}
         </div>
+      )}
+
+      {/* Upgrade account tab (own profile only) */}
+      {activeTab === "upgrade" && isOwn && (
+        <UpgradePanel
+          userId={profile.id}
+          verified={profile.is_verified}
+          initialStatus={upgradeStatus}
+          initialReference={upgradeReference}
+          configText={upgradeConfigText}
+        />
       )}
 
       <ConfirmDialog

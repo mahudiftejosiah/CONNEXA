@@ -194,6 +194,43 @@
   --border: #40301a;
 }
 
+/* Full-screen game frame (Games tab) */
+.game-frame:fullscreen {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+.game-frame:fullscreen > * + * { margin-top: 0; }
+.game-frame:fullscreen > .rounded-2xl { width: 100%; max-width: 64rem; }
+.game-frame:fullscreen canvas {
+  height: 72vh;
+  width: auto;
+  max-width: 92vw;
+}
+
+/* Full-screen 3D "Trending games" player (Games tab) */
+.trend-shell {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+  height: 80vh;
+}
+.trend-shell:fullscreen {
+  border-radius: 0;
+  border: 0;
+  height: 100vh;
+  width: 100vw;
+  background: #000;
+}
+.trend-shell > div { height: 100%; }
+
 @layer components {
   .card {
     background-color: var(--bg-card);

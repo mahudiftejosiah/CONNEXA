@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Gamepad2, Bug, Car, Dices, Grid3x3, Zap, Brain, Target, Bomb, Feather, Circle, SquareStack } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, Gamepad2, Bug, Car, Dices, Grid3x3, Zap, Brain, Target, Bomb, Feather, Circle, SquareStack, Maximize2, Minimize2 } from "lucide-react";
 import Snake from "@/components/games/Snake";
 import Racing from "@/components/games/Racing";
 import Pong from "@/components/games/Pong";
@@ -13,8 +13,12 @@ import WhackAMole from "@/components/games/WhackAMole";
 import SimonSays from "@/components/games/SimonSays";
 import Minesweeper from "@/components/games/Minesweeper";
 import Flappy from "@/components/games/Flappy";
-import { ExternalLink } from "lucide-react";
-import type { ExternalGame } from "@/lib/supabase/types";
+import { ExternalLink, Box, Play, Trophy, CircleDollarSign, Swords } from "lucide-react";
+import type { ExternalGame, SiteShortcut } from "@/lib/supabase/types";
+import { TRENDING_3D, trendingCover, type TrendingGame } from "@/lib/trending-games";
+import { GameUserContext } from "@/components/games/GameUserContext";
+import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
+import { LiveGamePicker } from "@/components/games/live/LiveGamePicker";
 
 const GAMES: { id: string; name: string; desc: string; icon: React.ReactNode; color: string; play: React.ReactNode }[] = [
   { id: "snake",      name: "Snake",         desc: "Eat, grow, don't bite yourself.",   icon: <Bug className="w-7 h-7" />,            color: "#22c55e", play: <Snake /> },
@@ -30,19 +34,73 @@ const GAMES: { id: string; name: string; desc: string; icon: React.ReactNode; co
   { id: "mines",      name: "Minesweeper",   desc: "Clear the field, avoid bombs.",     icon: <Bomb className="w-7 h-7" />,           color: "#64748b", play: <Minesweeper /> },
 ];
 
-export default function GamesClient({ externalGames = [] }: { externalGames?: ExternalGame[] }) {
+export default function GamesClient({
+  externalGames = [],
+  currentUserId = null,
+  sportsSites = [],
+  bettingSites = [],
+  friends = [],
+  myScores = [],
+}: {
+  externalGames?: ExternalGame[];
+  currentUserId?: string | null;
+  sportsSites?: SiteShortcut[];
+  bettingSites?: SiteShortcut[];
+  friends?: { id: string; username: string; display_name: string; avatar_url: string | null; last_seen?: string | null }[];
+  myScores?: { game_id: string; best: number; points: number }[];
+}) {
   const [active, setActive] = useState<string | null>(null);
+  const [trend, setTrend] = useState<TrendingGame | null>(null);
+  const [isFs, setIsFs] = useState(false);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const trendRef = useRef<HTMLDivElement>(null);
   const game = GAMES.find((g) => g.id === active);
+
+  const bestBy = new Map(myScores.map((s) => [s.game_id, s.best]));
+  const careerPoints = myScores.reduce((n, s) => n + (s.points || s.best || 0), 0);
+
+  useEffect(() => {
+    const onChange = () => setIsFs(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  function toggleFullscreen(el?: HTMLElement | null) {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else (el ?? frameRef.current)?.requestFullscreen().catch(() => {});
+  }
+
+  // Fullscreen must be requested synchronously inside the click gesture, so we
+  // target the always-mounted trend container then reveal the iframe inside it.
+  function openTrend(g: TrendingGame) {
+    setActive(null);
+    setTrend(g);
+    trendRef.current?.requestFullscreen?.().catch(() => {});
+  }
+  function closeTrend() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    setTrend(null);
+  }
 
   if (game) {
     return (
-      <div className="space-y-4">
-        <button
-          onClick={() => setActive(null)}
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-        >
-          <ArrowLeft className="w-4 h-4" /> All games
-        </button>
+      <div ref={frameRef} className="game-frame space-y-4">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setActive(null)}
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          >
+            <ArrowLeft className="w-4 h-4" /> All games
+          </button>
+          <button
+            onClick={() => toggleFullscreen()}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border"
+            style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+          >
+            {isFs ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {isFs ? "Exit full screen" : "Full screen"}
+          </button>
+        </div>
         <div
           className="rounded-2xl border p-4 sm:p-6"
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
@@ -51,7 +109,7 @@ export default function GamesClient({ externalGames = [] }: { externalGames?: Ex
             {game.name}
           </h2>
           <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>{game.desc}</p>
-          {game.play}
+          <GameUserContext.Provider value={currentUserId}>{game.play}</GameUserContext.Provider>
         </div>
       </div>
     );
@@ -59,13 +117,79 @@ export default function GamesClient({ externalGames = [] }: { externalGames?: Ex
 
   return (
     <div className="space-y-4">
+      <div ref={trendRef} className={trend ? "trend-shell" : ""}>
+        {trend && (
+          <div className="flex flex-col h-full">
+            <div className="flex items-center justify-between gap-2 p-2 sm:p-3" style={{ backgroundColor: "#0b1512" }}>
+              <div className="min-w-0">
+                <p className="font-bold text-white truncate">{trend.name}</p>
+                <p className="text-xs text-white/60 truncate">{trend.desc}</p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => toggleFullscreen(trendRef.current)}
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border border-white/15 text-white hover:bg-white/10"
+                >
+                  {isFs ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  {isFs ? "Exit full screen" : "Full screen"}
+                </button>
+                <button
+                  onClick={closeTrend}
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border border-white/15 text-white hover:bg-white/10"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Close
+                </button>
+              </div>
+            </div>
+            <iframe
+              src={trend.url}
+              title={trend.name}
+              className="w-full flex-1 min-h-[60vh] border-0 bg-black"
+              allow="autoplay; fullscreen; gamepad; keyboard-map; xr-spatial-tracking; clipboard-write"
+              allowFullScreen
+            />
+          </div>
+        )}
+      </div>
+
+      {!trend && (
+        <>
       <div className="flex items-center gap-2">
         <Gamepad2 className="w-6 h-6" style={{ color: "rgb(var(--a-800))" }} />
         <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Games &amp; Fun</h1>
       </div>
       <p className="text-sm -mt-2" style={{ color: "var(--text-secondary)" }}>
-        Quick 2D arcade games, playable on any device. Your best scores are saved on this device.
+        Play instantly — nothing to download. Challenge a friend to a real board game, open a 3D hit in full screen, or grab a quick arcade round.
       </p>
+      <div className="flex items-center gap-2 pt-2">
+        <Swords className="w-5 h-5" style={{ color: "rgb(var(--a-800))" }} />
+        <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Live games</h2>
+        <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
+          style={{ backgroundColor: "rgb(var(--a-800) / 0.1)", color: "rgb(var(--a-800))" }}>
+          Versus friends
+        </span>
+      </div>
+      {currentUserId ? (
+        <LiveGamePicker currentUserId={currentUserId} friends={friends} />
+      ) : (
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Sign in to challenge a friend to Whot, Chess or Ludo.</p>
+      )}
+
+      <div className="flex items-center gap-2 pt-2 flex-wrap">
+        <Gamepad2 className="w-5 h-5" style={{ color: "rgb(var(--a-800))" }} />
+        <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>2D arcade</h2>
+        <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+          {currentUserId ? "Scores save to your account — 2048 and Minesweeper resume where you stopped" : "Best scores save on this device"}
+        </span>
+        {currentUserId && careerPoints > 0 && (
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: "rgb(var(--a-800) / 0.1)", color: "rgb(var(--a-800))" }}
+          >
+            {careerPoints.toLocaleString()} points
+          </span>
+        )}
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {GAMES.map((g) => (
           <button
@@ -80,7 +204,14 @@ export default function GamesClient({ externalGames = [] }: { externalGames?: Ex
             >
               {g.icon}
             </div>
-            <p className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>{g.name}</p>
+            <p className="font-bold text-sm flex items-center gap-1.5 flex-wrap" style={{ color: "var(--text-primary)" }}>
+              {g.name}
+              {bestBy.get(g.id) ? (
+                <span className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "rgb(var(--b-500) / 0.15)", color: "rgb(var(--b-500))" }}>
+                  {bestBy.get(g.id)} pts
+                </span>
+              ) : null}
+            </p>
             <p className="text-xs mt-0.5 line-clamp-2" style={{ color: "var(--text-secondary)" }}>{g.desc}</p>
           </button>
         ))}
@@ -120,6 +251,74 @@ export default function GamesClient({ externalGames = [] }: { externalGames?: Ex
               </a>
             ))}
           </div>
+        </>
+      )}
+
+      {TRENDING_3D.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 pt-2">
+            <Box className="w-5 h-5" style={{ color: "rgb(var(--a-800))" }} />
+            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Trending games</h2>
+            <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: "rgb(var(--a-800) / 0.1)", color: "rgb(var(--a-800))" }}>
+              Real 3D · Full screen
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {TRENDING_3D.map((g) => (
+              <button
+                key={g.id}
+                onClick={() => openTrend(g)}
+                className="relative rounded-2xl border overflow-hidden text-left transition-transform hover:scale-[1.02] active:scale-[0.98] group"
+                style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+              >
+                <div className="w-full h-28 flex items-center justify-center relative"
+                  style={{ background: `linear-gradient(135deg,${trendingCover(g.id).from},${trendingCover(g.id).to})` }}>
+                  <span className="text-3xl font-extrabold text-white/90">{g.name.charAt(0)}</span>
+                  <Box className="w-7 h-7 text-white/45 absolute bottom-2 right-2" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/45 transition-colors">
+                  <span className="w-11 h-11 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play className="w-5 h-5 text-black ml-0.5" fill="currentColor" />
+                  </span>
+                </div>
+                <div className="p-3">
+                  <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{g.name}</p>
+                  <p className="text-xs mt-0.5 line-clamp-2" style={{ color: "var(--text-secondary)" }}>{g.desc}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {sportsSites.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 pt-2">
+            <Trophy className="w-5 h-5" style={{ color: "rgb(var(--a-800))" }} />
+            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Sports &amp; browse</h2>
+            <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: "rgb(var(--a-800) / 0.1)", color: "rgb(var(--a-800))" }}>
+              Live scores
+            </span>
+          </div>
+          <SiteIconGrid items={sportsSites} />
+        </>
+      )}
+
+      {bettingSites.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 pt-2">
+            <CircleDollarSign className="w-5 h-5" style={{ color: "rgb(var(--a-800))" }} />
+            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Betting</h2>
+            <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: "rgb(var(--a-800) / 0.1)", color: "rgb(var(--a-800))" }}>
+              18+ only
+            </span>
+          </div>
+          <SiteIconGrid items={bettingSites} />
+        </>
+      )}
         </>
       )}
     </div>

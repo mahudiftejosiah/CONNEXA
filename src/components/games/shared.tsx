@@ -1,19 +1,110 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useGameUserId } from "./GameUserContext";
+
+const savedKey = (gameId: string) => `connexa_saved_${gameId}`;
+
+/** Synchronous read so a game can mount straight into its last position. */
+export function readSaved<T>(gameId: string): T | null {
+  try {
+    const raw = localStorage.getItem(savedKey(gameId));
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Saves an in-progress game (throttled to Supabase, immediate to localStorage) so
+ * the same session resumes after the next login, even on another device. Pass
+ * `null` to clear it — typically when the run ends or the player restarts.
+ */
+export function useGameSave<T>(gameId: string, onRemote?: (snap: T) => void) {
+  const userId = useGameUserId();
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const remote = useRef(onRemote);
+  remote.current = onRemote;
+
+  useEffect(() => {
+    if (!userId) return;
+    supabaseRef.current = supabaseRef.current || createClient();
+    supabaseRef.current
+      .from("game_scores")
+      .select("state")
+      .eq("user_id", userId)
+      .eq("game_id", gameId)
+      .maybeSingle()
+      .then(({ data }) => {
+        const snap = data?.state;
+        if (snap) remote.current?.(snap as T);
+      });
+  }, [userId, gameId]);
+
+  return useCallback((snap: T | null) => {
+    try {
+      if (snap === null) localStorage.removeItem(savedKey(gameId));
+      else localStorage.setItem(savedKey(gameId), JSON.stringify(snap));
+    } catch {}
+    if (!userId) return;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      supabaseRef.current = supabaseRef.current || createClient();
+      if (snap === null) {
+        void supabaseRef.current.from("game_scores").update({ state: null }).eq("user_id", userId).eq("game_id", gameId);
+      } else {
+        void supabaseRef.current.from("game_scores").upsert(
+          { user_id: userId, game_id: gameId, state: snap } as any,
+          { onConflict: "user_id,game_id" }
+        );
+      }
+    }, 500);
+  }, [gameId, userId]);
+}
 
 export function useBest(key: string, score: number) {
+  const userId = useGameUserId();
   const storageKey = `connexa_best_${key}`;
   const [best, setBest] = useState(0);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const loadedRef = useRef(false);
+
+  // Local best (works offline / for signed-out visitors).
   useEffect(() => {
-    setBest(Number(localStorage.getItem(storageKey) || 0));
+    try { setBest(Number(localStorage.getItem(storageKey) || 0)); } catch {}
   }, [storageKey]);
+
+  // Load the server best once, so a signed-in user resumes across devices.
+  useEffect(() => {
+    if (!userId || loadedRef.current) return;
+    loadedRef.current = true;
+    supabaseRef.current = supabaseRef.current || createClient();
+    supabaseRef.current
+      .from("game_scores")
+      .select("best")
+      .eq("user_id", userId)
+      .eq("game_id", key)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && typeof data.best === "number") setBest((b) => Math.max(b, data.best));
+      });
+  }, [userId, key]);
+
   useEffect(() => {
     if (score > best) {
       setBest(score);
       try { localStorage.setItem(storageKey, String(score)); } catch {}
+      if (userId) {
+        supabaseRef.current = supabaseRef.current || createClient();
+        supabaseRef.current.from("game_scores").upsert(
+          { user_id: userId, game_id: key, best: score, points: score },
+          { onConflict: "user_id,game_id" }
+        );
+      }
     }
-  }, [score, best, storageKey]);
+  }, [score, best, storageKey, userId, key]);
   return best;
 }
 

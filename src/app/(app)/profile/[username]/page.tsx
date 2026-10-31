@@ -73,6 +73,25 @@ export default async function ProfilePage({ params }: Props) {
       ? await baseQuery.or("visibility.eq.public,visibility.eq.friends")
       : await baseQuery.eq("visibility", "public");
 
+  // Upgrade / verification info (own profile)
+  const [{ data: upgradeContent }, ownUpgrade] = await Promise.all([
+    supabase.from("site_content").select("body").eq("key", "upgrade").single(),
+    isOwn && user
+      ? supabase.from("account_upgrades")
+          .select("status, reference")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null as { status: "pending" | "approved" | "rejected"; reference: string } | null }),
+  ]);
+  const upgradeConfigText =
+    upgradeContent?.body ||
+    "PRICE: 0\nPAY TO ACCOUNT NAME: CONNEXA\nPAY TO ACCOUNT NUMBER: —\nINSTRUCTIONS: Verification is currently unavailable.";
+  const upgradeStatus: "none" | "pending" | "approved" | "rejected" =
+    ownUpgrade.data?.status ?? "none";
+  const upgradeReference = ownUpgrade.data?.reference ?? null;
+
   let enrichedPosts = posts || [];
   if (user && enrichedPosts.length > 0) {
     const postIds = enrichedPosts.map((p) => p.id);
@@ -106,6 +125,9 @@ export default async function ProfilePage({ params }: Props) {
         followingCount={followingCount.count ?? 0}
         friendsCount={friendsCount.count ?? 0}
         initialPosts={enrichedPosts as any}
+        upgradeConfigText={upgradeConfigText}
+        upgradeStatus={upgradeStatus}
+        upgradeReference={upgradeReference}
       />
     </AppLayout>
   );

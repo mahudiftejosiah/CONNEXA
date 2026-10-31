@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { GameBtn, Stat, useBest } from "./shared";
+import { GameBtn, Stat, readSaved, useBest, useGameSave } from "./shared";
 
 type Grid = number[][];
+type Saved = { grid: Grid; score: number };
 
 const SIZE = 4;
 const TILE_STYLE: Record<number, { bg: string; fg: string }> = {
@@ -66,24 +67,37 @@ function move(s: Grid, dir: "left" | "right" | "up" | "down"): { grid: Grid; gai
 }
 
 export default function Game2048() {
-  const [grid, setGrid] = useState<Grid>(() => add(add(empty())));
-  const [score, setScore] = useState(0);
+  const resumeRef = useRef<Saved | null>(readSaved<Saved>("2048"));
+  const [grid, setGrid] = useState<Grid>(() => resumeRef.current?.grid ?? add(add(empty())));
+  const [score, setScore] = useState(() => resumeRef.current?.score ?? 0);
   const best = useBest("2048", score);
   const [lost, setLost] = useState(false);
   const touch = useRef({ x: 0, y: 0 });
+  // Once this device has played (or restored) we stop applying the server copy,
+  // so a slower fetch can never overwrite a live board.
+  const settled = useRef(Boolean(resumeRef.current));
+  const save = useGameSave<Saved>("2048", (snap) => {
+    if (settled.current) return;
+    settled.current = true;
+    setGrid(snap.grid);
+    setScore(snap.score);
+  });
 
   const doMove = (dir: "left" | "right" | "up" | "down") => {
     if (lost) return;
-    setGrid((cur) => {
-      const res = move(cur, dir);
-      if (!res.moved) return cur;
-      setScore((v) => v + res.gained);
-      const next = add(res.grid);
-      const dead = (["left", "right", "up", "down"] as const).every((d) => !move(next, d).moved);
-      if (dead) setLost(true);
-      return next;
-    });
+    const res = move(grid, dir);
+    if (!res.moved) return;
+    const next = add(res.grid);
+    const nextScore = score + res.gained;
+    const dead = (["left", "right", "up", "down"] as const).every((d) => !move(next, d).moved);
+    setGrid(next);
+    setScore(nextScore);
+    setLost(dead);
+    save(dead ? null : { grid: next, score: nextScore });
   };
+
+  const moveRef = useRef(doMove);
+  moveRef.current = doMove;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -92,13 +106,15 @@ export default function Game2048() {
         a: "left", d: "right", w: "up", s: "down",
       };
       const dir = map[e.key];
-      if (dir) { e.preventDefault(); doMove(dir); }
+      if (dir) { e.preventDefault(); moveRef.current(dir); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [lost]);
+  }, []);
 
   function restart() {
+    settled.current = true;
+    save(null);
     setGrid(add(add(empty())));
     setScore(0);
     setLost(false);

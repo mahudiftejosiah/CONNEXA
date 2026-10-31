@@ -47,7 +47,7 @@ export default function Snake() {
   useEffect(() => {
     if (phase !== "run") return;
     let raf = 0;
-    let last = 0;
+    let last = performance.now();
     let acc = 0;
     const touch = { x: 0, y: 0, on: false };
 
@@ -56,7 +56,9 @@ export default function Snake() {
       s.dir = s.next;
       const head = { x: s.snake[0].x + VEC[s.dir].x, y: s.snake[0].y + VEC[s.dir].y };
       const hitWall = head.x < 0 || head.y < 0 || head.x >= N || head.y >= N;
-      const hitSelf = s.snake.some((p) => p.x === head.x && p.y === head.y);
+      const willEat = head.x === s.food.x && head.y === s.food.y;
+      // the tail cell vacates this step unless we are eating — moving into it is legal
+      const hitSelf = s.snake.some((p, i) => (willEat || i < s.snake.length - 1) && p.x === head.x && p.y === head.y);
       if (hitWall || hitSelf) {
         s.alive = false;
         setPhase("over");
@@ -91,7 +93,7 @@ export default function Snake() {
 
     const loop = (t: number) => {
       if (!st.current.alive) return;
-      acc += t - last;
+      acc += Math.min(100, t - last);
       last = t;
       const speed = Math.max(70, 140 - score * 3);
       while (acc >= speed) {

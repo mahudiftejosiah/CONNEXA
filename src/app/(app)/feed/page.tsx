@@ -5,6 +5,7 @@ import { attachSharedPosts } from "@/lib/shared-posts";
 import { attachFeedActivity } from "@/lib/feed-activity";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { FeedClient } from "./FeedClient";
+import { REEL_POOL, shuffleTake } from "@/lib/reel-pool";
 import type { PostWithAuthor } from "@/lib/supabase/types";
 import type { Metadata } from "next";
 
@@ -135,6 +136,7 @@ export default async function FeedPage() {
         currentUserId={user.id}
         friendIds={cappedFriendIds}
         manyFriends={manyFriends}
+        reelSpotlights={shuffleTake(REEL_POOL, 8)}
       />
     </AppLayout>
   );
