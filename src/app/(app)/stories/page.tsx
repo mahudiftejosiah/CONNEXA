@@ -15,10 +15,10 @@ export default async function StoriesPage() {
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
   if (!profile) redirect("/login");
 
-  // Get friend IDs
+  // Get friend IDs — cap the IN() list (long lists blow up request URLs)
   const { data: friendships } = await supabase.from("friendships").select("friend_id").eq("user_id", user.id);
   const friendIds = (friendships || []).map((f) => f.friend_id);
-  const allIds = [user.id, ...friendIds];
+  const allIds = [user.id, ...friendIds].slice(0, 100);
 
   // Active stories (not expired) from self + friends
   const { data: stories } = await supabase
@@ -26,7 +26,8 @@ export default async function StoriesPage() {
     .select("*, author:profiles(*)")
     .in("author_id", allIds)
     .gt("expires_at", new Date().toISOString())
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(40);
 
   // Which stories has current user viewed?
   const storyIds = (stories || []).map((s) => s.id);

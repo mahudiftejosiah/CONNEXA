@@ -22,14 +22,19 @@ export default async function FeedPage() {
   const { data: friendships } = await supabase
     .from("friendships").select("friend_id").eq("user_id", user.id);
   const friendIds = (friendships || []).map((f) => f.friend_id);
+  // Very long IN() lists blow up PostgREST URLs — cap them and let RLS
+  // (which already restricts friends-visibility posts) do the filtering.
+  const manyFriends = friendIds.length > 100;
+  const cappedFriendIds = friendIds.slice(0, 100);
 
   // Active stories from self + friends (shown as a tray under the composer)
   const { data: stories } = await supabase
     .from("stories")
     .select("*, author:profiles(*)")
-    .in("author_id", [user.id, ...friendIds])
+    .in("author_id", [user.id, ...cappedFriendIds])
     .gt("expires_at", new Date().toISOString())
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(40);
 
   const storyIds = (stories || []).map((s) => s.id);
   const { data: storyViews } = storyIds.length
@@ -41,9 +46,11 @@ export default async function FeedPage() {
     (stories || []).map((s) => ({ ...s, has_viewed: storyViewedSet.has(s.id) }))
   );
 
-  const feedFilter = friendIds.length > 0
-    ? `visibility.eq.public,and(visibility.eq.friends,author_id.in.(${[user.id, ...friendIds].join(",")})),author_id.eq.${user.id}`
-    : `visibility.eq.public,author_id.eq.${user.id}`;
+  const feedFilter = manyFriends
+    ? `visibility.eq.public,visibility.eq.friends,author_id.eq.${user.id}`
+    : friendIds.length > 0
+      ? `visibility.eq.public,and(visibility.eq.friends,author_id.in.(${[user.id, ...friendIds].join(",")})),author_id.eq.${user.id}`
+      : `visibility.eq.public,author_id.eq.${user.id}`;
 
   const { data: posts } = await supabase
     .from("posts")
@@ -76,18 +83,22 @@ export default async function FeedPage() {
     is_saved: savedSet.has(p.id),
   })))) as unknown as PostWithAuthor[]);
 
-  // Suggested users — only if there are other users to suggest
-  const excludeIds = [user.id, ...friendIds];
+  // Suggested users — with many friends, exclude in JS instead of a huge not.in()
   const suggestedQuery = supabase
     .from("profiles")
     .select("id, username, display_name, avatar_url, bio")
     .eq("profile_visibility", "public")
-    .neq("id", user.id)
-    .limit(5);
+    .neq("id", user.id);
 
-  const { data: suggestedUsers } = friendIds.length > 0
-    ? await suggestedQuery.not("id", "in", `(${excludeIds.join(",")})`)
-    : await suggestedQuery;
+  const suggestedRes = manyFriends
+    ? await suggestedQuery.limit(60)
+    : await (friendIds.length > 0
+        ? suggestedQuery.not("id", "in", `(${[user.id, ...friendIds].join(",")})`).limit(5)
+        : suggestedQuery.limit(5));
+  const friendSet = new Set(friendIds);
+  const suggestedUsers = manyFriends
+    ? (suggestedRes.data || []).filter((u) => !friendSet.has(u.id)).slice(0, 5)
+    : suggestedRes.data;
 
   const rightSidebar = suggestedUsers && suggestedUsers.length > 0 ? (
     <div className="space-y-4">
@@ -122,7 +133,8 @@ export default async function FeedPage() {
         stories={(feedStories as any) || []}
         profile={profile}
         currentUserId={user.id}
-        friendIds={friendIds}
+        friendIds={cappedFriendIds}
+        manyFriends={manyFriends}
       />
     </AppLayout>
   );

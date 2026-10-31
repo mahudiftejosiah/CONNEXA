@@ -338,7 +338,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      unread_message_count: {
+        Args: { p_user: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

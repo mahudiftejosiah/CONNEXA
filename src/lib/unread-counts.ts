@@ -16,22 +16,9 @@ export async function getUnreadCounts(): Promise<UnreadCounts> {
     .eq("user_id", user.id)
     .eq("is_read", false);
 
-  const cpRes = await supabase
-    .from("conversation_participants")
-    .select("conversation_id")
-    .eq("user_id", user.id);
-  const convIds = cpRes.data?.map((r) => r.conversation_id) ?? [];
+  // Single indexed SQL count — avoids shipping every conversation id
+  // through the API (a huge inbox would exceed request-URL limits).
+  const msgRes = await supabase.rpc("unread_message_count", { p_user: user.id });
 
-  let messages = 0;
-  if (convIds.length > 0) {
-    const msgRes = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .neq("sender_id", user.id)
-      .eq("is_read", false)
-      .in("conversation_id", convIds);
-    messages = msgRes.count ?? 0;
-  }
-
-  return { notifications: notifRes.count ?? 0, messages };
+  return { notifications: notifRes.count ?? 0, messages: Number(msgRes.data ?? 0) };
 }

@@ -21,9 +21,10 @@ interface FeedClientProps {
   profile: Profile;
   currentUserId: string;
   friendIds: string[];
+  manyFriends: boolean;
 }
 
-export function FeedClient({ initialPosts, stories, profile, currentUserId, friendIds }: FeedClientProps) {
+export function FeedClient({ initialPosts, stories, profile, currentUserId, friendIds, manyFriends }: FeedClientProps) {
   const [tab, setTab] = useState<"feed" | "reels">("feed");
   const [posts, setPosts] = useState<PostWithAuthor[]>(initialPosts);
   const [loading, setLoading] = useState(false);
@@ -32,10 +33,12 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
   const pageRef = useRef(1);
 
   const buildFilter = useCallback(() =>
-    friendIds.length > 0
-      ? `visibility.eq.public,and(visibility.eq.friends,author_id.in.(${[currentUserId, ...friendIds].join(",")})),author_id.eq.${currentUserId}`
-      : `visibility.eq.public,author_id.eq.${currentUserId}`,
-  [currentUserId, friendIds]);
+    manyFriends
+      ? `visibility.eq.public,visibility.eq.friends,author_id.eq.${currentUserId}`
+      : friendIds.length > 0
+        ? `visibility.eq.public,and(visibility.eq.friends,author_id.in.(${[currentUserId, ...friendIds].join(",")})),author_id.eq.${currentUserId}`
+        : `visibility.eq.public,author_id.eq.${currentUserId}`,
+  [currentUserId, friendIds, manyFriends]);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;

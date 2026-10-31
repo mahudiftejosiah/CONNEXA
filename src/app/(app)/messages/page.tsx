@@ -14,28 +14,46 @@ export default async function MessagesPage() {
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
   if (!profile) redirect("/login");
 
-  // Get conversations this user is in
+  // Inbox: fetch ids via participants (one filter, no huge IN list),
+  // sort by most recent message, render the 30 newest threads.
   const { data: participantRows } = await supabase
     .from("conversation_participants")
-    .select("conversation_id")
+    .select("conversation:conversations!inner(id, last_message_at, created_at)")
     .eq("user_id", user.id);
 
-  const convIds = (participantRows || []).map((r) => r.conversation_id);
+  type LightConv = { id: string; last_message_at: string | null; created_at: string };
+  const recentIds: LightConv[] = (participantRows || [])
+    .map((r) => {
+      const c = r.conversation as unknown as LightConv | LightConv[] | null;
+      return Array.isArray(c) ? c[0] : c;
+    })
+    .filter((c): c is LightConv => Boolean(c))
+    .sort(
+      (a, b) =>
+        new Date(b.last_message_at || b.created_at).getTime() -
+        new Date(a.last_message_at || a.created_at).getTime()
+    )
+    .slice(0, 30);
 
-  const { data: conversations } = convIds.length
+  const { data: conversations } = recentIds.length
     ? await supabase
         .from("conversations")
         .select(`
           *,
           participants:conversation_participants(*, profile:profiles(*))
         `)
-        .in("id", convIds)
-        .order("last_message_at", { ascending: false, nullsFirst: false })
+        .in("id", recentIds.map((c) => c.id))
     : { data: [] };
 
-  // Last message per conversation
+  const ordered = (conversations || []).sort(
+    (a, b) =>
+      new Date(b.last_message_at || b.created_at).getTime() -
+      new Date(a.last_message_at || a.created_at).getTime()
+  );
+
+  // Last message + unread count per thread (parallel, bounded to 30)
   const convWithMessages = await Promise.all(
-    (conversations || []).map(async (conv) => {
+    ordered.map(async (conv) => {
       const { data: lastMsg } = await supabase
         .from("messages")
         .select("*")
