@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { createClient } from "@/lib/supabase/client";
 import { signPostMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
+import { attachFeedActivity } from "@/lib/feed-activity";
 import type { PostWithAuthor, Profile, StoryWithAuthor } from "@/lib/supabase/types";
 import { Users } from "lucide-react";
 
@@ -59,11 +60,11 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
     const reactionMap = Object.fromEntries((reactionsRes.data || []).map((r) => [r.post_id, r.type]));
     const savedSet = new Set((savedRes.data || []).map((s) => s.post_id));
 
-    const enriched = await signPostMedia(supabase, await attachSharedPosts(supabase, data.map((p) => ({
+    const enriched = await attachFeedActivity(supabase, await signPostMedia(supabase, await attachSharedPosts(supabase, data.map((p) => ({
       ...p,
       user_reaction: reactionMap[p.id] || null,
       is_saved: savedSet.has(p.id),
-    })))) as unknown as PostWithAuthor[];
+    })))) as unknown as PostWithAuthor[]);
 
     setPosts((prev) => [...prev, ...enriched]);
     setHasMore(data.length === 20);
@@ -96,11 +97,11 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
       ]);
       const reactionMap = Object.fromEntries((reactionsRes.data || []).map((r) => [r.post_id, r.type]));
       const savedSet = new Set((savedRes.data || []).map((s) => s.post_id));
-      const enriched = await signPostMedia(supabase, await attachSharedPosts(supabase, data.map((p) => ({
+      const enriched = await attachFeedActivity(supabase, await signPostMedia(supabase, await attachSharedPosts(supabase, data.map((p) => ({
         ...p,
         user_reaction: reactionMap[p.id] || null,
         is_saved: savedSet.has(p.id),
-      })))) as unknown as PostWithAuthor[];
+      })))) as unknown as PostWithAuthor[]);
       pageRef.current = 1;
       setPosts(enriched);
       setHasMore(data.length === 20);
@@ -131,6 +132,7 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
           <PostCard
             post={post}
             currentUserId={currentUserId}
+            commentsExpanded={activeComments === post.id}
             onComment={toggleComments}
             onRefresh={refreshFeed}
           />

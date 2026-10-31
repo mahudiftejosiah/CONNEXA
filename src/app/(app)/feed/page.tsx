@@ -2,8 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signPostMedia, signStoryMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
+import { attachFeedActivity } from "@/lib/feed-activity";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { FeedClient } from "./FeedClient";
+import type { PostWithAuthor } from "@/lib/supabase/types";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Home Feed" };
@@ -68,11 +70,11 @@ export default async function FeedPage() {
   );
   const savedSet = new Set((savedRes.data || []).map((s) => s.post_id));
 
-  const enrichedPosts = await signPostMedia(supabase, await attachSharedPosts(supabase, (posts || []).map((p) => ({
+  const enrichedPosts = await attachFeedActivity(supabase, await signPostMedia(supabase, await attachSharedPosts(supabase, (posts || []).map((p) => ({
     ...p,
     user_reaction: reactionMap[p.id] || null,
     is_saved: savedSet.has(p.id),
-  }))));
+  })))) as unknown as PostWithAuthor[]);
 
   // Suggested users — only if there are other users to suggest
   const excludeIds = [user.id, ...friendIds];

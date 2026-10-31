@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import {
   MessageCircle, Share2, Bookmark, BookmarkCheck,
@@ -20,11 +20,23 @@ import toast from "react-hot-toast";
 interface PostCardProps {
   post: PostWithAuthor;
   currentUserId?: string;
+  commentsExpanded?: boolean;
   onEdit?: (post: PostWithAuthor) => void;
   onComment?: (postId: string) => void;
   onShare?: (post: PostWithAuthor) => void;
   onRefresh?: () => void;
 }
+
+const REACTIONS = [
+  { type: "like",  emoji: "👍", label: "Like" },
+  { type: "love",  emoji: "❤️", label: "Love" },
+  { type: "haha",  emoji: "😆", label: "Haha" },
+  { type: "wow",   emoji: "😮", label: "Wow" },
+  { type: "sad",   emoji: "😢", label: "Sad" },
+  { type: "angry", emoji: "😡", label: "Angry" },
+];
+
+const reactionMeta = (type: string) => REACTIONS.find((r) => r.type === type) ?? REACTIONS[0];
 
 const visibilityIcon = {
   public:  <Globe className="w-3 h-3" />,
@@ -32,10 +44,15 @@ const visibilityIcon = {
   only_me: <Lock className="w-3 h-3" />,
 };
 
-export function PostCard({ post, currentUserId, onEdit, onComment, onShare, onRefresh }: PostCardProps) {
-  const [liked, setLiked] = useState(!!post.user_reaction);
-  const [reactionCount, setReactionCount] = useState(post.reaction_count);
+export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit, onComment, onShare, onRefresh }: PostCardProps) {
+  const [userReaction, setUserReaction] = useState<string | null>(post.user_reaction ?? null);
+  const [breakdown, setBreakdown] = useState<Record<string, number>>(
+    () => post.reaction_breakdown ?? { like: Math.max(post.reaction_count - (post.user_reaction ? 1 : 0), 0) }
+  );
   const [saved, setSaved] = useState(!!post.is_saved);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -52,12 +69,38 @@ export function PostCard({ post, currentUserId, onEdit, onComment, onShare, onRe
   const [commentsProfile, setCommentsProfile] = useState<Profile | null>(null);
 
   const isOwner = currentUserId === post.author_id;
+  const totalReactions = Object.values(breakdown).reduce((a, b) => a + b, 0);
+  const sortedReactionTypes = Object.entries(breakdown)
+    .filter(([, c]) => c > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([t]) => t);
+  const previewComments = commentsExpanded ? [] : (post.preview_comments ?? []);
 
-  async function handleReact() {
+  async function applyReaction(next: string | null) {
     if (!currentUserId) { toast.error("Sign in to react."); return; }
-    setLiked((p) => !p);
-    setReactionCount((c) => liked ? c - 1 : c + 1);
-    await toggleReaction(post.id, "like");
+    const prev = userReaction;
+    const prevBreakdown = breakdown;
+    const nb: Record<string, number> = { ...breakdown };
+    if (prev) nb[prev] = Math.max((nb[prev] ?? 1) - 1, 0);
+    if (next) nb[next] = (nb[next] ?? 0) + 1;
+    setUserReaction(next);
+    setBreakdown(nb);
+    const res = await toggleReaction(post.id, next ?? prev ?? "like");
+    if (res?.error) {
+      setUserReaction(prev);
+      setBreakdown(prevBreakdown);
+      toast.error(res.error);
+    }
+  }
+
+  function openPickerSoon() {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setPickerOpen(true), 200);
+  }
+
+  function closePickerSoon() {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setPickerOpen(false), 250);
   }
 
   async function handleSave() {
@@ -113,6 +156,15 @@ export function PostCard({ post, currentUserId, onEdit, onComment, onShare, onRe
     toast.success("Report submitted. Moderators will review it.");
     setReportOpen(false);
     setReportReason("");
+  }
+
+  function openCommentsSection() {
+    if (onComment) onComment(post.id); else toggleOwnComments();
+  }
+
+  function openCommentsSectionFromSummary() {
+    if (commentsExpanded) return;
+    openCommentsSection();
   }
 
   async function toggleOwnComments() {
@@ -181,6 +233,18 @@ export function PostCard({ post, currentUserId, onEdit, onComment, onShare, onRe
         </div>
       </div>
 
+      {/* Repost line */}
+      {post.reposters && post.reposters.length > 0 && (
+        <div className="px-4 pb-2 flex items-center gap-1.5 text-[13px] text-[var(--text-secondary)]">
+          <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate">
+            {post.reposters[0].display_name}
+            {post.reposters.length > 1 ? ` and ${post.reposters.length - 1} other${post.reposters.length - 1 > 1 ? "s" : ""}` : ""}
+            {" "}reposted
+          </span>
+        </div>
+      )}
+
       {/* Shared post indicator */}
       {post.is_shared && post.shared_post && (
         <div className="px-4 pb-2 text-sm text-[var(--text-secondary)] flex items-center gap-1">
@@ -230,27 +294,82 @@ export function PostCard({ post, currentUserId, onEdit, onComment, onShare, onRe
         </div>
       )}
 
+      {/* Reactions / comments / repost summary */}
+      {(totalReactions > 0 || post.comment_count > 0 || post.share_count > 0) && (
+        <div className="px-4 pt-3 pb-1 flex items-center justify-between">
+          <div className="flex items-center gap-0.5">
+            {sortedReactionTypes.slice(0, 4).map((t) => (
+              <span
+                key={t}
+                title={`${breakdown[t]} ${reactionMeta(t).label}${breakdown[t] > 1 ? "s" : ""}`}
+                className="w-[18px] h-[18px] rounded-full bg-[var(--bg-card)] border border-[var(--border)] shadow-sm flex items-center justify-center text-[11px] leading-none"
+              >
+                {reactionMeta(t).emoji}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 text-[13px] text-[var(--text-secondary)]">
+            {totalReactions > 0 && <button onClick={openCommentsSectionFromSummary} className="hover:underline">{totalReactions} reaction{totalReactions > 1 ? "s" : ""}</button>}
+            {post.comment_count > 0 && <button onClick={openCommentsSectionFromSummary} className="hover:underline">{post.comment_count} comment{post.comment_count > 1 ? "s" : ""}</button>}
+            {post.share_count > 0 && <span>{post.share_count} repost{post.share_count > 1 ? "s" : ""}</span>}
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
-      <div className="px-4 py-2 flex items-center justify-between border-t border-[var(--border)]">
+      <div className="px-4 py-1 flex items-center justify-between border-t border-[var(--border)]">
         <div className="flex items-center gap-1">
-          <button
-            onClick={handleReact}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-[var(--border)]",
-              liked ? "text-brand-green-800 dark:text-brand-gold-400" : "text-[var(--text-secondary)]"
-            )}
-            aria-label={liked ? "Unlike" : "Like"}
+          <div
+            className="relative"
+            onMouseEnter={openPickerSoon}
+            onMouseLeave={closePickerSoon}
           >
-            <ThumbsUp className={cn("w-4 h-4", liked && "fill-current")} />
-            {reactionCount > 0 && <span>{reactionCount}</span>}
-          </button>
+            {pickerOpen && (
+              <div className="reaction-picker absolute bottom-full left-0 mb-1 flex gap-1 px-2 py-1.5 rounded-full shadow-xl border border-[var(--border)] bg-[var(--bg-card)] z-20">
+                {REACTIONS.map((r, i) => (
+                  <button
+                    key={r.type}
+                    title={r.label}
+                    aria-label={r.label}
+                    onClick={() => { setPickerOpen(false); applyReaction(r.type); }}
+                    className="reaction-pop w-9 h-9 flex items-center justify-center text-2xl rounded-full transition-transform duration-150 hover:scale-125 hover:bg-[var(--border)]"
+                    style={{ animationDelay: `${i * 45}ms` }}
+                  >
+                    {r.emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => applyReaction(userReaction ? null : "like")}
+              onContextMenu={(e) => { e.preventDefault(); setPickerOpen((o) => !o); }}
+              onTouchStart={() => {
+                if (pressTimer.current) clearTimeout(pressTimer.current);
+                pressTimer.current = setTimeout(() => setPickerOpen(true), 350);
+              }}
+              onTouchEnd={() => { if (pressTimer.current) clearTimeout(pressTimer.current); }}
+              onTouchMove={() => { if (pressTimer.current) clearTimeout(pressTimer.current); }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-[var(--border)]",
+                userReaction ? "text-brand-green-800 dark:text-brand-gold-400" : "text-[var(--text-secondary)]"
+              )}
+              aria-label={userReaction ? `Remove ${reactionMeta(userReaction).label.toLowerCase()}` : "Like"}
+            >
+              {userReaction ? (
+                <span className="text-[15px] leading-none">{reactionMeta(userReaction).emoji}</span>
+              ) : (
+                <ThumbsUp className="w-4 h-4" />
+              )}
+              <span>{userReaction ? reactionMeta(userReaction).label : "Like"}</span>
+            </button>
+          </div>
 
           <button
-            onClick={() => { if (onComment) onComment(post.id); else toggleOwnComments(); }}
+            onClick={openCommentsSection}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
-            {post.comment_count > 0 && <span>{post.comment_count}</span>}
+            <span>Comment</span>
           </button>
 
           <button
@@ -258,7 +377,7 @@ export function PostCard({ post, currentUserId, onEdit, onComment, onShare, onRe
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors"
           >
             <Share2 className="w-4 h-4" />
-            {post.share_count > 0 && <span>{post.share_count}</span>}
+            <span>Repost</span>
           </button>
         </div>
 
@@ -273,6 +392,37 @@ export function PostCard({ post, currentUserId, onEdit, onComment, onShare, onRe
           {saved ? <BookmarkCheck className="w-4 h-4 fill-current" /> : <Bookmark className="w-4 h-4" />}
         </button>
       </div>
+
+      {/* Comment previews */}
+      {previewComments.length > 0 && (
+        <div className="px-4 pb-3 space-y-2">
+          {previewComments.map((c) => (
+            <div key={c.id} className="flex gap-2 items-start">
+              <Link href={`/profile/${c.author.username}`} className="flex-shrink-0">
+                <Avatar src={c.author.avatar_url} name={c.author.display_name} size={32} />
+              </Link>
+              <div className="min-w-0">
+                <div className="bg-[var(--border)] rounded-2xl px-3 py-2 inline-block max-w-full">
+                  <Link href={`/profile/${c.author.username}`} className="text-xs font-semibold text-[var(--text-primary)] hover:underline block">
+                    {c.author.display_name}
+                  </Link>
+                  <p className="text-sm text-[var(--text-primary)] leading-snug whitespace-pre-wrap break-words">{c.content}</p>
+                </div>
+                <div className="flex items-center gap-3 text-xs mt-0.5 px-2">
+                  <span className="text-[var(--text-secondary)]">{formatRelativeTime(c.created_at)}</span>
+                  <span className="text-brand-green-800 dark:text-brand-gold-400 font-semibold">Like</span>
+                  <span className="text-brand-green-800 dark:text-brand-gold-400 font-semibold">Reply</span>
+                </div>
+              </div>
+            </div>
+          ))}
+          {post.comment_count > previewComments.length && (
+            <button onClick={openCommentsSection} className="text-sm font-semibold text-[var(--text-secondary)] hover:underline pl-1">
+              View more comments
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Inline comments (used when parent doesn't manage them) */}
       {commentsOpen && !onComment && (

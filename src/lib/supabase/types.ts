@@ -337,12 +337,18 @@ export type UserPreferences = Database["public"]["Tables"]["user_preferences"]["
 export type ModerationAction = Database["public"]["Tables"]["moderation_actions"]["Row"]
 
 // Extended types with joins
+export type MiniProfile = Pick<Profile, "id" | "username" | "display_name" | "avatar_url">
+
 export type PostWithAuthor = Post & {
   author: Profile
   media: PostMedia[]
   user_reaction?: string | null
   is_saved?: boolean
   shared_post?: PostWithAuthor | null
+  reaction_breakdown?: Record<string, number>
+  reaction_faces?: MiniProfile[]
+  preview_comments?: { id: string; content: string; created_at: string; author: MiniProfile }[]
+  reposters?: MiniProfile[]
 }
 
 export type CommentWithAuthor = Comment & {
