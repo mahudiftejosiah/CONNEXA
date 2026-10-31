@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, Compass, Bell, MessageCircle, Gamepad2 } from "lucide-react";
+import { Home, Users, Compass, Bell, MessageCircle, Gamepad2, UserCircle } from "lucide-react";
 import { useUnreadCounts } from "./UnreadProvider";
 
-export function MobileNav() {
+export function MobileNav({ username }: { username: string | null }) {
   const pathname = usePathname();
   const { notifications: unreadNotifications, messages: unreadMessages } = useUnreadCounts();
 
@@ -16,6 +16,7 @@ export function MobileNav() {
     { href: "/games",         label: "Games",   icon: <Gamepad2 className="w-6 h-6" /> },
     { href: "/messages",      label: "Messages",icon: <MessageCircle className="w-6 h-6" />, badge: unreadMessages },
     { href: "/notifications", label: "Notifications", icon: <Bell className="w-6 h-6" />,    badge: unreadNotifications },
+    ...(username ? [{ href: `/profile/${username}`, label: "Profile", icon: <UserCircle className="w-6 h-6" /> }] : []),
   ];
 
   return (

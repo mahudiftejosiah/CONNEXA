@@ -73,7 +73,7 @@ function Shell({
           </aside>
         )}
       </div>
-      {signedIn && <MobileNav />}
+      {signedIn && <MobileNav username={profile?.username ?? null} />}
     </div>
   );
 }
