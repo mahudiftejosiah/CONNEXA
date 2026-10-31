@@ -3,14 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Users, Compass, Bell, MessageCircle, Gamepad2 } from "lucide-react";
+import { useUnreadCounts } from "./UnreadProvider";
 
-interface MobileNavProps {
-  unreadNotifications?: number;
-  unreadMessages?: number;
-}
-
-export function MobileNav({ unreadNotifications = 0, unreadMessages = 0 }: MobileNavProps) {
+export function MobileNav() {
   const pathname = usePathname();
+  const { notifications: unreadNotifications, messages: unreadMessages } = useUnreadCounts();
 
   const items = [
     { href: "/feed",          label: "Home",    icon: <Home className="w-6 h-6" /> },

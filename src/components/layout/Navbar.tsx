@@ -8,17 +8,17 @@ import { Logo } from "@/components/brand/Logo";
 import { Avatar } from "@/components/ui/Avatar";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
+import { useUnreadCounts } from "./UnreadProvider";
 import type { Profile } from "@/lib/supabase/types";
 
 interface NavbarProps {
   profile: Profile | null;
-  unreadNotifications?: number;
-  unreadMessages?: number;
 }
 
-export function Navbar({ profile, unreadNotifications = 0, unreadMessages = 0 }: NavbarProps) {
+export function Navbar({ profile }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { notifications: unreadNotifications, messages: unreadMessages } = useUnreadCounts();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 

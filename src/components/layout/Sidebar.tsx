@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Profile } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/client";
+import { useUnreadCounts } from "./UnreadProvider";
 
 interface NavItem {
   href: string;
@@ -22,14 +23,13 @@ interface NavItem {
 
 interface SidebarProps {
   profile: Profile | null;
-  unreadNotifications?: number;
-  unreadMessages?: number;
   isAdmin?: boolean;
 }
 
-export function Sidebar({ profile, unreadNotifications = 0, unreadMessages = 0, isAdmin = false }: SidebarProps) {
+export function Sidebar({ profile, isAdmin = false }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { notifications: unreadNotifications, messages: unreadMessages } = useUnreadCounts();
 
   const navItems: NavItem[] = [
     { href: "/feed",          label: "Home",          icon: <Home className="w-5 h-5" />,          exact: true },

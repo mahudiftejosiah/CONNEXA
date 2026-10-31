@@ -62,6 +62,7 @@ export function MessagesClient({ conversations: initConvs, profile: _profile, cu
       .update({ is_read: true })
       .eq("conversation_id", conv.id)
       .neq("sender_id", currentUserId);
+    window.dispatchEvent(new Event("connexa-unread-refresh"));
 
     setConversations((p) => p.map((c) => c.id === conv.id ? { ...c, unread_count: 0 } : c));
     setTimeout(() => bottomRef.current?.scrollIntoView(), 100);
