@@ -56,9 +56,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="card p-8">
+    <div className="card p-8 stagger-in">
       <div className="flex justify-center mb-6">
-        <Logo size="md" variant="full" href="/" />
+        <div className="animate-glow-pulse rounded-2xl">
+          <Logo size="md" variant="full" href="/" />
+        </div>
       </div>
 
       <h1 className="text-2xl font-extrabold text-[var(--text-primary)] text-center mb-1">Welcome back</h1>
