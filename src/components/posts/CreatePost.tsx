@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ImageIcon, Video, Globe, Users, Lock, X } from "lucide-react";
+import { ImageIcon, Video, Globe, Users, Lock, X, Mic, Square } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { createPost } from "@/lib/actions/posts";
@@ -25,9 +25,45 @@ export function CreatePost({ profile, onCreated, groupId }: CreatePostProps) {
   const [expanded, setExpanded] = useState(false);
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<PostVisibility>("public");
-  const [previews, setPreviews] = useState<{ file: File; url: string; type: "image" | "video" }[]>([]);
+  const [previews, setPreviews] = useState<{ file: File; url: string; type: "image" | "video" | "audio" }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recSeconds, setRecSeconds] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  async function toggleVoiceRecording() {
+    if (recording) {
+      recorderRef.current?.stop();
+      return;
+    }
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      toast.error("Microphone access was blocked — allow it in your browser to record.");
+      return;
+    }
+    const recorder = new MediaRecorder(stream);
+    const chunks: BlobPart[] = [];
+    recorder.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
+    recorder.onstop = () => {
+      stream.getTracks().forEach((t) => t.stop());
+      setRecording(false);
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+      const ext = blob.type.includes("ogg") ? "ogg" : "webm";
+      const file = new File([blob], `voice_${Date.now()}.${ext}`, { type: blob.type });
+      setPreviews((p) => [...p, { file, url: URL.createObjectURL(blob), type: "audio" }]);
+      setRecSeconds(0);
+    };
+    recorderRef.current = recorder;
+    recorder.start();
+    setRecording(true);
+    setRecSeconds(0);
+    timerRef.current = setInterval(() => setRecSeconds((s) => s + 1), 1000);
+  }
 
   function handleFiles(files: FileList | null) {
     if (!files) return;
@@ -97,6 +133,11 @@ export function CreatePost({ profile, onCreated, groupId }: CreatePostProps) {
                   {p.type === "image" ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={p.url} alt="Preview" className="w-full h-full object-cover" />
+                  ) : p.type === "audio" ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-3 bg-[var(--bg)]">
+                      <Mic className="w-8 h-8" style={{ color: "rgb(var(--a-800))" }} />
+                      <audio src={p.url} controls className="w-full" />
+                    </div>
                   ) : (
                     <video src={p.url} className="w-full h-full object-cover" />
                   )}
@@ -139,6 +180,25 @@ export function CreatePost({ profile, onCreated, groupId }: CreatePostProps) {
                   style={{ color: "var(--text-secondary)" }}
                 >
                   <Video className="w-4 h-4" /> Video
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleVoiceRecording}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors",
+                    recording ? "bg-red-600 text-white hover:bg-red-700" : "hover:bg-[var(--border)]"
+                  )}
+                  style={recording ? undefined : { color: "var(--text-secondary)" }}
+                >
+                  {recording ? (
+                    <>
+                      <Square className="w-4 h-4 fill-current" /> Stop · {Math.floor(recSeconds / 60)}:{String(recSeconds % 60).padStart(2, "0")}
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-4 h-4" /> Voice
+                    </>
+                  )}
                 </button>
               </div>
 

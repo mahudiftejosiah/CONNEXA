@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signPostMedia } from "@/lib/media";
+import { getBbcNews } from "@/lib/news";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { DiscoverClient } from "./DiscoverClient";
 import type { Metadata } from "next";
@@ -62,6 +63,7 @@ export default async function DiscoverPage() {
     .map((x) => x.pp);
 
   const trendingPosts = await signPostMedia(supabase, rankedPosts);
+  const news = await getBbcNews();
 
   return (
     <AppLayout>
@@ -70,6 +72,7 @@ export default async function DiscoverPage() {
         publicGroups={(groupsRes.data || []) as any}
         trendingPosts={trendingPosts as any}
         currentUserId={user.id}
+        news={news as any}
       />
     </AppLayout>
   );

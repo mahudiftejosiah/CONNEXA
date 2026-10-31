@@ -55,8 +55,10 @@ export function slugify(str: string): string {
 
 export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
 export const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg"];
+export const ACCEPTED_AUDIO_TYPES = ["audio/webm", "audio/ogg", "audio/mpeg", "audio/mp4"];
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 export const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+export const MAX_AUDIO_SIZE = 25 * 1024 * 1024; // 25MB
 export const MAX_STORY_SIZE = 50 * 1024 * 1024; // 50MB
 
 export function isValidImageType(type: string): boolean {
@@ -65,6 +67,10 @@ export function isValidImageType(type: string): boolean {
 
 export function isValidVideoType(type: string): boolean {
   return ACCEPTED_VIDEO_TYPES.includes(type);
+}
+
+export function isValidAudioType(type: string): boolean {
+  return ACCEPTED_AUDIO_TYPES.includes(type);
 }
 
 export function bytesToMB(bytes: number): string {

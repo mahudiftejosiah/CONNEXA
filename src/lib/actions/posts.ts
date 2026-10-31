@@ -4,20 +4,23 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { PostVisibility } from "@/lib/supabase/types";
-import { isValidImageType, isValidVideoType, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE } from "@/lib/utils";
+import { isValidImageType, isValidVideoType, isValidAudioType, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE, MAX_AUDIO_SIZE } from "@/lib/utils";
 
 export async function createPost(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const content = (formData.get("content") as string)?.trim();
+  const content = (formData.get("content") as string)?.trim() || "";
   const visibility = (formData.get("visibility") as PostVisibility) || "public";
   const files = formData.getAll("media") as File[];
   const groupId = formData.get("groupId") as string | null;
 
-  if (!content || content.length > 5000) {
-    return { error: "Post content must be between 1 and 5000 characters." };
+  if (files.length === 0 && !content) {
+    return { error: "Write something or add media." };
+  }
+  if (content.length > 5000) {
+    return { error: "Post content must be under 5000 characters." };
   }
   if (!["public", "friends", "only_me"].includes(visibility)) {
     return { error: "Invalid visibility setting." };
@@ -33,20 +36,22 @@ export async function createPost(formData: FormData) {
   if (postError || !post) return { error: "Failed to create post." };
 
   // Handle media uploads
-  const mediaInserts: { post_id: string; url: string; type: "image" | "video"; position: number }[] = [];
+  const mediaInserts: { post_id: string; url: string; type: "image" | "video" | "audio"; position: number }[] = [];
   for (const file of files) {
     if (!file.size) continue;
     const isImage = isValidImageType(file.type);
     const isVideo = isValidVideoType(file.type);
-    if (!isImage && !isVideo) continue;
+    const isAudio = isValidAudioType(file.type);
+    if (!isImage && !isVideo && !isAudio) continue;
     if (isImage && file.size > MAX_IMAGE_SIZE) continue;
     if (isVideo && file.size > MAX_VIDEO_SIZE) continue;
+    if (isAudio && file.size > MAX_AUDIO_SIZE) continue;
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
     const path = `${user.id}/${post.id}_${Date.now()}.${ext}`;
-    const { data: upload } = await supabase.storage.from("post-media").upload(path, file, { upsert: false });
+    const { data: upload } = await supabase.storage.from("post-media").upload(path, file, { upsert: false, contentType: file.type });
     if (upload) {
-      mediaInserts.push({ post_id: post.id, url: path, type: isImage ? "image" : "video", position: mediaInserts.length });
+      mediaInserts.push({ post_id: post.id, url: path, type: isImage ? "image" : isVideo ? "video" : "audio", position: mediaInserts.length });
     }
   }
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   MessageCircle, Share2, Bookmark, BookmarkCheck,
   MoreHorizontal, Trash2, Edit2, Flag, Globe, Users, Lock,
-  ThumbsUp,
+  ThumbsUp, Mic,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Modal, ConfirmDialog } from "@/components/ui/Modal";
@@ -281,6 +281,16 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
               {m.type === "image" ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={m.url} alt="Post media" className="w-full h-full object-cover" loading="lazy" />
+              ) : m.type === "audio" ? (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-4 bg-[var(--bg)]">
+                  <div className="story-ring">
+                    <div className="w-16 h-16 rounded-full bg-[var(--bg-card)] flex items-center justify-center">
+                      <Mic className="w-7 h-7" style={{ color: "rgb(var(--a-800))" }} />
+                    </div>
+                  </div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Voice recording</p>
+                  <audio src={m.url} controls className="w-full max-w-xs" />
+                </div>
               ) : (
                 <video src={m.url} controls className="w-full h-full object-cover" />
               )}

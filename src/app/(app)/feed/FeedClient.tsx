@@ -12,7 +12,8 @@ import { signPostMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
 import { attachFeedActivity } from "@/lib/feed-activity";
 import type { PostWithAuthor, Profile, StoryWithAuthor } from "@/lib/supabase/types";
-import { Users } from "lucide-react";
+import { Users, Clapperboard, Newspaper } from "lucide-react";
+import { ReelsViewer } from "@/components/reels/ReelsViewer";
 
 interface FeedClientProps {
   initialPosts: PostWithAuthor[];
@@ -23,6 +24,7 @@ interface FeedClientProps {
 }
 
 export function FeedClient({ initialPosts, stories, profile, currentUserId, friendIds }: FeedClientProps) {
+  const [tab, setTab] = useState<"feed" | "reels">("feed");
   const [posts, setPosts] = useState<PostWithAuthor[]>(initialPosts);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialPosts.length === 20);
@@ -73,13 +75,14 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
 
   useEffect(() => {
     const handler = () => {
+      if (tab !== "feed") return;
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 400) {
         loadMore();
       }
     };
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
-  }, [loadMore]);
+  }, [loadMore, tab]);
 
   const refreshFeed = useCallback(async () => {
     const supabase = createClient();
@@ -114,6 +117,22 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
 
   return (
     <div className="space-y-4">
+      {/* Home tabs */}
+      <div className="card p-1 flex gap-1">
+        <button onClick={() => setTab("feed")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors ${tab === "feed" ? "bg-[rgb(var(--a-800))] text-white" : "text-[var(--text-secondary)] hover:bg-[var(--border)]"}`}>
+          <Newspaper className="w-4 h-4" /> Feed
+        </button>
+        <button onClick={() => setTab("reels")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors ${tab === "reels" ? "bg-[rgb(var(--a-800))] text-white" : "text-[var(--text-secondary)] hover:bg-[var(--border)]"}`}>
+          <Clapperboard className="w-4 h-4" /> Reels
+        </button>
+      </div>
+
+      {tab === "reels" ? (
+        <ReelsViewer />
+      ) : (
+        <>
       <CreatePost profile={profile} onCreated={refreshFeed} />
 
       <StoriesTray stories={stories} profile={profile} currentUserId={currentUserId} />
@@ -155,6 +174,8 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
         <p className="text-center text-sm text-[var(--text-secondary)] py-6">
           You&apos;re all caught up!
         </p>
+      )}
+        </>
       )}
     </div>
   );

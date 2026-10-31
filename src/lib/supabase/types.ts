@@ -69,7 +69,7 @@ export interface Database {
           id: string
           post_id: string
           url: string
-          type: "image" | "video"
+          type: "image" | "video" | "audio"
           position: number
           created_at: string
         }
