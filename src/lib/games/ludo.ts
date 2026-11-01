@@ -132,7 +132,7 @@ export function movePiece(s: LudoState, pieceIdx: number): LudoState {
     });
   }
 
-  let log = [...s.log, `${nameOf(p)} ${pieceIdx + 1}: ${cellLabel(from)} → ${cellLabel(to)}`];
+  const log = [...s.log, `${nameOf(p)} ${pieceIdx + 1}: ${cellLabel(from)} → ${cellLabel(to)}`];
   if (captured) log.push(`${nameOf(p)} captured ${nameOf(o)}'s token`);
   const won = pieces[p].every((c) => c === FINISH);
   if (won) log.push(`${nameOf(p)} wins`);
