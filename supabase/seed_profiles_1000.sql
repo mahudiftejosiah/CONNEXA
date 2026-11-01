@@ -46,6 +46,7 @@ select
   pw.hash,
   now() - (((g.i * 43) % 43200) || ' minutes')::interval,
   now() - (((g.i * 43) % 43200) || ' minutes')::interval,
+  now() - (((g.i * 43) % 43200) || ' minutes')::interval,
   '{"provider":"email","providers":["email"]}'::jsonb,
   jsonb_build_object('full_name', g.first_name || ' ' || g.last_name)
 from gen g cross join pw
