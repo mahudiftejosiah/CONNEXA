@@ -9,7 +9,8 @@ export function PresenceHeartbeat({ userId }: { userId: string }) {
     const supabase = createClient();
     const beat = () => {
       if (document.visibilityState === "hidden") return;
-      void supabase.from("profiles").update({ last_seen: new Date().toISOString() }).eq("id", userId);
+      // postgrest-js only sends the request when the builder is awaited.
+      void supabase.from("profiles").update({ last_seen: new Date().toISOString() }).eq("id", userId).then(() => {});
     };
     beat();
     const timer = setInterval(beat, 60_000);

@@ -53,12 +53,12 @@ export function useGameSave<T>(gameId: string, onRemote?: (snap: T) => void) {
     timer.current = setTimeout(() => {
       supabaseRef.current = supabaseRef.current || createClient();
       if (snap === null) {
-        void supabaseRef.current.from("game_scores").update({ state: null }).eq("user_id", userId).eq("game_id", gameId);
+        void supabaseRef.current.from("game_scores").update({ state: null }).eq("user_id", userId).eq("game_id", gameId).then(() => {});
       } else {
         void supabaseRef.current.from("game_scores").upsert(
           { user_id: userId, game_id: gameId, state: snap } as any,
           { onConflict: "user_id,game_id" }
-        );
+        ).then(() => {});
       }
     }, 500);
   }, [gameId, userId]);
@@ -98,10 +98,10 @@ export function useBest(key: string, score: number) {
       try { localStorage.setItem(storageKey, String(score)); } catch {}
       if (userId) {
         supabaseRef.current = supabaseRef.current || createClient();
-        supabaseRef.current.from("game_scores").upsert(
+        void supabaseRef.current.from("game_scores").upsert(
           { user_id: userId, game_id: key, best: score, points: score },
           { onConflict: "user_id,game_id" }
-        );
+        ).then(() => {});
       }
     }
   }, [score, best, storageKey, userId, key]);
