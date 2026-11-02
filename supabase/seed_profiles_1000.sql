@@ -151,6 +151,32 @@ from gen g cross join admin a
 on conflict (user_id, friend_id) do nothing;
 
 -- ------------------------------------------------------------
+-- 3b) FRIENDS OF FRIENDS — without this every demo account has
+--     exactly one friend (you), so their feed, stories tray and
+--     friends list look empty. This gives each account about 30
+--     friends among the demo accounts, which also stays under the
+--     feed's 100-id query cap. Pairs are chosen by a symmetric
+--     hash so a rerun produces the same network, never a new one.
+-- ------------------------------------------------------------
+with gen as (
+  select i, ('00000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid as id
+  from generate_series(1, 1000) i
+),
+pairs as (
+  select a.id as lo, b.id as hi
+  from gen a
+  join gen b on b.i > a.i
+  where abs(hashtext(a.id::text || b.id::text)) % 33 = 0
+)
+insert into public.friendships (user_id, friend_id, created_at)
+select lo, hi, now() - ((abs(hashtext(lo::text || hi::text || 'mf')) % 40320) || ' minutes')::interval
+from pairs
+union all
+select hi, lo, now() - ((abs(hashtext(lo::text || hi::text || 'mf')) % 40320) || ' minutes')::interval
+from pairs
+on conflict (user_id, friend_id) do nothing;
+
+-- ------------------------------------------------------------
 -- 4) POSTS — 2 per account, 3-in-4 public and 1-in-4
 --    friends-only, spread over the last 7 days. Skipped for
 --    authors who already have their own posts.
