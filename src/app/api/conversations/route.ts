@@ -21,20 +21,25 @@ export async function POST(req: NextRequest) {
     .single();
   if (block) return NextResponse.json({ error: "Cannot message this user" }, { status: 403 });
 
-  // Check if conversation already exists between these two users
-  const { data: existing } = await supabase
+  // Look for a thread that already covers these two people. The peer's ids are
+  // checked in batches because a 1000-conversation account puts a request URL
+  // past PostgREST's limit if the whole list goes into one in().
+  const { data: peerConvs } = await supabase
     .from("conversation_participants")
     .select("conversation_id")
-    .eq("user_id", user.id);
+    .eq("user_id", participantId);
 
-  const myConvIds = (existing || []).map((r) => r.conversation_id);
+  const peerIds = (peerConvs || []).map((r) => r.conversation_id);
+  const batches: string[][] = [];
+  for (let i = 0; i < peerIds.length; i += 100) batches.push(peerIds.slice(i, i + 100));
 
-  if (myConvIds.length > 0) {
+  for (const batch of batches) {
     const { data: shared } = await supabase
       .from("conversation_participants")
       .select("conversation_id")
-      .eq("user_id", participantId)
-      .in("conversation_id", myConvIds);
+      .eq("user_id", user.id)
+      .in("conversation_id", batch)
+      .limit(1);
 
     if (shared && shared.length > 0) {
       return NextResponse.json({ conversationId: shared[0].conversation_id });
