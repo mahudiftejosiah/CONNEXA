@@ -97,7 +97,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
         // A brand-new thread has no participants yet, so RLS hides it from any
         // read-back — mint the id here and add both people before selecting.
         const newId = crypto.randomUUID();
-        const { error: convErr } = await supabase.from("conversations").insert({ id: newId });
+        const { error: convErr } = await supabase.from("conversations").insert({ id: newId } as any);
         if (!convErr) {
           const { error: partErr } = await supabase.from("conversation_participants").insert([
             { conversation_id: newId, user_id: user.id },

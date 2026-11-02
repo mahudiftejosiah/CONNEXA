@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   const conversationId = crypto.randomUUID();
   const { error: convError } = await supabase
     .from("conversations")
-    .insert({ id: conversationId });
+    .insert({ id: conversationId } as any);
 
   if (convError) return NextResponse.json({ error: "Failed to create conversation" }, { status: 500 });
 
