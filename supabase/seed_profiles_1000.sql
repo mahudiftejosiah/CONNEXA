@@ -540,8 +540,58 @@ where not exists (
 );
 
 -- ------------------------------------------------------------
+-- 10b) NOTIFICATIONS — the app writes these itself when someone
+--      comments or accepts a request, and nothing else creates
+--      them, so without this block the Notifications tab and its
+--      unread badge stay empty. Anything older than two days is
+--      marked read, the way an active account looks.
+-- ------------------------------------------------------------
+with admin as (
+  select id, display_name from public.profiles where is_admin order by created_at limit 1
+),
+gen as (
+  select i, ('00000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid as id
+  from generate_series(1, 1000) i
+),
+accepted as (
+  select g.id as user_id, a.id as actor_id,
+    a.display_name || ' accepted your friend request' as message,
+    now() - ((abs(hashtext(g.id::text || 'fa')) % 4320) || ' minutes')::interval as t
+  from gen g cross join admin a
+  union all
+  select a.id, g.id,
+    p.display_name || ' accepted your friend request',
+    now() - ((abs(hashtext(g.id::text || 'fa')) % 4320) || ' minutes')::interval
+  from gen g cross join admin a join public.profiles p on p.id = g.id
+)
+insert into public.notifications (user_id, actor_id, type, entity_id, entity_type, message, is_read, created_at)
+select r.user_id, r.actor_id, 'friend_accepted', r.actor_id, 'profile', r.message,
+  r.t < now() - interval '2 days', r.t
+from accepted r
+where not exists (
+  select 1 from public.notifications n
+  where n.user_id = r.user_id and n.actor_id = r.actor_id and n.type = 'friend_accepted'
+);
+
+-- One per seeded comment, addressed to the post author.
+insert into public.notifications (user_id, actor_id, type, entity_id, entity_type, message, is_read, created_at)
+select p.author_id, c.author_id, 'post_comment', c.post_id, 'post',
+  a.display_name || ' commented on your post',
+  c.created_at < now() - interval '2 days', c.created_at
+from public.comments c
+join public.posts p on p.id = c.post_id
+join public.profiles a on a.id = c.author_id
+where p.author_id <> c.author_id
+  and c.parent_id is null
+  and not exists (
+    select 1 from public.notifications n
+    where n.user_id = p.author_id and n.actor_id = c.author_id
+      and n.type = 'post_comment' and n.entity_id = c.post_id
+  );
+
+-- ------------------------------------------------------------
 -- 11) RESULTS — run this file again safely afterwards; counts
---     should read ~1000 / ~1000 / ~2000 / 2000 / ~1000
+--     should read ~1000 / ~1000 / ~2000 / 2000 / ~1000 / ~5000
 -- ------------------------------------------------------------
 select
   (select count(*) from auth.users where email like '%@connexa1000.test') as auth_users,
@@ -554,4 +604,9 @@ select
   (select count(*) from public.conversations c
      where c.id in (select conv from (
        select ('00000000-0000-4000-9000-' || lpad(i::text, 12, '0'))::uuid as conv
-       from generate_series(1, 1000) i ) x)) as conversations;
+       from generate_series(1, 1000) i ) x)) as conversations,
+  (select count(*) from public.notifications
+     where type in ('friend_accepted', 'post_comment')) as notifications,
+  (select count(*) from public.notifications
+     where is_read = false and user_id = (
+       select id from public.profiles where is_admin order by created_at limit 1)) as admin_unread;
