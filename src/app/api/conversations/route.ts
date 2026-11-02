@@ -41,19 +41,21 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Create new conversation
-  const { data: conv, error } = await supabase
+  // Create new conversation. The id is minted here because a thread with no
+  // participants is invisible to RLS, so reading the insert back would fail.
+  const conversationId = crypto.randomUUID();
+  const { error: convError } = await supabase
     .from("conversations")
-    .insert({})
-    .select()
-    .single();
+    .insert({ id: conversationId });
 
-  if (error || !conv) return NextResponse.json({ error: "Failed to create conversation" }, { status: 500 });
+  if (convError) return NextResponse.json({ error: "Failed to create conversation" }, { status: 500 });
 
-  await supabase.from("conversation_participants").insert([
-    { conversation_id: conv.id, user_id: user.id },
-    { conversation_id: conv.id, user_id: participantId },
+  const { error: partError } = await supabase.from("conversation_participants").insert([
+    { conversation_id: conversationId, user_id: user.id },
+    { conversation_id: conversationId, user_id: participantId },
   ]);
 
-  return NextResponse.json({ conversationId: conv.id });
+  if (partError) return NextResponse.json({ error: "Failed to create conversation" }, { status: 500 });
+
+  return NextResponse.json({ conversationId });
 }
