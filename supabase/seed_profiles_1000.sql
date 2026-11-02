@@ -13,6 +13,20 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
+-- 0) PREFLIGHT — read this first result before the rest runs.
+--    admins must be 1 (that account becomes the centre of the
+--    demo: everyone is friends with it), demo_accounts must be
+--    1000 (the provisioner script creates them; this seed only
+--    uses them). Nothing below has an id to edit by hand.
+-- ------------------------------------------------------------
+select
+  (select count(*) from public.profiles where is_admin) as admins,
+  (select count(*) from public.profiles
+     where id::text like '00000000-0000-4000-8000-%') as demo_accounts,
+  (select username from public.profiles
+     where is_admin order by created_at limit 1) as admin_used;
+
+-- ------------------------------------------------------------
 -- 1) AUTH USERS (1000) — DO NOT RUN THIS BLOCK.
 --    The dashboard role cannot write auth.users (it fails with
 --    42501: must be owner of table users), so the accounts are
@@ -123,7 +137,7 @@ where p.id = g.id;
 -- 3) FRIENDSHIPS — every account is friends with you, both
 --    directions, like the accept-request flow creates.
 -- ------------------------------------------------------------
-with admin as (select '621daa12-4038-4f5b-b198-b9eaae4c139d'::uuid as id),
+with admin as (select id from public.profiles where is_admin order by created_at limit 1),
 gen as (
   select ('00000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid as id, i
   from generate_series(1, 1000) i
@@ -238,7 +252,7 @@ recent as (
     order by p.created_at desc limit 150)
   union
   (select p.id, p.author_id from public.posts p
-    where p.author_id = '621daa12-4038-4f5b-b198-b9eaae4c139d'::uuid
+    where p.author_id = (select id from public.profiles where is_admin order by created_at limit 1)
       and p.visibility = 'public' and p.is_shared = false and p.group_id is null)
 ),
 pairs as (
@@ -272,7 +286,7 @@ recent as (
     order by p.created_at desc limit 100)
   union
   (select p.id, p.author_id from public.posts p
-    where p.author_id = '621daa12-4038-4f5b-b198-b9eaae4c139d'::uuid
+    where p.author_id = (select id from public.profiles where is_admin order by created_at limit 1)
       and p.visibility = 'public' and p.is_shared = false and p.group_id is null)
 )
 insert into public.comments (post_id, author_id, content, created_at)
@@ -338,7 +352,15 @@ where p.reposter_id is not null
 -- 9) MESSAGES — one conversation between you and every account,
 --    three messages each. Their last message is UNREAD, so your
 --    Messages badge lights up like a real inbox.
+--    First: drop the empty threads the old chat-creation bug left
+--    behind (a conversation with nobody in it can never load).
 -- ------------------------------------------------------------
+delete from public.conversations c
+where not exists (
+  select 1 from public.conversation_participants p
+  where p.conversation_id = c.id
+);
+
 with gen as (
   select
     i,
@@ -353,7 +375,7 @@ select g.conv_id,
 from gen g
 on conflict (id) do nothing;
 
-with admin as (select '621daa12-4038-4f5b-b198-b9eaae4c139d'::uuid as id),
+with admin as (select id from public.profiles where is_admin order by created_at limit 1),
 gen as (
   select
     i,
@@ -415,11 +437,14 @@ first_msgs as (
   select m.conversation_id, m.created_at
   from public.messages m
   where m.conversation_id in (select conv_id from gen)
+),
+admin as (
+  select id from public.profiles where is_admin order by created_at limit 1
 )
 insert into public.messages (conversation_id, sender_id, content, is_read, created_at)
 select
   g.conv_id,
-  '621daa12-4038-4f5b-b198-b9eaae4c139d'::uuid,
+  a.id,
   (array[
     'Ha! Good to hear from you.',
     'Appreciate you reaching out.',
@@ -431,12 +456,13 @@ select
   true,
   fm.created_at + interval '20 minutes'
 from gen g
+cross join admin a
 join first_msgs fm on fm.conversation_id = g.conv_id
 where fm.created_at + interval '20 minutes' < now()
   and not exists (
     select 1 from public.messages m
     where m.conversation_id = g.conv_id
-      and m.sender_id = '621daa12-4038-4f5b-b198-b9eaae4c139d'::uuid
+      and m.sender_id = a.id
   );
 
 -- message 3: their last word (UNREAD -> badge)
