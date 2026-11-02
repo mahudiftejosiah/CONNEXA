@@ -13,10 +13,17 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
--- 1) AUTH USERS (1000). The existing on_auth_user_created
---    trigger auto-creates each profiles + user_preferences row,
---    exactly like a normal signup.
+-- 1) AUTH USERS (1000) — DO NOT RUN THIS BLOCK.
+--    The dashboard role cannot write auth.users (it fails with
+--    42501: must be owner of table users), so the accounts are
+--    created through the Auth Admin API instead:
+--      node scripts/provision-demo-users.mjs --to 1000 --names supabase/demo-names.json
+--    That uses the same uuids, emails and full names as the
+--    statement below, and the on_auth_user_created trigger makes
+--    each profiles + user_preferences row exactly like a signup.
+--    The SQL is kept here as the record of those identities.
 -- ------------------------------------------------------------
+/*
 with pw as (
   select crypt('ConnexaDemo2026!', gen_salt('bf')) as hash
 ),
@@ -51,6 +58,7 @@ select
   jsonb_build_object('full_name', g.first_name || ' ' || g.last_name)
 from gen g cross join pw
 on conflict (id) do nothing;
+*/
 
 -- ------------------------------------------------------------
 -- 2) PROFILE ENRICHMENT — bio, location, interests
