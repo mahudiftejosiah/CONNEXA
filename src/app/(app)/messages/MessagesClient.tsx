@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -27,7 +26,7 @@ interface MessagesClientProps {
   openPeerId: string | null;
 }
 
-export function MessagesClient({ conversations: initConvs, profile: _profile, currentUserId, friends, openPeerId }: MessagesClientProps) {
+export function MessagesClient({ conversations: initConvs, profile, currentUserId, friends, openPeerId }: MessagesClientProps) {
   const [conversations, setConversations] = useState(initConvs);
   const [active, setActive] = useState<ConversationWithDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,7 +35,6 @@ export function MessagesClient({ conversations: initConvs, profile: _profile, cu
   const [sending, setSending] = useState(false);
   const [tab, setTab] = useState<"all" | "active" | "offline">("all");
   const [search, setSearch] = useState("");
-  const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
@@ -98,6 +96,32 @@ export function MessagesClient({ conversations: initConvs, profile: _profile, cu
 
   function getOtherParticipant(conv: ConversationWithDetails) {
     return conv.participants.find((p) => p.user_id !== currentUserId)?.profile;
+  }
+
+  // Friends with no thread yet: a searchParams-only router.push does not re-run
+  // the server page, so the thread is created here and opened straight away.
+  async function startChatWith(friend: FriendLite) {
+    const res = await fetch("/api/conversations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ participantId: friend.id }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!json.conversationId) {
+      toast.error("Could not open that chat.");
+      return;
+    }
+    const conv = {
+      id: json.conversationId,
+      participants: [
+        { conversation_id: json.conversationId, user_id: currentUserId, profile },
+        { conversation_id: json.conversationId, user_id: friend.id, profile: friend },
+      ],
+      last_message: null,
+      unread_count: 0,
+    } as unknown as ConversationWithDetails;
+    setConversations((p) => [conv, ...p]);
+    await openConversation(conv);
   }
 
   // Threads first, then friends we have never messaged (clicking one opens / creates the thread).
@@ -185,7 +209,7 @@ export function MessagesClient({ conversations: initConvs, profile: _profile, cu
                 const f = row.friend;
                 const online = isOnline(f.last_seen);
                 return (
-                  <button key={row.key} onClick={() => router.push(`/messages?with=${f.id}`)}
+                  <button key={row.key} onClick={() => void startChatWith(f)}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--border)] transition-colors text-left">
                     <Avatar src={f.avatar_url} name={f.display_name} size={48} online={online} />
                     <div className="flex-1 min-w-0">
