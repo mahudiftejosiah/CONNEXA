@@ -85,13 +85,16 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     setSending(true);
     const content = input.trim();
     setInput("");
-    const { error } = await supabase.from("messages").insert({
+    const { data, error } = await supabase.from("messages").insert({
       conversation_id: active.id,
       sender_id: currentUserId,
       content,
-    });
+    }).select().single();
     setSending(false);
-    if (error) { toast.error("Failed to send message."); setInput(content); }
+    if (error) { toast.error("Failed to send message."); setInput(content); return; }
+    // Render it immediately; the realtime echo can also arrive, so dedupe by id.
+    setMessages((p) => p.some((m) => m.id === data.id) ? p : [...p, data]);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }
 
   function getOtherParticipant(conv: ConversationWithDetails) {
