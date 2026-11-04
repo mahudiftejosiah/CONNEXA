@@ -14,8 +14,12 @@ import SimonSays from "@/components/games/SimonSays";
 import Minesweeper from "@/components/games/Minesweeper";
 import Flappy from "@/components/games/Flappy";
 import { ExternalLink, Box, Play, Trophy, CircleDollarSign, Swords } from "lucide-react";
+import {
+  Truck, Crosshair, Volleyball, Snowflake, Skull, Ghost, Rocket, Flame,
+  PersonStanding, Bike, Blocks, Waves, Anchor,
+} from "lucide-react";
 import type { ExternalGame, SiteShortcut } from "@/lib/supabase/types";
-import { TRENDING_3D, trendingCover, type TrendingGame } from "@/lib/trending-games";
+import { TRENDING_3D, trendingCover, type TrendingGame, type TrendingArt } from "@/lib/trending-games";
 import { GameUserContext } from "@/components/games/GameUserContext";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
 import { LiveGamePicker } from "@/components/games/live/LiveGamePicker";
@@ -33,6 +37,28 @@ const GAMES: { id: string; name: string; desc: string; icon: React.ReactNode; co
   { id: "simon",      name: "Simon Pulse",   desc: "Repeat the glowing sequence.",      icon: <Zap className="w-7 h-7" />,            color: "#06b6d4", play: <SimonSays /> },
   { id: "mines",      name: "Minesweeper",   desc: "Clear the field, avoid bombs.",     icon: <Bomb className="w-7 h-7" />,           color: "#64748b", play: <Minesweeper /> },
 ];
+
+const TREND_ART: Record<TrendingArt, React.ReactNode> = {
+  car: <Car className="w-8 h-8" />,
+  truck: <Truck className="w-8 h-8" />,
+  crosshair: <Crosshair className="w-8 h-8" />,
+  ball: <Volleyball className="w-8 h-8" />,
+  snowflake: <Snowflake className="w-8 h-8" />,
+  bomb: <Bomb className="w-8 h-8" />,
+  flame: <Flame className="w-8 h-8" />,
+  target: <Target className="w-8 h-8" />,
+  skull: <Skull className="w-8 h-8" />,
+  ghost: <Ghost className="w-8 h-8" />,
+  rocket: <Rocket className="w-8 h-8" />,
+  swords: <Swords className="w-8 h-8" />,
+  runner: <PersonStanding className="w-8 h-8" />,
+  bike: <Bike className="w-8 h-8" />,
+  blocks: <Blocks className="w-8 h-8" />,
+  grid: <Grid3x3 className="w-8 h-8" />,
+  dice: <Dices className="w-8 h-8" />,
+  anchor: <Anchor className="w-8 h-8" />,
+  waves: <Waves className="w-8 h-8" />,
+};
 
 export default function GamesClient({
   externalGames = [],
@@ -274,7 +300,9 @@ export default function GamesClient({
               >
                 <div className="w-full h-28 flex items-center justify-center relative"
                   style={{ background: `linear-gradient(135deg,${trendingCover(g.id).from},${trendingCover(g.id).to})` }}>
-                  <span className="text-3xl font-extrabold text-white/90">{g.name.charAt(0)}</span>
+                  <span className="w-14 h-14 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center text-white shadow-sm">
+                    {TREND_ART[g.art]}
+                  </span>
                   <Box className="w-7 h-7 text-white/45 absolute bottom-2 right-2" />
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/45 transition-colors">

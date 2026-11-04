@@ -116,7 +116,7 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
               BBC News
             </span>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory md:grid md:grid-cols-2 md:overflow-visible">
+          <div className="rail flex gap-3 pb-2 snap-x snap-mandatory md:grid md:grid-cols-2 md:overflow-visible">
             {news.slice(0, 8).map((n) => (
               <a key={n.link} href={n.link} target="_blank" rel="noopener noreferrer"
                 className="card p-4 min-w-[75%] sm:min-w-[45%] md:min-w-0 snap-start hover:shadow-md transition-shadow flex flex-col gap-1.5">
@@ -401,10 +401,21 @@ function StudyRoom({ initial, currentUserId, sites, books }: { initial: StudyCar
             <a key={b.id} href={b.pdf_url} target="_blank" rel="noopener noreferrer"
               className="rounded-2xl border overflow-hidden transition-transform hover:scale-[1.02]"
               style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
-              <div className="h-24 flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg,rgb(var(--a-800)),rgb(var(--b-500)))" }}>
-                <Library className="w-8 h-8 text-white/80" />
-              </div>
+              {b.cover_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={b.cover_url}
+                  alt={`Cover of ${b.title}`}
+                  className="w-full h-32 object-cover object-top bg-[var(--border)]"
+                  loading="lazy"
+                  onError={(e) => { e.currentTarget.style.display = "none"; }}
+                />
+              ) : (
+                <div className="h-32 flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg,rgb(var(--a-800)),rgb(var(--b-500)))" }}>
+                  <Library className="w-8 h-8 text-white/80" />
+                </div>
+              )}
               <div className="p-3">
                 <p className="text-sm font-bold leading-tight line-clamp-2" style={{ color: "var(--text-primary)" }}>{b.title}</p>
                 {b.author && <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-secondary)" }}>{b.author}</p>}
