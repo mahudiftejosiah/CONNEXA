@@ -197,6 +197,8 @@ export interface Database {
           attachment_kind: MessageAttachmentKind | null
           attachment_name: string | null
           attachment_size: number | null
+          view_once: boolean
+          viewed_at: string | null
         }
         Insert: Partial<Omit<Database["public"]["Tables"]["messages"]["Row"], "id" | "is_read" | "created_at">>
         Update: Partial<Pick<Database["public"]["Tables"]["messages"]["Row"], "is_read">>
@@ -487,6 +489,10 @@ export interface Database {
       bot_restore: {
         Args: { p_flag_id: string }
         Returns: undefined
+      }
+      open_view_once: {
+        Args: { p_message_id: string }
+        Returns: { attachment_path: string; media_kind: MessageAttachmentKind; ttl_seconds: number }[]
       }
     }
     Enums: {

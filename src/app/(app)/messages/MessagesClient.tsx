@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X } from "lucide-react";
+import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
@@ -39,7 +39,10 @@ function fileSizeLabel(bytes?: number | null) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function attachmentPreview(kind?: MessageAttachmentKind | null) {
+function attachmentPreview(kind?: MessageAttachmentKind | null, viewOnce?: boolean | null) {
+  if (viewOnce && (kind === "image" || kind === "video")) {
+    return kind === "image" ? "View-once photo" : "View-once video";
+  }
   if (kind === "image") return "Sent a photo";
   if (kind === "video") return "Sent a video";
   if (kind === "file") return "Sent a file";
@@ -54,6 +57,21 @@ interface MessagesClientProps {
   openPeerId: string | null;
 }
 
+// A view-once file is signed only for the moment it is on screen. The database
+// policy (migration 017) closes the door a couple of minutes after the tap, so
+// a short TTL here is what actually keeps the link from being reusable.
+const VIEW_ONCE_URL_SECONDS = 60;
+
+type ViewOnceView = {
+  url: string;
+  kind: MessageAttachmentKind;
+  name: string | null;
+};
+
+function isViewOnceMedia(kind: MessageAttachmentKind) {
+  return kind === "image" || kind === "video";
+}
+
 export function MessagesClient({ conversations: initConvs, profile, currentUserId, friends, openPeerId }: MessagesClientProps) {
   const [conversations, setConversations] = useState(initConvs);
   const [active, setActive] = useState<ConversationWithDetails | null>(null);
@@ -64,6 +82,9 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const [tab, setTab] = useState<"all" | "active" | "offline">("all");
   const [search, setSearch] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [viewOnce, setViewOnce] = useState(false);
+  const [viewer, setViewer] = useState<ViewOnceView | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const urlsRef = useRef<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,9 +92,20 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
 
+  // A view-once file the peer sent stays unsigned until it is tapped open.
+  function isPeerViewOnce(msg: Message) {
+    return msg.view_once === true && msg.sender_id !== currentUserId;
+  }
+
+  function markOpened(msgId: string) {
+    setMessages((p) => p.map((m) => (m.id === msgId ? { ...m, viewed_at: m.viewed_at || new Date().toISOString() } : m)));
+  }
+
   // Attachments live in a private bucket, so every path needs a signed URL.
   async function signAttachments(rows: Message[]) {
-    const paths = Array.from(new Set(rows.map((r) => r.attachment_url).filter((p): p is string => Boolean(p))));
+    const paths = Array.from(new Set(rows
+      .filter((r) => r.attachment_url && !isPeerViewOnce(r))
+      .map((r) => r.attachment_url!)));
     const todo = paths.filter((p) => !p.startsWith("http") && !urlsRef.current[p]);
     if (todo.length === 0) return;
     const { data } = await supabase.storage.from("chat-files").createSignedUrls(todo, 6 * 60 * 60);
@@ -82,6 +114,35 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
       if (row.path && row.signedUrl) { urlsRef.current[row.path] = row.signedUrl; changed = true; }
     });
     if (changed) setUrls({ ...urlsRef.current });
+  }
+
+  async function openViewOnce(msg: Message) {
+    if (!msg.attachment_url || openingId) return;
+    setOpeningId(msg.id);
+    const { error } = await supabase.rpc("open_view_once", { p_message_id: msg.id });
+    setOpeningId(null);
+    if (error) {
+      // A closed message stays closed; a missing function means the database
+      // has not been migrated yet and the bubble should stay tappable.
+      const alreadyOpen = /already been opened/i.test(error.message || "");
+      if (alreadyOpen) markOpened(msg.id);
+      toast.error(alreadyOpen ? "That message has already been opened." : "Could not open it. Has migration 017 been applied?");
+      return;
+    }
+    const { data, error: signError } = await supabase.storage
+      .from("chat-files")
+      .createSignedUrl(msg.attachment_url, VIEW_ONCE_URL_SECONDS);
+    if (signError || !data?.signedUrl) {
+      markOpened(msg.id);
+      toast.error("Could not load that file. Has migration 017 been applied?");
+      return;
+    }
+    markOpened(msg.id);
+    setViewer({
+      url: data.signedUrl,
+      kind: msg.attachment_kind || "file",
+      name: msg.attachment_name,
+    });
   }
 
   // Real-time subscription
@@ -106,6 +167,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
 
   async function openConversation(conv: ConversationWithDetails) {
     setActive(conv);
+    setViewer(null);
     setLoadingMsgs(true);
     const { data } = await supabase
       .from("messages")
@@ -129,7 +191,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   }
 
   function pickFile(next: File | null) {
-    if (!next) { setFile(null); return; }
+    if (!next) { setFile(null); setViewOnce(false); return; }
     const kind = kindOfFile(next);
     const limit = sizeLimit(kind);
     if (next.size > limit) {
@@ -138,6 +200,8 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
       return;
     }
     setFile(next);
+    // Documents are opened outside the app, so they cannot be shown once.
+    if (!isViewOnceMedia(kind)) setViewOnce(false);
   }
 
   async function sendMessage() {
@@ -162,11 +226,14 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
       attachment = { url: path, kind, name: file.name.slice(0, 120), size: file.size };
     }
 
+    const asViewOnce = viewOnce && !!attachment && isViewOnceMedia(attachment.kind);
+
     setInput("");
     setFile(null);
+    setViewOnce(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
 
-    const { data, error } = await supabase.from("messages").insert({
+    const payload = {
       conversation_id: active.id,
       sender_id: currentUserId,
       content,
@@ -174,10 +241,15 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
       attachment_kind: attachment?.kind ?? null,
       attachment_name: attachment?.name ?? null,
       attachment_size: attachment?.size ?? null,
-    }).select().single();
+      // Left out entirely when off, so an un-migrated database still accepts the
+      // message rather than rejecting an unknown column.
+      ...(asViewOnce ? { view_once: true } : {}),
+    };
+
+    const { data, error } = await supabase.from("messages").insert(payload).select().single();
     setSending(false);
     if (error) {
-      toast.error("Failed to send message.");
+      toast.error(asViewOnce ? "Failed to send. Has migration 017 been applied?" : "Failed to send message.");
       setInput(content);
       if (attachment) void supabase.storage.from("chat-files").remove([attachment.url]);
       return;
@@ -343,7 +415,8 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     </div>
                     <p className="text-xs text-[var(--text-secondary)] truncate">
                       {conv.last_message
-                        ? (conv.last_message.content || attachmentPreview(conv.last_message.attachment_kind))
+                        ? (conv.last_message.content ||
+                            attachmentPreview(conv.last_message.attachment_kind, conv.last_message.view_once))
                         : "No messages yet"}
                     </p>
                   </div>
@@ -367,7 +440,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
           <>
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)]">
-              <button onClick={() => setActive(null)} className="md:hidden p-1 rounded-lg hover:bg-[var(--border)]">
+              <button onClick={() => { setActive(null); setViewer(null); }} className="md:hidden p-1 rounded-lg hover:bg-[var(--border)]">
                 <ArrowLeft className="w-5 h-5" />
               </button>
               {(() => {
@@ -395,10 +468,40 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
               ) : (
                 messages.map((msg) => {
                   const isMe = msg.sender_id === currentUserId;
-                  const media = msg.attachment_url ? urls[msg.attachment_url] : undefined;
+                  const peerViewOnce = isPeerViewOnce(msg);
+                  const opened = peerViewOnce && !!msg.viewed_at;
+                  const media = msg.attachment_url && !peerViewOnce ? urls[msg.attachment_url] : undefined;
 
                   let attachment: React.ReactNode = null;
-                  if (msg.attachment_kind === "image") {
+                  if (peerViewOnce) {
+                    // No media and no link on the bubble: opening it goes through
+                    // the viewer, and the database closes the file behind it.
+                    attachment = opened ? (
+                      <p className="flex items-center gap-2 px-4 pt-3 text-xs opacity-70">
+                        <CheckCheck className="w-4 h-4 flex-shrink-0" />
+                        Opened · view once
+                      </p>
+                    ) : (
+                      <button
+                        onClick={() => void openViewOnce(msg)}
+                        disabled={openingId === msg.id}
+                        className="w-full flex items-center gap-2.5 px-4 pt-3 text-left hover:opacity-90 disabled:opacity-60"
+                        aria-label={`Open the ${msg.attachment_kind === "video" ? "video" : "photo"} sent for one view`}
+                      >
+                        <span className="p-2 rounded-xl bg-black/15 flex-shrink-0">
+                          <Eye className="w-4 h-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium">
+                            {msg.attachment_kind === "video" ? "View-once video" : "View-once photo"}
+                          </span>
+                          <span className="block text-[11px] opacity-70">
+                            {openingId === msg.id ? "Opening…" : "Tap to view · disappears after"}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  } else if (msg.attachment_kind === "image") {
                     attachment = media ? (
                       <a href={media} target="_blank" rel="noopener noreferrer" className="block">
                         <img src={media} alt={msg.attachment_name || "Photo"} className="max-h-72 w-full object-cover" loading="lazy" />
@@ -436,6 +539,12 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                           : "bg-[var(--border)] text-[var(--text-primary)] rounded-bl-sm"
                       }`}>
                         {attachment}
+                        {msg.view_once && isMe && (
+                          <p className="flex items-center gap-1.5 px-4 pt-1.5 text-[11px] text-white/70">
+                            <Eye className="w-3.5 h-3.5 flex-shrink-0" />
+                            View once{msg.viewed_at ? " · opened" : " · waiting"}
+                          </p>
+                        )}
                         {msg.content && <p className="leading-relaxed px-4 pt-2.5">{msg.content}</p>}
                         <p className={`text-[10px] px-4 pt-1 pb-2 ${isMe ? "text-white/60" : "text-[var(--text-secondary)]"}`}>
                           {formatMessageTime(msg.created_at)}
@@ -456,6 +565,11 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     <FileText className="w-4 h-4 flex-shrink-0 text-[var(--text-secondary)]" />
                     <span className="text-xs text-[var(--text-primary)] truncate">{file.name}</span>
                     <span className="text-[11px] text-[var(--text-secondary)] flex-shrink-0">{fileSizeLabel(file.size)}</span>
+                    {viewOnce && isViewOnceMedia(kindOfFile(file)) && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold flex-shrink-0 text-[var(--brand-gold)]">
+                        <Eye className="w-3 h-3" /> View once
+                      </span>
+                    )}
                     <button
                       onClick={() => pickFile(null)}
                       className="p-0.5 rounded hover:bg-[var(--border)] flex-shrink-0"
@@ -482,6 +596,19 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>
+                <button
+                  onClick={() => setViewOnce((v) => !v)}
+                  disabled={!file || !isViewOnceMedia(kindOfFile(file)) || sending}
+                  aria-label="Send this photo or video for one view only"
+                  aria-pressed={viewOnce}
+                  className={`p-2.5 rounded-xl border flex-shrink-0 transition-colors disabled:opacity-40 ${
+                    viewOnce
+                      ? "bg-brand-green-800 text-white border-brand-green-800"
+                      : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
                 <input
                   type="text"
                   placeholder="Type a message…"
@@ -504,6 +631,48 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
           </>
         )}
       </div>
+
+      {/* View-once viewer: the only place this media ever appears, and the URL
+          behind it expires in about a minute. */}
+      {viewer && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="View-once message"
+        >
+          <div className="flex items-center gap-2 text-white/80 text-xs mb-3">
+            <Eye className="w-4 h-4 flex-shrink-0" />
+            <span>{viewer.kind === "video" ? "View-once video" : "View-once photo"} · closes when you leave</span>
+            <button
+              onClick={() => setViewer(null)}
+              className="ml-2 p-1.5 rounded-full bg-white/15 hover:bg-white/25"
+              aria-label="Close view-once message"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {viewer.kind === "video" ? (
+            <video
+              src={viewer.url}
+              controls
+              playsInline
+              autoPlay
+              controlsList="nodownload noremoteplayback"
+              disablePictureInPicture
+              onContextMenu={(e) => e.preventDefault()}
+              className="max-h-[70vh] w-full max-w-3xl bg-black"
+            />
+          ) : (
+            <img
+              src={viewer.url}
+              alt={viewer.name || "Photo"}
+              onContextMenu={(e) => e.preventDefault()}
+              className="max-h-[70vh] w-auto max-w-full object-contain"
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
