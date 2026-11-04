@@ -221,11 +221,17 @@
   border: 1px solid var(--border);
   background: #000;
   height: 80vh;
+  height: 80dvh;
+}
+/* Phones: leave the header and the composer visible above the game. */
+@media (max-width: 767px) {
+  .trend-shell { height: 62dvh; }
 }
 .trend-shell:fullscreen {
   border-radius: 0;
   border: 0;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   background: #000;
 }
@@ -237,6 +243,16 @@
     border: 1px solid var(--border);
     border-radius: 1rem;
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08);
+  }
+
+  /* Horizontally scrolling card rail. A plain overflow-x:auto rail still
+     reports the summed width of its cards as its own minimum, which pushes the
+     whole page sideways on phones. Pinning the width to the container and
+     letting min-width pull it back to 100% keeps the page one screen wide. */
+  .rail {
+    overflow-x: auto;
+    width: 0;
+    min-width: 100%;
   }
 
   .btn-primary {

@@ -208,8 +208,8 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
           </button>
           {menuOpen && (
             <>
-              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-              <div className="absolute right-0 mt-1 w-44 card shadow-lg z-20 py-1 overflow-hidden">
+              <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 mt-1 w-44 card shadow-lg z-50 py-1 overflow-hidden">
                 {isOwner && (
                   <>
                     <button onClick={() => { setMenuOpen(false); if (onEdit) onEdit(post); else openEditModal(); }}
@@ -256,7 +256,7 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
       {/* Content */}
       {post.content && (
         <div className="px-4 pb-3">
-          <p className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+          <p className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">{post.content}</p>
         </div>
       )}
 
@@ -360,7 +360,7 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
               onTouchEnd={() => { if (pressTimer.current) clearTimeout(pressTimer.current); }}
               onTouchMove={() => { if (pressTimer.current) clearTimeout(pressTimer.current); }}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-[var(--border)]",
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium max-[420px]:gap-1 max-[420px]:px-2 max-[420px]:text-xs transition-all duration-200 hover:bg-[var(--border)]",
                 userReaction ? "text-brand-green-800 dark:text-brand-gold-400" : "text-[var(--text-secondary)]"
               )}
               aria-label={userReaction ? `Remove ${reactionMeta(userReaction).label.toLowerCase()}` : "Like"}
@@ -376,7 +376,7 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
 
           <button
             onClick={openCommentsSection}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium max-[420px]:gap-1 max-[420px]:px-2 max-[420px]:text-xs text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
             <span>Comment</span>
@@ -384,7 +384,7 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
 
           <button
             onClick={() => { if (onShare) onShare(post); else setShareOpen(true); }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium max-[420px]:gap-1 max-[420px]:px-2 max-[420px]:text-xs text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors"
           >
             <Share2 className="w-4 h-4" />
             <span>Repost</span>
@@ -416,7 +416,7 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
                   <Link href={`/profile/${c.author.username}`} className="text-xs font-semibold text-[var(--text-primary)] hover:underline block">
                     {c.author.display_name}
                   </Link>
-                  <p className="text-sm text-[var(--text-primary)] leading-snug whitespace-pre-wrap break-words">{c.content}</p>
+                  <p className="text-sm text-[var(--text-primary)] leading-snug whitespace-pre-wrap [overflow-wrap:anywhere]">{c.content}</p>
                 </div>
                 <div className="flex items-center gap-3 text-xs mt-0.5 px-2">
                   <span className="text-[var(--text-secondary)]">{formatRelativeTime(c.created_at)}</span>

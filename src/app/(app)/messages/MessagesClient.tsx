@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon } from "lucide-react";
+import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
 import { VerifiedTick } from "@/components/ui/VerifiedTick";
 import { createClient } from "@/lib/supabase/client";
-import type { ConversationWithDetails, Profile, Message } from "@/lib/supabase/types";
-import { formatMessageTime, formatRelativeTime } from "@/lib/utils";
+import type { ConversationWithDetails, Profile, Message, MessageAttachmentKind } from "@/lib/supabase/types";
+import {
+  formatMessageTime, formatRelativeTime,
+  isValidImageType, isValidVideoType,
+  MAX_IMAGE_SIZE, MAX_VIDEO_SIZE, MAX_CHAT_FILE_SIZE,
+} from "@/lib/utils";
 import toast from "react-hot-toast";
 
 type FriendLite = Pick<Profile, "id" | "username" | "display_name" | "avatar_url" | "is_verified"> & { last_seen?: string | null };
@@ -16,6 +20,30 @@ type FriendLite = Pick<Profile, "id" | "username" | "display_name" | "avatar_url
 const ONLINE_WINDOW_MS = 5 * 60_000;
 function isOnline(lastSeen?: string | null) {
   return !!lastSeen && Date.now() - new Date(lastSeen).getTime() < ONLINE_WINDOW_MS;
+}
+
+function kindOfFile(file: File): MessageAttachmentKind {
+  if (isValidImageType(file.type)) return "image";
+  if (isValidVideoType(file.type)) return "video";
+  return "file";
+}
+
+function sizeLimit(kind: MessageAttachmentKind) {
+  return kind === "image" ? MAX_IMAGE_SIZE : kind === "video" ? MAX_VIDEO_SIZE : MAX_CHAT_FILE_SIZE;
+}
+
+function fileSizeLabel(bytes?: number | null) {
+  if (!bytes && bytes !== 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function attachmentPreview(kind?: MessageAttachmentKind | null) {
+  if (kind === "image") return "Sent a photo";
+  if (kind === "video") return "Sent a video";
+  if (kind === "file") return "Sent a file";
+  return "No messages yet";
 }
 
 interface MessagesClientProps {
@@ -35,9 +63,26 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const [sending, setSending] = useState(false);
   const [tab, setTab] = useState<"all" | "active" | "offline">("all");
   const [search, setSearch] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [urls, setUrls] = useState<Record<string, string>>({});
+  const urlsRef = useRef<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
+
+  // Attachments live in a private bucket, so every path needs a signed URL.
+  async function signAttachments(rows: Message[]) {
+    const paths = Array.from(new Set(rows.map((r) => r.attachment_url).filter((p): p is string => Boolean(p))));
+    const todo = paths.filter((p) => !p.startsWith("http") && !urlsRef.current[p]);
+    if (todo.length === 0) return;
+    const { data } = await supabase.storage.from("chat-files").createSignedUrls(todo, 6 * 60 * 60);
+    let changed = false;
+    (data || []).forEach((row) => {
+      if (row.path && row.signedUrl) { urlsRef.current[row.path] = row.signedUrl; changed = true; }
+    });
+    if (changed) setUrls({ ...urlsRef.current });
+  }
 
   // Real-time subscription
   useEffect(() => {
@@ -50,7 +95,9 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
         table: "messages",
         filter: `conversation_id=eq.${active.id}`,
       }, (payload) => {
-        setMessages((p) => [...p, payload.new as Message]);
+        const row = payload.new as Message;
+        setMessages((p) => p.some((m) => m.id === row.id) ? p : [...p, row]);
+        void signAttachments([row]);
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
       })
       .subscribe();
@@ -67,6 +114,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
       .order("created_at", { ascending: true })
       .limit(50);
     setMessages(data || []);
+    void signAttachments(data || []);
     setLoadingMsgs(false);
 
     // Mark as read
@@ -80,18 +128,61 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     setTimeout(() => bottomRef.current?.scrollIntoView(), 100);
   }
 
+  function pickFile(next: File | null) {
+    if (!next) { setFile(null); return; }
+    const kind = kindOfFile(next);
+    const limit = sizeLimit(kind);
+    if (next.size > limit) {
+      toast.error(`Too large — ${kind === "image" ? "photos" : kind === "video" ? "videos" : "files"} can be up to ${Math.round(limit / 1024 / 1024)}MB.`);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setFile(next);
+  }
+
   async function sendMessage() {
-    if (!input.trim() || !active || sending) return;
-    setSending(true);
+    if (!active || sending) return;
     const content = input.trim();
+    if (!content && !file) return;
+    setSending(true);
+
+    let attachment: { url: string; kind: MessageAttachmentKind; name: string; size: number } | null = null;
+    if (file) {
+      const kind = kindOfFile(file);
+      const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) : "bin";
+      const path = `${currentUserId}/${active.id}_${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("chat-files")
+        .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+      if (uploadError) {
+        setSending(false);
+        toast.error("Upload failed. Has migration 015 been applied?");
+        return;
+      }
+      attachment = { url: path, kind, name: file.name.slice(0, 120), size: file.size };
+    }
+
     setInput("");
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
     const { data, error } = await supabase.from("messages").insert({
       conversation_id: active.id,
       sender_id: currentUserId,
       content,
+      attachment_url: attachment?.url ?? null,
+      attachment_kind: attachment?.kind ?? null,
+      attachment_name: attachment?.name ?? null,
+      attachment_size: attachment?.size ?? null,
     }).select().single();
     setSending(false);
-    if (error) { toast.error("Failed to send message."); setInput(content); return; }
+    if (error) {
+      toast.error("Failed to send message.");
+      setInput(content);
+      if (attachment) void supabase.storage.from("chat-files").remove([attachment.url]);
+      return;
+    }
+    if (attachment) void signAttachments([data]);
     // Render it immediately; the realtime echo can also arrive, so dedupe by id.
     setMessages((p) => p.some((m) => m.id === data.id) ? p : [...p, data]);
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -177,7 +268,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   }, [openPeerId, conversations, active]);
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] -mx-4 -mt-6">
+    <div className="flex h-[calc(100dvh-8rem)] md:h-[calc(100dvh-5rem)] -mx-4 -mt-6 -mb-20 md:-mb-6">
       {/* Conversation list */}
       <div className={`w-full md:w-80 border-r border-[var(--border)] flex flex-col ${active ? "hidden md:flex" : "flex"}`}>
         <div className="p-4 border-b border-[var(--border)]">
@@ -251,7 +342,9 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                       )}
                     </div>
                     <p className="text-xs text-[var(--text-secondary)] truncate">
-                      {conv.last_message ? conv.last_message.content : "No messages yet"}
+                      {conv.last_message
+                        ? (conv.last_message.content || attachmentPreview(conv.last_message.attachment_kind))
+                        : "No messages yet"}
                     </p>
                   </div>
                   {conv.unread_count > 0 && (
@@ -302,15 +395,49 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
               ) : (
                 messages.map((msg) => {
                   const isMe = msg.sender_id === currentUserId;
+                  const media = msg.attachment_url ? urls[msg.attachment_url] : undefined;
+
+                  let attachment: React.ReactNode = null;
+                  if (msg.attachment_kind === "image") {
+                    attachment = media ? (
+                      <a href={media} target="_blank" rel="noopener noreferrer" className="block">
+                        <img src={media} alt={msg.attachment_name || "Photo"} className="max-h-72 w-full object-cover" loading="lazy" />
+                      </a>
+                    ) : <p className="px-4 pt-2.5 text-xs opacity-60">Loading photo…</p>;
+                  } else if (msg.attachment_kind === "video") {
+                    attachment = media ? (
+                      <video src={media} controls playsInline preload="metadata" className="max-h-72 w-full bg-black" />
+                    ) : <p className="px-4 pt-2.5 text-xs opacity-60">Loading video…</p>;
+                  } else if (msg.attachment_kind === "file") {
+                    attachment = media ? (
+                      <a
+                        href={media}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        className="flex items-center gap-2.5 px-4 pt-2.5 min-w-0"
+                      >
+                        <FileText className="w-8 h-8 flex-shrink-0 opacity-70" />
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium truncate">{msg.attachment_name || "File"}</span>
+                          <span className={`block text-[11px] ${isMe ? "text-white/60" : "text-[var(--text-secondary)]"}`}>
+                            {fileSizeLabel(msg.attachment_size)}
+                          </span>
+                        </span>
+                      </a>
+                    ) : <p className="px-4 pt-2.5 text-xs opacity-60">Loading file…</p>;
+                  }
+
                   return (
                     <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
+                      <div className={`max-w-[80%] md:max-w-[75%] rounded-2xl text-sm overflow-hidden ${
                         isMe
                           ? "bg-brand-green-800 text-white rounded-br-sm"
                           : "bg-[var(--border)] text-[var(--text-primary)] rounded-bl-sm"
                       }`}>
-                        <p className="leading-relaxed">{msg.content}</p>
-                        <p className={`text-[10px] mt-1 ${isMe ? "text-white/60" : "text-[var(--text-secondary)]"}`}>
+                        {attachment}
+                        {msg.content && <p className="leading-relaxed px-4 pt-2.5">{msg.content}</p>}
+                        <p className={`text-[10px] px-4 pt-1 pb-2 ${isMe ? "text-white/60" : "text-[var(--text-secondary)]"}`}>
                           {formatMessageTime(msg.created_at)}
                         </p>
                       </div>
@@ -322,24 +449,57 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
             </div>
 
             {/* Input */}
-            <div className="px-4 py-3 border-t border-[var(--border)] flex gap-2">
-              <input
-                type="text"
-                placeholder="Type a message…"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                className="input flex-1"
-                maxLength={5000}
-              />
-              <button
-                onClick={sendMessage}
-                disabled={!input.trim() || sending}
-                className="btn-primary px-4 py-2.5 rounded-xl disabled:opacity-40"
-                aria-label="Send message"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+            <div className="border-t border-[var(--border)]">
+              {file && (
+                <div className="px-4 pt-3">
+                  <div className="inline-flex items-center gap-2 max-w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
+                    <FileText className="w-4 h-4 flex-shrink-0 text-[var(--text-secondary)]" />
+                    <span className="text-xs text-[var(--text-primary)] truncate">{file.name}</span>
+                    <span className="text-[11px] text-[var(--text-secondary)] flex-shrink-0">{fileSizeLabel(file.size)}</span>
+                    <button
+                      onClick={() => pickFile(null)}
+                      className="p-0.5 rounded hover:bg-[var(--border)] flex-shrink-0"
+                      aria-label="Remove attachment"
+                    >
+                      <X className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="px-4 py-3 flex gap-2 items-end">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip"
+                  onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={sending}
+                  className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 flex-shrink-0"
+                  aria-label="Attach a photo, video or document"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </button>
+                <input
+                  type="text"
+                  placeholder="Type a message…"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                  className="input flex-1"
+                  maxLength={5000}
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={(!input.trim() && !file) || sending}
+                  className="btn-primary px-4 py-2.5 rounded-xl disabled:opacity-40 flex-shrink-0"
+                  aria-label="Send message"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </>
         )}

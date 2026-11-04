@@ -25,7 +25,7 @@ export function StoriesTray({ stories, profile, currentUserId }: StoriesTrayProp
 
   return (
     <div className="card p-3">
-      <div className="flex items-start gap-4 overflow-x-auto pb-1">
+      <div className="rail flex items-start gap-4 pb-1">
         {/* Your story */}
         <Link href="/stories" className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16 group">
           <span className="relative block w-14 h-14 rounded-full p-[2px]" style={{ background: "var(--border)" }}>

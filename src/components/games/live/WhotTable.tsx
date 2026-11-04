@@ -340,7 +340,7 @@ export default function WhotTable({
         ) : null}
       </div>
 
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
+      <div className="rail flex gap-1.5 pb-1">
         {hand.map((card, idx) => (
           <PlayingCard
             key={card.id}

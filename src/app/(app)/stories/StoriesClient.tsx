@@ -95,7 +95,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
       <h1 className="text-2xl font-extrabold" style={{ color: "var(--text-primary)" }}>Stories</h1>
 
       {/* Story row */}
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="rail flex gap-3 pb-2">
         {/* Create story button */}
         <button
           onClick={() => setCreating(true)}

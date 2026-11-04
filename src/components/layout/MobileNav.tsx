@@ -25,19 +25,21 @@ export function MobileNav({ username }: { username: string | null }) {
       style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       aria-label="Mobile navigation"
     >
-      <div className="flex items-center justify-around h-16 px-2">
+      <div className="flex items-center h-16 px-1">
         {items.map((item) => {
           const active = pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-colors min-w-[3rem]"
+              className="relative flex-1 min-w-0 basis-0 flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-colors"
               style={{ color: active ? "var(--brand-gold)" : "var(--text-secondary)" }}
               aria-label={item.label}
             >
               {item.icon}
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[9px] max-[400px]:text-[8px] font-medium tracking-tight w-full text-center truncate leading-tight">
+                {item.label}
+              </span>
               {item.badge && item.badge > 0 ? (
                 <span className="badge absolute top-0 right-1 text-[9px] min-w-[1rem] h-4">
                   {item.badge > 9 ? "9+" : item.badge}

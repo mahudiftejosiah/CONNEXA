@@ -209,7 +209,7 @@ function ReelSpotlight({ spotlights, onOpen }: { spotlights: PoolReel[]; onOpen:
           Watch all
         </button>
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-1 snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="rail flex gap-3 pb-1 snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {spotlights.slice(0, 8).map((s) => (
           <button key={`${s.platform}-${s.external_id}`} onClick={onOpen}
             className="min-w-[132px] max-w-[132px] snap-start text-left group">

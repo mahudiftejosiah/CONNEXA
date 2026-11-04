@@ -65,7 +65,7 @@ function Shell({
       <div className="flex flex-1 pt-16">
         {signedIn && <Sidebar profile={profile} isAdmin={isAdmin} />}
         <main className={`flex-1 ${signedIn ? "md:ml-64" : ""} ${rightSidebar ? "lg:mr-80" : ""}`}>
-          <div className="max-w-2xl mx-auto px-4 py-6">
+          <div className="max-w-2xl mx-auto px-4 pt-6 pb-20 md:pb-6">
             {children}
           </div>
         </main>

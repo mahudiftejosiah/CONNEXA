@@ -60,6 +60,7 @@ export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 export const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 export const MAX_AUDIO_SIZE = 25 * 1024 * 1024; // 25MB
 export const MAX_STORY_SIZE = 50 * 1024 * 1024; // 50MB
+export const MAX_CHAT_FILE_SIZE = 25 * 1024 * 1024; // 25MB — documents in Messages
 
 export function isValidImageType(type: string): boolean {
   return ACCEPTED_IMAGE_TYPES.includes(type);

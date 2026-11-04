@@ -118,7 +118,7 @@ export function CommentSection({ postId, currentProfile }: CommentSectionProps) 
                   >
                     {c.author.display_name}
                   </Link>
-                  <p className="text-sm mt-0.5 whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
+                  <p className="text-sm mt-0.5 whitespace-pre-wrap [overflow-wrap:anywhere]" style={{ color: "var(--text-primary)" }}>
                     {c.content}
                   </p>
                 </div>

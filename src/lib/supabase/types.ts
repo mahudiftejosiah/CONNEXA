@@ -7,6 +7,7 @@ export type Json =
   | Json[]
 
 export type PostVisibility = "public" | "friends" | "only_me"
+export type MessageAttachmentKind = "image" | "video" | "file"
 export type FriendRequestStatus = "pending" | "accepted" | "rejected"
 export type GroupRole = "owner" | "admin" | "member"
 export type GroupVisibility = "public" | "private"
@@ -100,11 +101,12 @@ export interface Database {
           parent_id: string | null
           reaction_count: number
           reply_count: number
+          hidden?: boolean
           created_at: string
           updated_at: string
         }
-        Insert: Partial<Omit<Database["public"]["Tables"]["comments"]["Row"], "id" | "reaction_count" | "reply_count" | "created_at" | "updated_at">>
-        Update: Partial<Pick<Database["public"]["Tables"]["comments"]["Row"], "content" | "updated_at">>
+        Insert: Partial<Omit<Database["public"]["Tables"]["comments"]["Row"], "id" | "reaction_count" | "reply_count" | "hidden" | "created_at" | "updated_at">>
+        Update: Partial<Pick<Database["public"]["Tables"]["comments"]["Row"], "content" | "hidden" | "updated_at">>
       }
       friend_requests: {
         Row: {
@@ -191,6 +193,10 @@ export interface Database {
           content: string
           is_read: boolean
           created_at: string
+          attachment_url: string | null
+          attachment_kind: MessageAttachmentKind | null
+          attachment_name: string | null
+          attachment_size: number | null
         }
         Insert: Partial<Omit<Database["public"]["Tables"]["messages"]["Row"], "id" | "is_read" | "created_at">>
         Update: Partial<Pick<Database["public"]["Tables"]["messages"]["Row"], "is_read">>
@@ -438,6 +444,25 @@ export interface Database {
         Insert: Omit<Database["public"]["Tables"]["account_upgrades"]["Row"], "id" | "created_at" | "reviewed_by" | "reviewed_at"> & { status?: "pending" | "approved" | "rejected" }
         Update: Partial<Omit<Database["public"]["Tables"]["account_upgrades"]["Row"], "id" | "user_id" | "reference" | "created_at">>
       }
+      bot_flags: {
+        Row: {
+          id: string
+          entity_type: "post" | "comment"
+          entity_id: string
+          author_id: string | null
+          matched_keyword: string | null
+          excerpt: string | null
+          action: "flag" | "hide"
+          previous_visibility: PostVisibility | null
+          previous_hidden: boolean | null
+          open: boolean
+          created_at: string
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: Omit<Database["public"]["Tables"]["bot_flags"]["Row"], "id" | "created_at" | "resolved_at" | "resolved_by">
+        Update: Partial<Pick<Database["public"]["Tables"]["bot_flags"]["Row"], "action" | "open" | "resolved_at" | "resolved_by">>
+      }
     }
     Views: {
       [_ in never]: never
@@ -446,6 +471,22 @@ export interface Database {
       unread_message_count: {
         Args: { p_user: string }
         Returns: number
+      }
+      bot_inspect: {
+        Args: { p_entity_type: string; p_entity_id: string; p_content: string }
+        Returns: string
+      }
+      bot_scan: {
+        Args: { p_limit?: number }
+        Returns: number
+      }
+      bot_hide: {
+        Args: { p_flag_id: string }
+        Returns: undefined
+      }
+      bot_restore: {
+        Args: { p_flag_id: string }
+        Returns: undefined
       }
     }
     Enums: {
@@ -486,6 +527,10 @@ export type StudyBook = Database["public"]["Tables"]["study_books"]["Row"]
 export type GameScore = Database["public"]["Tables"]["game_scores"]["Row"]
 export type GameRequest = Database["public"]["Tables"]["game_requests"]["Row"]
 export type AccountUpgrade = Database["public"]["Tables"]["account_upgrades"]["Row"]
+export type BotFlag = Database["public"]["Tables"]["bot_flags"]["Row"]
+export type BotFlagWithAuthor = BotFlag & { author: MiniProfile | null }
+
+export type BotSettings = { enabled: boolean; autoHide: boolean; keywords: string[] }
 
 export type ColorTheme = "follow_site" | "connexa" | "crimson" | "ocean" | "violet" | "amber"
 
