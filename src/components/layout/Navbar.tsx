@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, MessageCircle, Search, Menu, X, Settings } from "lucide-react";
-import { useState } from "react";
+import { Bell, MessageCircle, Search, Menu, X, Settings, ShieldCheck } from "lucide-react";
+import { useState, useTransition } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { Avatar } from "@/components/ui/Avatar";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
+import { backToAdminPanel } from "@/lib/actions/adminView";
 import { useUnreadCounts } from "./UnreadProvider";
 import type { Profile } from "@/lib/supabase/types";
 
@@ -27,6 +28,8 @@ export function Navbar({ profile }: NavbarProps) {
     const q = searchQuery.trim();
     if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
   }
+
+  const [returning, startReturning] = useTransition();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 border-b shadow-sm" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
@@ -62,6 +65,19 @@ export function Navbar({ profile }: NavbarProps) {
 
           {profile ? (
             <>
+              {profile.is_admin && (
+                <button
+                  type="button"
+                  onClick={() => startReturning(() => void backToAdminPanel())}
+                  disabled={returning}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide transition-opacity hover:opacity-80 disabled:opacity-50"
+                  style={{ backgroundColor: "var(--brand-gold)", color: "#12372A" }}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span className="hidden sm:inline">Admin panel</span>
+                </button>
+              )}
+
               <ThemeToggle />
 
               <Link

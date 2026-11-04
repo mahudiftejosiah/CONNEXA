@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trash2, Edit2, Eye, Ban } from "lucide-react";
@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { adminUpdatePost, adminDeletePost, adminDeleteStory } from "@/lib/actions/admin";
+import { enterPublicSiteAt } from "@/lib/actions/adminView";
 import { formatRelativeTime } from "@/lib/utils";
 import type { Profile, PostWithAuthor, PostVisibility } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
@@ -28,6 +29,7 @@ export function AdminUserClient({ target, posts, stories, stats, currentAdminId 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmPost, setConfirmPost] = useState<string | null>(null);
   const [confirmStory, setConfirmStory] = useState<string | null>(null);
+  const [entering, startEntering] = useTransition();
 
   function startEdit(p: PostWithAuthor) {
     setEditingId(p.id);
@@ -87,13 +89,23 @@ export function AdminUserClient({ target, posts, stories, stats, currentAdminId 
             </div>
           </div>
           <div className="flex flex-col gap-2 flex-shrink-0">
-            <Link href={`/profile/${target.username}`} className="btn-ghost text-sm flex items-center gap-1.5 justify-center">
+            <button
+              type="button"
+              onClick={() => startEntering(() => void enterPublicSiteAt(`/profile/${target.username}`))}
+              disabled={entering}
+              className="btn-ghost text-sm flex items-center gap-1.5 justify-center disabled:opacity-50"
+            >
               <Eye className="w-4 h-4" /> Public view
-            </Link>
+            </button>
             {target.id !== currentAdminId && (
-              <Link href={`/profile/${target.username}`} className="btn-ghost text-sm flex items-center gap-1.5 justify-center text-red-500">
+              <button
+                type="button"
+                onClick={() => startEntering(() => void enterPublicSiteAt(`/profile/${target.username}`))}
+                disabled={entering}
+                className="btn-ghost text-sm flex items-center gap-1.5 justify-center text-red-500 disabled:opacity-50"
+              >
                 <Ban className="w-4 h-4" /> Flag / Ban
-              </Link>
+              </button>
             )}
           </div>
         </div>

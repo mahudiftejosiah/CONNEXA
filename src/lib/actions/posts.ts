@@ -59,6 +59,9 @@ export async function createPost(formData: FormData) {
     await supabase.from("post_media").insert(mediaInserts);
   }
 
+  // Assistant bot: returns nothing unless the admin has switched it on.
+  await supabase.rpc("bot_inspect", { p_entity_type: "post", p_entity_id: post.id, p_content: content });
+
   revalidatePath("/feed");
   return { postId: post.id };
 }
@@ -186,6 +189,9 @@ export async function createComment(postId: string, content: string, parentId?: 
       message: `${profile?.display_name || "Someone"} commented on your post`,
     });
   }
+
+  // Assistant bot: returns nothing unless the admin has switched it on.
+  await supabase.rpc("bot_inspect", { p_entity_type: "comment", p_entity_id: data.id, p_content: trimmed });
 
   revalidatePath("/feed");
   return { comment: data };

@@ -1,12 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { revalidateSite } from "@/lib/revalidateSite";
 import type { PostVisibility } from "@/lib/supabase/types";
 
 type AdminCtx = { supabase: Awaited<ReturnType<typeof createClient>>; adminId: string };
 
-async function requireAdmin(): Promise<AdminCtx | { error: string }> {
+export async function requireAdmin(): Promise<AdminCtx | { error: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
@@ -36,8 +36,7 @@ export async function adminUpdatePost(postId: string, content: string, visibilit
     action: "admin_edit_post", reason: "Content edited by admin",
   });
 
-  revalidatePath("/feed");
-  revalidatePath("/admin");
+  revalidateSite();
   return { success: true };
 }
 
@@ -56,8 +55,7 @@ export async function adminDeletePost(postId: string): Promise<{ error?: string;
     action: "admin_delete_post", reason: "Post removed by admin",
   });
 
-  revalidatePath("/feed");
-  revalidatePath("/admin");
+  revalidateSite();
   return { success: true };
 }
 
@@ -76,8 +74,6 @@ export async function adminDeleteStory(storyId: string): Promise<{ error?: strin
     action: "admin_delete_story", reason: "Story removed by admin",
   });
 
-  revalidatePath("/feed");
-  revalidatePath("/stories");
-  revalidatePath("/admin");
+  revalidateSite();
   return { success: true };
 }

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signPostMedia, signStoryMedia } from "@/lib/media";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AdminShell } from "@/components/layout/AdminShell";
 import { AdminUserClient } from "./AdminUserClient";
 import type { Metadata } from "next";
 
@@ -12,7 +12,7 @@ export default async function AdminUserPage({ params }: { params: { id: string }
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: adminProfile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
+  const { data: adminProfile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
   if (!adminProfile?.is_admin) redirect("/feed");
 
   const { data: target } = await supabase.from("profiles").select("*").eq("id", params.id).single();
@@ -39,7 +39,7 @@ export default async function AdminUserPage({ params }: { params: { id: string }
   const stories = await signStoryMedia(supabase, (storiesRes.data || []) as any[]);
 
   return (
-    <AppLayout>
+    <AdminShell profile={adminProfile}>
       <AdminUserClient
         target={target as any}
         posts={posts as any}
@@ -50,6 +50,6 @@ export default async function AdminUserPage({ params }: { params: { id: string }
         }}
         currentAdminId={user.id}
       />
-    </AppLayout>
+    </AdminShell>
   );
 }

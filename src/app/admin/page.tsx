@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { AdminShell } from "@/components/layout/AdminShell";
 import { AdminClient } from "./AdminClient";
 import { getGlobalTheme } from "@/lib/site";
+import { getBotPanel } from "@/lib/bot";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin Dashboard" };
@@ -12,7 +13,7 @@ export default async function AdminPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
   if (!profile?.is_admin) redirect("/feed");
 
   const [usersRes, reportsRes, postsRes, actionsRes, contentRes, gamesRes, reelsRes, upgradesRes, shortcutsRes] = await Promise.all([
@@ -38,9 +39,10 @@ export default async function AdminPage() {
   ]);
 
   const globalTheme = await getGlobalTheme();
+  const bot = await getBotPanel();
 
   return (
-    <AppLayout>
+    <AdminShell profile={profile}>
       <AdminClient
         users={(usersRes.data || []) as any}
         pendingReports={(reportsRes.data || []) as any}
@@ -57,7 +59,8 @@ export default async function AdminPage() {
         globalTheme={globalTheme}
         upgrades={(upgradesRes.data || []) as any}
         siteShortcuts={(shortcutsRes.data || []) as any}
+        bot={bot}
       />
-    </AppLayout>
+    </AdminShell>
   );
 }

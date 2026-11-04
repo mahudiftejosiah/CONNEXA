@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTransition } from "react";
 import {
   Home, Users, Bell, Bookmark, Settings, LogOut,
   Compass, MessageCircle, Film, UsersRound, Shield,
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Profile } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/client";
+import { backToAdminPanel } from "@/lib/actions/adminView";
 import { useUnreadCounts } from "./UnreadProvider";
 
 interface NavItem {
@@ -48,7 +50,6 @@ export function Sidebar({ profile, isAdmin = false }: SidebarProps) {
     ...(profile?.username ? [{ href: `/profile/${profile.username}`, label: "Profile", icon: <UserCircle className="w-5 h-5" /> }] : []),
     { href: "/settings",  label: "Settings", icon: <Settings className="w-5 h-5" /> },
     { href: "/help",      label: "Help",      icon: <HelpCircle className="w-5 h-5" /> },
-    ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: <Shield className="w-5 h-5" /> }] : []),
   ];
 
   function isActive(item: NavItem) {
@@ -61,6 +62,8 @@ export function Sidebar({ profile, isAdmin = false }: SidebarProps) {
     router.push("/");
     router.refresh();
   }
+
+  const [enteringPanel, startEnteringPanel] = useTransition();
 
   return (
     <aside className="hidden md:flex flex-col fixed left-0 top-16 bottom-0 w-64 border-r overflow-y-auto z-30"
@@ -113,6 +116,17 @@ export function Sidebar({ profile, isAdmin = false }: SidebarProps) {
               <span>{item.label}</span>
             </Link>
           ))}
+          {isAdmin && (
+            <button
+              onClick={() => startEnteringPanel(() => void backToAdminPanel())}
+              disabled={enteringPanel}
+              className="nav-link w-full text-left"
+              style={{ color: "var(--brand-gold)" }}
+            >
+              <Shield className="w-5 h-5" />
+              <span>Admin panel</span>
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="nav-link w-full text-left"

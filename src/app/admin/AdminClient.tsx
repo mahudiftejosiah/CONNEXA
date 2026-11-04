@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe } from "lucide-react";
+import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe, Bot } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
+import { AssistantBot } from "./AssistantBot";
+import type { HealthCheck } from "@/lib/botHealth";
 import { createClient } from "@/lib/supabase/client";
-import type { Profile, ContentReport, ModerationAction, SiteContent, ExternalGame, ReelEmbed, SiteShortcut } from "@/lib/supabase/types";
+import type { Profile, ContentReport, ModerationAction, SiteContent, ExternalGame, ReelEmbed, SiteShortcut, BotFlagWithAuthor, BotSettings } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 import { formatRelativeTime } from "@/lib/utils";
 
@@ -34,9 +36,10 @@ interface AdminClientProps {
   globalTheme: string;
   upgrades: UpgradeRow[];
   siteShortcuts: SiteShortcut[];
+  bot: { settings: BotSettings; openFlags: BotFlagWithAuthor[]; resolved: BotFlagWithAuthor[]; checks: HealthCheck[] };
 }
 
-type Tab = "overview" | "users" | "reports" | "actions" | "content" | "appearance" | "games" | "sites" | "verification";
+type Tab = "overview" | "users" | "reports" | "actions" | "content" | "appearance" | "games" | "sites" | "verification" | "assistant";
 
 const THEME_CHOICES = [
   { key: "connexa", label: "Connexa (green/gold)", a: "#12372A", b: "#D6B875" },
@@ -55,7 +58,7 @@ const CONTENT_KEYS: { key: string; label: string }[] = [
   { key: "upgrade", label: "Upgrade / Pricing" },
 ];
 
-export function AdminClient({ users, pendingReports: initReports, recentActions, stats, currentAdminId, siteContent: initContent, externalGames: initGames, reelEmbeds: initReelEmbeds, globalTheme: initTheme, upgrades: initUpgrades, siteShortcuts: initSites }: AdminClientProps) {
+export function AdminClient({ users, pendingReports: initReports, recentActions, stats, currentAdminId, siteContent: initContent, externalGames: initGames, reelEmbeds: initReelEmbeds, globalTheme: initTheme, upgrades: initUpgrades, siteShortcuts: initSites, bot }: AdminClientProps) {
   const [tab, setTab] = useState<Tab>("overview");
   const [reports, setReports] = useState(initReports);
   const [actioningId, setActioningId] = useState<string | null>(null);
@@ -238,6 +241,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
     { key: "games",      label: "Games",     icon: <Gamepad2 className="w-4 h-4" /> },
     { key: "sites",      label: "Sites",     icon: <Globe className="w-4 h-4" /> },
     { key: "verification", label: "Verified", icon: <BadgeCheck className="w-4 h-4" />, badge: upgradeRows.filter((u) => u.status === "pending").length },
+    { key: "assistant", label: "Assistant", icon: <Bot className="w-4 h-4" />, badge: bot.openFlags.length },
   ];
 
   const editingRow = contentRows.find((c) => c.key === editingKey);
@@ -252,7 +256,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
       </div>
 
       {/* Tabs */}
-      <div className="card flex overflow-x-auto">
+      <div className="card rail flex">
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`flex-1 min-w-[5.5rem] py-3 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors ${tab === t.key ? "text-brand-green-800 dark:text-brand-gold-400 border-b-2 border-brand-green-800 dark:border-brand-gold-400" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}>
@@ -678,6 +682,8 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
           </div>
         </div>
       )}
+
+      {tab === "assistant" && <AssistantBot settings={bot.settings} openFlags={bot.openFlags} resolved={bot.resolved} checks={bot.checks} />}
     </div>
   );
 }
