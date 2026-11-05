@@ -397,6 +397,19 @@ export interface Database {
         Insert: Omit<Database["public"]["Tables"]["study_books"]["Row"], "id" | "created_at">
         Update: Partial<Omit<Database["public"]["Tables"]["study_books"]["Row"], "id" | "created_at">>
       }
+      study_progress: {
+        Row: {
+          id: string
+          user_id: string
+          book_id: string
+          position: number
+          percent: number
+          finished_at: string | null
+          updated_at: string
+        }
+        Insert: { user_id: string; book_id: string; position?: number; percent?: number; finished_at?: string | null }
+        Update: Partial<{ position: number; percent: number; finished_at: string | null; updated_at: string }>
+      }
       game_scores: {
         Row: {
           id: string
@@ -530,6 +543,8 @@ export type StudyResource = Database["public"]["Tables"]["study_resources"]["Row
 export type ReelEmbed = Database["public"]["Tables"]["reel_embeds"]["Row"]
 export type SiteShortcut = Database["public"]["Tables"]["site_shortcuts"]["Row"]
 export type StudyBook = Database["public"]["Tables"]["study_books"]["Row"]
+export type StudyProgress = Database["public"]["Tables"]["study_progress"]["Row"]
+export type StudyProgressInsert = Database["public"]["Tables"]["study_progress"]["Insert"]
 export type GameScore = Database["public"]["Tables"]["game_scores"]["Row"]
 export type GameRequest = Database["public"]["Tables"]["game_requests"]["Row"]
 export type AccountUpgrade = Database["public"]["Tables"]["account_upgrades"]["Row"]

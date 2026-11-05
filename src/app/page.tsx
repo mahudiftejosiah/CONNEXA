@@ -36,18 +36,7 @@ export default function LandingPage() {
           <div className="relative max-w-7xl mx-auto px-4 py-24 md:py-36 text-center">
             {/* Logo hero */}
             <div className="flex justify-center mb-8">
-              <div className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur flex items-center justify-center border border-white/20">
-                <svg width="56" height="56" viewBox="0 0 48 48" fill="none">
-                  <circle cx="24" cy="24" r="7" fill="#12372A" />
-                  <circle cx="24" cy="10" r="5" fill="#D6B875" opacity="0.9" />
-                  <circle cx="36" cy="32" r="5" fill="#D6B875" opacity="0.7" />
-                  <circle cx="12" cy="32" r="5" fill="#D6B875" opacity="0.7" />
-                  <line x1="24" y1="15" x2="24" y2="17" stroke="#12372A" strokeWidth="2" strokeLinecap="round" />
-                  <line x1="31.5" y1="28.5" x2="29.5" y2="27" stroke="#12372A" strokeWidth="2" strokeLinecap="round" />
-                  <line x1="16.5" y1="28.5" x2="18.5" y2="27" stroke="#12372A" strokeWidth="2" strokeLinecap="round" />
-                  <circle cx="24" cy="24" r="21" stroke="#D6B875" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-                </svg>
-              </div>
+              <Logo size="2xl" variant="icon" href={undefined} />
             </div>
 
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">

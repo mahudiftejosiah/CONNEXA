@@ -385,3 +385,533 @@
   50%      { box-shadow: 0 0 28px 4px rgb(var(--b-400) / 0.28); }
 }
 .animate-glow-pulse { animation: glowPulse 3.2s ease-in-out infinite; }
+
+/* ===== 3D brand mark =====
+   The emblem is a four-sided prism: every face carries the logo, so the mark
+   stays readable throughout the turn. Face width is 70% of the box because a
+   square prism seen corner-on projects 1.41x wider than one face, and 70% of
+   that still fits. */
+@keyframes logoSpin {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+@keyframes logoSheen {
+  0%       { opacity: 0; }
+  4%, 9%   { opacity: 1; }
+  18%,100% { opacity: 0; }
+}
+.logo3d {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  line-height: 0;
+  perspective: calc(var(--logo3d, 48px) * 6);
+}
+.logo3d__tilt {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(-11deg);
+}
+.logo3d__gyro {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: logoSpin 9s linear infinite;
+}
+.logo3d__halo {
+  position: absolute;
+  inset: -16%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--b-400) / 0.3), transparent 68%);
+}
+.logo3d__orbit {
+  position: absolute;
+  inset: -10%;
+  border-radius: 50%;
+  border: 1px solid rgb(var(--b-400) / 0.45);
+  transform: rotateX(74deg);
+}
+.logo3d__panel {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 70%;
+  height: 100%;
+  margin-left: -35%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15%;
+  border: 1px solid rgb(var(--b-400) / 0.55);
+  background: linear-gradient(155deg,
+    rgb(var(--a-600)) 0%,
+    rgb(var(--a-800)) 52%,
+    rgb(var(--a-900)) 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14);
+  backface-visibility: hidden;
+  overflow: hidden;
+  transform: translateZ(calc(var(--logo3d, 48px) * 0.35));
+}
+.logo3d__panel--1 { transform: rotateY(90deg)  translateZ(calc(var(--logo3d, 48px) * 0.35)); }
+.logo3d__panel--2 { transform: rotateY(180deg) translateZ(calc(var(--logo3d, 48px) * 0.35)); }
+.logo3d__panel--3 { transform: rotateY(270deg) translateZ(calc(var(--logo3d, 48px) * 0.35)); }
+.logo3d__emblem { width: 76%; height: 76%; }
+.logo3d__sheen {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(118deg,
+    rgb(255 255 255 / 0) 26%,
+    rgb(255 255 255 / 0.34) 47%,
+    rgb(255 255 255 / 0) 68%);
+  animation: logoSheen 9s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo3d__gyro { animation-name: none; transform: rotateY(-28deg); }
+  .logo3d__sheen { animation-name: none; opacity: 0.16; }
+}
+
+/* ===== Study Room reader ===== */
+.study-page {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px 18px 44px;
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  line-height: 1.74;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.study-page__para { margin: 0 0 1em; }
+.study-page__para:first-child::first-letter {
+  font-size: 2.7em;
+  float: left;
+  line-height: 0.86;
+  padding: 0.04em 0.1em 0 0;
+  font-weight: 700;
+  color: rgb(var(--a-700));
+}
+.study-page__end {
+  margin-top: 28px;
+  text-align: center;
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* ===== Study Room: the 3D book room =====
+   Every measure comes from --s, the ratio between the frame's width and the
+   720px the room was drawn at, so walls, bookcase and depth scale together.
+   Side walls, floor and ceiling are anchored to the frame's edges and rotated
+   about them, which sends each plane away from the viewer into the scene. */
+@keyframes roomEnter {
+  from { opacity: 0; transform: translateZ(calc(var(--s) * -430px)); }
+  to   { opacity: 1; transform: translateZ(0); }
+}
+@keyframes roomSway {
+  0%, 100% { transform: rotateY(-1.5deg); }
+  50%      { transform: rotateY(1.5deg); }
+}
+@keyframes roomLamp {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 0.78; }
+}
+@keyframes roomDust {
+  0%   { opacity: 0; transform: translate3d(0, 0, calc(var(--s) * 40px)); }
+  30%  { opacity: 0.7; }
+  100% { opacity: 0; transform: translate3d(calc(var(--s) * 26px), calc(var(--s) * -120px), calc(var(--s) * -60px)); }
+}
+.room3d {
+  position: relative;
+  height: clamp(430px, 64vh, 560px);
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: #0b1410;
+  perspective: calc(var(--s) * 940px);
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+}
+.room3d--dragging { cursor: grabbing; }
+.room3d__enter {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: roomEnter 0.9s ease-out both;
+}
+.room3d__look {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt, 0deg)) rotateY(var(--turn, 0deg));
+  transition: transform 0.25s ease-out;
+}
+.room3d--dragging .room3d__look { transition: none; }
+.room3d__sway {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: roomSway 18s ease-in-out infinite;
+}
+.room3d__wall,
+.room3d__floor,
+.room3d__ceiling { position: absolute; }
+.room3d__wall--back {
+  inset: -24% -30%;
+  transform: translateZ(calc(var(--s) * -440px));
+  background:
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.028) 0 calc(var(--s) * 26px), transparent 0 calc(var(--s) * 52px)),
+    linear-gradient(180deg, #16271d 0%, #1c3025 55%, #10201a 100%);
+}
+.room3d__wall--left {
+  top: 0; left: 0;
+  height: 100%;
+  width: calc(var(--s) * 440px);
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  background: linear-gradient(90deg, #0c1712, #1a2b21 70%, #21372a);
+}
+.room3d__wall--right {
+  top: 0; right: 0;
+  height: 100%;
+  width: calc(var(--s) * 440px);
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  background: linear-gradient(-90deg, #0c1712, #18271f 70%, #21372a);
+}
+.room3d__floor {
+  left: -10%; bottom: 0;
+  width: 120%;
+  height: calc(var(--s) * 440px);
+  transform-origin: bottom center;
+  transform: rotateX(90deg);
+  background:
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.34) 0 2px, transparent 2px calc(var(--s) * 74px)),
+    linear-gradient(180deg, #3f2a18, #5a3d24 60%, #6d4a2d);
+}
+.room3d__ceiling {
+  left: 50%; top: 0;
+  width: 120%;
+  height: calc(var(--s) * 440px);
+  transform-origin: top center;
+  transform: rotateX(-90deg);
+  background: linear-gradient(0deg, #14211b, #0e1814);
+}
+.room3d__rug {
+  position: absolute;
+  left: 50%; bottom: calc(var(--s) * 120px);
+  width: calc(var(--s) * 420px);
+  height: calc(var(--s) * 150px);
+  margin-left: calc(var(--s) * -210px);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgb(120 41 33 / 0.85), rgb(74 24 20 / 0.7) 62%, transparent 72%);
+}
+.room3d__beam {
+  position: absolute;
+  top: calc(var(--s) * 90px);
+  left: calc(var(--s) * 130px);
+  width: calc(var(--s) * 300px);
+  height: calc(var(--s) * 330px);
+  background: radial-gradient(ellipse at 30% 0%, rgb(255 226 160 / 0.3), transparent 65%);
+}
+.room3d__window {
+  position: absolute;
+  top: 18%; bottom: 30%;
+  left: 26%;
+  width: 46%;
+  background: linear-gradient(180deg, #cfe4f2, #f6e6bd 70%, #d8bd85);
+  border: calc(var(--s) * 8px) solid #2a1c11;
+  box-shadow: 0 0 calc(var(--s) * 60px) calc(var(--s) * 6px) rgb(255 226 160 / 0.22);
+}
+.room3d__window::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 47%, #2a1c11 47% 53%, transparent 53%),
+    linear-gradient(180deg, transparent 47%, #2a1c11 47% 53%, transparent 53%);
+}
+.room3d__picture {
+  position: absolute;
+  top: 14%;
+  left: 12%;
+  width: calc(var(--s) * 92px);
+  height: calc(var(--s) * 68px);
+  background: linear-gradient(150deg, #2f4d3a, #6d8a5f 60%, #a98f52);
+  border: calc(var(--s) * 5px) solid #b99a5f;
+  box-shadow: calc(var(--s) * 5px) calc(var(--s) * 7px) calc(var(--s) * 18px) rgb(0 0 0 / 0.45);
+}
+.room3d__clock {
+  position: absolute;
+  top: 10%;
+  right: 15%;
+  width: calc(var(--s) * 54px);
+  height: calc(var(--s) * 54px);
+  border-radius: 50%;
+  background: radial-gradient(circle, #f4ecd8 62%, #cbb27f 63%, #8f6f37);
+  box-shadow: calc(var(--s) * 3px) calc(var(--s) * 5px) calc(var(--s) * 14px) rgb(0 0 0 / 0.4);
+}
+.room3d__clock::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 2px; height: 42%;
+  margin-left: -1px;
+  background: #23362a;
+  transform-origin: bottom center;
+  transform: translateY(-100%) rotate(38deg);
+}
+.room3d__case {
+  position: absolute;
+  left: 7%; right: 7%;
+  top: 15%; bottom: 13%;
+  transform: translateZ(calc(var(--s) * -330px));
+  transform-style: preserve-3d;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--s) * 6px) calc(var(--s) * 12px) calc(var(--s) * 4px);
+  border-radius: calc(var(--s) * 8px) calc(var(--s) * 8px) 0 0;
+  background: linear-gradient(96deg, #3c2716, #5b3a21 22%, #4a2f1b 55%, #6b4527 82%, #352314);
+  box-shadow:
+    inset 0 0 calc(var(--s) * 40px) rgb(0 0 0 / 0.6),
+    0 calc(var(--s) * 14px) calc(var(--s) * 34px) rgb(0 0 0 / 0.55);
+}
+.room3d__cornice {
+  position: absolute;
+  left: -3%; right: -3%;
+  top: calc(var(--s) * -14px);
+  height: calc(var(--s) * 16px);
+  border-radius: calc(var(--s) * 4px);
+  background: linear-gradient(180deg, #7d522d, #45291a);
+  transform: translateZ(calc(var(--s) * 20px));
+  box-shadow: 0 calc(var(--s) * 5px) calc(var(--s) * 12px) rgb(0 0 0 / 0.5);
+}
+.room3d__shelf {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  transform-style: preserve-3d;
+  background: linear-gradient(180deg, #150d07, #241609 68%, #33200f);
+  box-shadow: inset 0 calc(var(--s) * 10px) calc(var(--s) * 16px) rgb(0 0 0 / 0.65);
+}
+.room3d__shelf::after {
+  /* the plank the books stand on, standing proud of the case */
+  content: "";
+  position: absolute;
+  left: -2%; right: -2%; bottom: 0;
+  height: calc(var(--s) * 10px);
+  z-index: 5;
+  border-radius: calc(var(--s) * 2px);
+  background: linear-gradient(180deg, #855730, #40261520 6%, #3f2716);
+  box-shadow: 0 calc(var(--s) * 4px) calc(var(--s) * 9px) rgb(0 0 0 / 0.55);
+  transform: translateZ(calc(var(--s) * 12px));
+}
+.room3d__shelf::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: calc(var(--s) * 10px);
+  height: calc(var(--s) * 12px);
+  background: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.5));
+  pointer-events: none;
+}
+.room3d__books {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: calc(var(--s) * 2px);
+  width: 100%;
+  height: calc(100% - var(--s) * 10px);
+  padding: 0 calc(var(--s) * 6px);
+  transform-style: preserve-3d;
+}
+.room3d__book {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  transform-style: preserve-3d;
+}
+.room3d__book--face { flex: 2.4 1 0; }
+.room3d__spine {
+  display: block;
+  height: 100%;
+  border-radius: calc(var(--s) * 2px) calc(var(--s) * 2px) 0 0;
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.42), transparent 22%, transparent 76%, rgb(0 0 0 / 0.5)),
+    hsl(var(--h) 38% 30%);
+  box-shadow: inset 0 calc(var(--s) * 3px) 0 rgb(255 255 255 / 0.18);
+  color: rgb(255 255 255 / 0.86);
+  font-size: max(8px, calc(var(--s) * 10px));
+  line-height: 1.05;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: calc(var(--s) * 4px) 1px;
+  transition: transform 0.18s ease-out;
+}
+.room3d__book:hover .room3d__spine,
+.room3d__book:focus-visible .room3d__spine { transform: translateZ(calc(var(--s) * 18px)) rotateY(-16deg); }
+.room3d__mark {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: calc(var(--s) * 3px);
+  background: rgb(var(--b-300));
+}
+.room3d__face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 1px calc(var(--s) * 4px) calc(var(--s) * 4px) 1px;
+  background-size: cover;
+  background-position: top center;
+  box-shadow: calc(var(--s) * -5px) calc(var(--s) * 6px) calc(var(--s) * 16px) rgb(0 0 0 / 0.6);
+  transform-origin: left center;
+  transform: rotateY(-16deg) translateZ(calc(var(--s) * 12px));
+  transition: transform 0.2s ease-out;
+}
+.room3d__book:hover .room3d__face { transform: rotateY(-6deg) translateZ(calc(var(--s) * 22px)); }
+.room3d__plate {
+  position: absolute;
+  left: calc(var(--s) * 8px);
+  bottom: calc(var(--s) * 1px);
+  z-index: 7;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--s) * 4px);
+  padding: calc(var(--s) * 2px) calc(var(--s) * 8px);
+  border: 1px solid rgb(90 66 24);
+  border-radius: calc(var(--s) * 4px);
+  background: linear-gradient(180deg, #e3ca8b, #b9964d);
+  color: #24301f;
+  font-size: max(9px, calc(var(--s) * 11px));
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transform: translateZ(calc(var(--s) * 16px));
+}
+.room3d__lamp {
+  position: absolute;
+  top: calc(var(--s) * -8px);
+  left: 62%;
+  width: calc(var(--s) * 74px);
+  height: calc(var(--s) * 150px);
+  transform: translateZ(calc(var(--s) * -240px));
+  transform-style: preserve-3d;
+}
+.room3d__lamp::before {
+  content: "";
+  position: absolute;
+  left: 50%; top: 0;
+  width: 2px; height: 46%;
+  background: #6c5a34;
+}
+.room3d__shade {
+  position: absolute;
+  left: 0; top: 44%;
+  width: 100%; height: 30%;
+  background: linear-gradient(180deg, #d9b972, #8c6528);
+  clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%);
+}
+.room3d__bulb {
+  position: absolute;
+  left: 8%; top: 60%;
+  width: 84%; height: 90%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 236 190 / 0.95), rgb(255 214 140 / 0.28) 55%, transparent 72%);
+  animation: roomLamp 5.5s ease-in-out infinite;
+}
+.room3d__desk {
+  position: absolute;
+  left: 4%; right: 4%;
+  bottom: 2%;
+  height: calc(var(--s) * 96px);
+  transform: translateZ(calc(var(--s) * 150px));
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.room3d__desk-top {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: calc(var(--s) * 16px);
+  border-radius: calc(var(--s) * 4px);
+  background: linear-gradient(96deg, #4a3018, #7c5228 30%, #59391d 62%, #8a5c2f);
+  box-shadow: 0 calc(var(--s) * 8px) calc(var(--s) * 22px) rgb(0 0 0 / 0.6);
+}
+.room3d__stack {
+  position: absolute;
+  bottom: calc(var(--s) * 14px);
+  width: calc(var(--s) * 74px);
+  height: calc(var(--s) * 40px);
+  border-radius: calc(var(--s) * 2px);
+  background: repeating-linear-gradient(180deg,
+    hsl(12 42% 32%) 0 calc(var(--s) * 8px),
+    #e8dcc0 calc(var(--s) * 8px) calc(var(--s) * 10px));
+  box-shadow: 0 calc(var(--s) * 3px) calc(var(--s) * 8px) rgb(0 0 0 / 0.5);
+}
+.room3d__open-book {
+  position: absolute;
+  bottom: calc(var(--s) * 14px);
+  right: calc(var(--s) * 30px);
+  width: calc(var(--s) * 132px);
+  height: calc(var(--s) * 30px);
+  background:
+    linear-gradient(90deg, transparent 48%, rgb(0 0 0 / 0.35) 49% 51%, transparent 52%),
+    linear-gradient(180deg, #f4ecd6, #d9cbaa);
+  border-radius: calc(var(--s) * 3px) calc(var(--s) * 3px) calc(var(--s) * 10px) calc(var(--s) * 10px);
+  transform: rotateX(62deg);
+  box-shadow: 0 calc(var(--s) * 6px) calc(var(--s) * 14px) rgb(0 0 0 / 0.45);
+}
+.room3d__plant {
+  position: absolute;
+  right: 2%;
+  bottom: 12%;
+  width: calc(var(--s) * 60px);
+  height: calc(var(--s) * 130px);
+  transform: translateZ(calc(var(--s) * -300px));
+}
+.room3d__plant::before {
+  content: "";
+  position: absolute;
+  left: 12%; bottom: 0;
+  width: 76%; height: 34%;
+  background: linear-gradient(180deg, #8d5b32, #5d3a1d);
+  clip-path: polygon(8% 0, 92% 0, 80% 100%, 20% 100%);
+}
+.room3d__plant::after {
+  content: "";
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 74%;
+  background:
+    radial-gradient(ellipse at 30% 78%, rgb(58 106 68 / 0.95) 0 26%, transparent 27%),
+    radial-gradient(ellipse at 62% 60%, rgb(72 124 78 / 0.95) 0 24%, transparent 25%),
+    radial-gradient(ellipse at 42% 34%, rgb(52 96 60 / 0.95) 0 22%, transparent 23%);
+}
+.room3d__dust {
+  position: absolute;
+  width: calc(var(--s) * 4px);
+  height: calc(var(--s) * 4px);
+  border-radius: 50%;
+  background: rgb(255 240 200 / 0.8);
+  animation: roomDust 9s linear infinite;
+}
+.room3d__glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 12%, rgb(255 255 255 / 0.06), transparent 45%),
+    radial-gradient(ellipse at 50% 120%, rgb(0 0 0 / 0.5), transparent 55%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .room3d__enter, .room3d__sway, .room3d__lamp .room3d__bulb, .room3d__dust {
+    animation-name: none;
+    opacity: 1;
+  }
+}
