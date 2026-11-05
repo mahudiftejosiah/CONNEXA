@@ -5,6 +5,9 @@ import { bookParagraphs, gutenbergId } from "@/lib/gutenberg";
 // Hands the in-app reader a book as paragraphs. The text is fetched here rather
 // than in the browser because Project Gutenberg does not send CORS headers, and
 // because one warmed copy serves every reader of the same title.
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
 export async function GET(req: NextRequest) {
   const bookId = req.nextUrl.searchParams.get("book");
   if (!bookId || !/^[0-9a-f-]{36}$/.test(bookId)) {
