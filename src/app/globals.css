@@ -592,7 +592,7 @@
     linear-gradient(180deg, #3f2a18, #5a3d24 60%, #6d4a2d);
 }
 .room3d__ceiling {
-  left: 50%; top: 0;
+  left: -10%; top: 0;
   width: 120%;
   height: calc(var(--s) * 440px);
   transform-origin: top center;
