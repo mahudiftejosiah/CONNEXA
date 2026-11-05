@@ -13,21 +13,30 @@ const CACHE_MS = 6 * 60 * 60 * 1000;
 const cache = new Map<string, { at: number; paragraphs: string[] }>();
 
 // Gutenberg wraps the book between two banner lines; everything outside them is
-// the licence and the transcription notes.
+// the licence and the transcription notes. The line just under the opening
+// banner names the transcribers, so the text only starts at the first blank
+// line after it.
 function stripFrontMatter(raw: string) {
-  const start = raw.indexOf("*** START OF");
-  const from = start >= 0 ? raw.indexOf("\n", raw.indexOf("\n", start) + 1) + 1 : 0;
-  const end = raw.indexOf("*** END OF", from);
-  return raw.slice(from, end > from ? end : raw.length);
+  const text = raw.replace(/\r\n?/g, "\n"); // Gutenberg files are CRLF
+  const start = text.indexOf("*** START OF");
+  const from = start >= 0 ? start : 0;
+  const end = text.indexOf("*** END OF", from);
+  let body = text.slice(from, end > from ? end : text.length);
+  const firstBlank = body.search(/\n[ \t]*\n/);
+  if (firstBlank >= 0) body = body.slice(firstBlank + 1);
+  return body;
 }
 
 function toParagraphs(body: string): string[] {
-  return body
+  const out = body
     .replace(/\r\n?/g, "\n")
     .replace(/[\u2029\f]/g, "\n\n") // form feeds are Gutenberg's page breaks
     .split(/\n{2,}/)
     .map((p) => p.trim())
-    .filter((p) => p.length > 0 && !/^\W{0,3}$/.test(p));
+    .filter((p) => p.length > 0 && !/^\W{0,3}$/.test(p) && !/^End of the Project Gutenberg/i.test(p));
+  // The credit line that names the transcribers lands where page one should be.
+  while (out.length && /^Produced by\b/i.test(out[0])) out.shift();
+  return out;
 }
 
 export async function bookParagraphs(id: string): Promise<string[] | null> {
@@ -43,7 +52,9 @@ export async function bookParagraphs(id: string): Promise<string[] | null> {
       if (!res.ok) continue;
       const text = await res.text();
       const paragraphs = toParagraphs(stripFrontMatter(text));
-      if (paragraphs.length < 20) continue;
+      // A short tale is still a book, so the test is whether any real reading
+      // matter came back, not how many paragraphs it happened to have.
+      if (paragraphs.length < 2 || paragraphs.join("").length < 600) continue;
       cache.set(id, { at: Date.now(), paragraphs });
       return paragraphs;
     } catch {
