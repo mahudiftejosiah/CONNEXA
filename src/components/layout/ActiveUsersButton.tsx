@@ -46,7 +46,7 @@ export function ActiveUsersButton() {
         "hover:bg-[var(--border)]"
       )}
       style={{ color: "var(--text-secondary)" }}
-      aria-label={count === null ? "See who is active" : `${count} people active now`}
+      aria-label={count === null ? "See who is active" : `${count} ${count === 1 ? "person" : "people"} active now`}
       title="See who is active"
     >
       <Users className="w-5 h-5" />
