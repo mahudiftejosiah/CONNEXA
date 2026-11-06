@@ -915,3 +915,186 @@
     opacity: 1;
   }
 }
+
+/* ===== Header: presence dot and small-screen fit =====
+   Below 400px the wordmark is what gives way — the five header buttons and the
+   profile icon need that room to stay on the screen. */
+@media (max-width: 400px) {
+  .site-header .logo3d__word { display: none; }
+}
+@keyframes activePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--a-500) / 0.55); }
+  70%      { box-shadow: 0 0 0 6px rgb(var(--a-500) / 0); }
+}
+.active-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: rgb(var(--a-500));
+  border: 2px solid var(--bg-card);
+  animation: activePulse 2.6s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .active-dot { animation-name: none; box-shadow: none; }
+}
+
+/* ===== Study Room: fullscreen and the welcome card =====
+   The shell is what goes fullscreen, so the room keeps its own scroll and the
+   page behind it is never left half-drawn. */
+.room-shell { position: relative; }
+.room-shell:fullscreen,
+.room-shell:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  padding: 0;
+  background: #0b1410;
+  /* Scrolling stays available so the shelf drawer below the room is still
+     reachable while the display is taken over. */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.room-shell:fullscreen .room3d,
+.room-shell:-webkit-full-screen .room3d {
+  height: 100dvh;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Floating over the room, so leaving is one tap, not an escape key. */
+.room3d__exit {
+  position: absolute;
+  top: calc(var(--s) * 14px);
+  right: calc(var(--s) * 14px);
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--s) * 8px);
+}
+.room3d__exit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: max(4px, calc(var(--s) * 6px));
+  padding: max(6px, calc(var(--s) * 7px)) max(10px, calc(var(--s) * 12px));
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--b-400) / 0.5);
+  background: rgb(11 20 16 / 0.72);
+  color: #f2e8d5;
+  font-size: max(11px, calc(var(--s) * 13px));
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s ease-out, transform 0.2s ease-out;
+}
+.room3d__exit-btn:hover {
+  background: rgb(11 20 16 / 0.92);
+  transform: scale(1.04);
+}
+
+@keyframes welcomeVeil {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes welcomeRise {
+  from { opacity: 0; transform: translateY(26px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+/* The jacket swings off the shelf and settles upright. */
+@keyframes welcomeBook {
+  0%   { opacity: 0; transform: rotateY(-70deg) translateZ(-30px); }
+  62%  { opacity: 1; transform: rotateY(9deg)   translateZ(10px); }
+  100% { opacity: 1; transform: rotateY(0)      translateZ(0); }
+}
+@keyframes welcomeLine {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes welcomeGlow {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.9; }
+}
+.room-welcome {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(6 12 9 / 0.62);
+  animation: welcomeVeil 0.28s ease-out both;
+}
+.room-welcome__card {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: clamp(1.1rem, 4vw, 1.8rem);
+  border-radius: 22px;
+  border: 1px solid rgb(var(--b-400) / 0.45);
+  background: linear-gradient(160deg, #17251d 0%, #0e1a14 100%);
+  color: #f2e8d5;
+  box-shadow: 0 26px 60px rgb(0 0 0 / 0.55);
+  transform-style: preserve-3d;
+  animation: welcomeRise 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.room-welcome__cover {
+  display: block;
+  width: 104px;
+  height: 150px;
+  margin: 0 auto 1rem;
+  border-radius: 4px 8px 8px 4px;
+  border: 1px solid rgb(var(--b-400) / 0.5);
+  background-size: cover;
+  background-position: top center;
+  box-shadow: -6px 0 0 rgb(0 0 0 / 0.22) inset, 0 14px 26px rgb(0 0 0 / 0.45);
+  transform-origin: left center;
+  animation: welcomeBook 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1) 0.1s both;
+}
+.room-welcome__cover--spine {
+  background: linear-gradient(155deg,
+    hsl(var(--h, 160) 40% 34%) 0%,
+    hsl(var(--h, 160) 38% 22%) 100%);
+}
+.room-welcome__eyebrow {
+  animation: welcomeLine 0.4s ease-out 0.3s both;
+}
+.room-welcome__title {
+  animation: welcomeLine 0.4s ease-out 0.38s both;
+}
+.room-welcome__by {
+  animation: welcomeLine 0.4s ease-out 0.46s both;
+}
+.room-welcome__blurb {
+  animation: welcomeLine 0.4s ease-out 0.54s both;
+}
+.room-welcome__actions {
+  animation: welcomeLine 0.4s ease-out 0.62s both;
+}
+.room-welcome__glow {
+  position: absolute;
+  inset: -18% -8% auto -8%;
+  height: 46%;
+  border-radius: 9999px;
+  background: radial-gradient(ellipse at center, rgb(var(--b-400) / 0.34), transparent 62%);
+  animation: welcomeGlow 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .room-welcome,
+  .room-welcome__card,
+  .room-welcome__cover,
+  .room-welcome__eyebrow,
+  .room-welcome__title,
+  .room-welcome__by,
+  .room-welcome__blurb,
+  .room-welcome__actions,
+  .room-welcome__glow {
+    animation-name: none;
+    opacity: 1;
+    transform: none;
+  }
+}

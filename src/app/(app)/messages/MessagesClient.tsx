@@ -55,6 +55,7 @@ interface MessagesClientProps {
   currentUserId: string;
   friends: FriendLite[];
   openPeerId: string | null;
+  initialTab?: "all" | "active" | "offline";
 }
 
 // A view-once file is signed only for the moment it is on screen. The database
@@ -72,14 +73,14 @@ function isViewOnceMedia(kind: MessageAttachmentKind) {
   return kind === "image" || kind === "video";
 }
 
-export function MessagesClient({ conversations: initConvs, profile, currentUserId, friends, openPeerId }: MessagesClientProps) {
+export function MessagesClient({ conversations: initConvs, profile, currentUserId, friends, openPeerId, initialTab = "all" }: MessagesClientProps) {
   const [conversations, setConversations] = useState(initConvs);
   const [active, setActive] = useState<ConversationWithDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [tab, setTab] = useState<"all" | "active" | "offline">("all");
+  const [tab, setTab] = useState<"all" | "active" | "offline">(initialTab);
   const [search, setSearch] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [viewOnce, setViewOnce] = useState(false);
@@ -91,6 +92,10 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const bottomRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
+
+  // The header's active-users button points here, so a arriving ?tab= has to
+  // move the list even when this view was already open.
+  useEffect(() => { setTab(initialTab); }, [initialTab]);
 
   // A view-once file the peer sent stays unsigned until it is tapped open.
   function isPeerViewOnce(msg: Message) {
@@ -382,7 +387,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                       <p className="font-semibold text-sm truncate text-[var(--text-primary)] flex items-center gap-1.5">
                         {f.display_name}{f.is_verified && <VerifiedTick size={14} />}
                       </p>
-                      <p className="text-xs truncate" style={{ color: online ? "#22c55e" : "var(--text-secondary)" }}>
+                      <p className="text-xs truncate" style={{ color: online ? "rgb(var(--a-600))" : "var(--text-secondary)" }}>
                         {online ? "Online now" : f.last_seen ? `Active ${formatRelativeTime(f.last_seen)}` : "Not active yet"}
                       </p>
                     </div>
@@ -450,7 +455,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     <Avatar src={other.avatar_url} name={other.display_name} size={40} online={isOnline(other.last_seen)} />
                     <div>
                       <p className="font-semibold text-[var(--text-primary)]">{other.display_name}</p>
-                      <p className="text-xs" style={{ color: isOnline(other.last_seen) ? "#22c55e" : "var(--text-secondary)" }}>
+                      <p className="text-xs" style={{ color: isOnline(other.last_seen) ? "rgb(var(--a-600))" : "var(--text-secondary)" }}>
                         {isOnline(other.last_seen) ? "Online now" : other.last_seen ? `Active ${formatRelativeTime(other.last_seen)}` : `@${other.username}`}
                       </p>
                     </div>

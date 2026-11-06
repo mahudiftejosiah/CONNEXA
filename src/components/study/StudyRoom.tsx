@@ -5,8 +5,8 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight, BookOpen, ExternalLink, Globe, GraduationCap, Library, Plus,
-  Trash2,
+  ArrowRight, BookOpen, ExternalLink, Globe, GraduationCap, Library, LogOut,
+  Maximize2, Minimize2, Plus, Trash2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
@@ -52,11 +52,14 @@ function seedOf(text: string) {
 const inputCls = "w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10";
 const inputStyle = { backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-primary)" } as const;
 
-export function StudyRoom({ initial, currentUserId, sites, books }: {
+export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, onToggleFullscreen, onLeave }: {
   initial: StudyCard[];
   currentUserId: string;
   sites: SiteShortcut[];
   books: StudyBook[];
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
+  onLeave: () => void;
 }) {
   const router = useRouter();
   const [items, setItems] = useState(initial);
@@ -65,6 +68,7 @@ export function StudyRoom({ initial, currentUserId, sites, books }: {
   const [marks, setMarks] = useState<Record<string, Marker>>({});
   const [form, setForm] = useState({ title: "", url: "", cover_url: "", description: "" });
   const [saving, setSaving] = useState(false);
+  const [openBook, setOpenBook] = useState<StudyBook | null>(null);
 
   const [scale, setScale] = useState(0.55);
   const [view, setView] = useState({ turn: 0, tilt: 0 });
@@ -290,7 +294,7 @@ export function StudyRoom({ initial, currentUserId, sites, books }: {
                               className={"room3d__book" + (face ? " room3d__book--face" : "")}
                               style={{ height: `${face ? 100 : 82 + (seed % 18)}%` }}
                               title={b.title}
-                              onClick={() => tapped(() => router.push(`/study/${b.id}`))}
+                              onClick={() => tapped(() => setOpenBook(b))}
                             >
                               {face ? (
                                 <span className="room3d__face" style={{ backgroundImage: `url(${b.cover_url})` }} />
@@ -334,6 +338,77 @@ export function StudyRoom({ initial, currentUserId, sites, books }: {
           </div>
         </div>
         <div className="room3d__glare" />
+
+        {/* Floating controls — leaving the room is one tap, not an escape key. */}
+        <div className="room3d__exit">
+          <button
+            type="button"
+            className="room3d__exit-btn"
+            onClick={onToggleFullscreen}
+            aria-label={isFullscreen ? "Leave full screen" : "Enter full screen"}
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            <span>{isFullscreen ? "Small screen" : "Full screen"}</span>
+          </button>
+          <button type="button" className="room3d__exit-btn" onClick={onLeave} aria-label="Leave the study room">
+            <LogOut className="w-4 h-4" />
+            <span>Exit room</span>
+          </button>
+        </div>
+
+        {openBook && (() => {
+          const mark = marks[openBook.id];
+          const shelf = SHELVES.find((s) => s.key === openBook.category);
+          const seed = seedOf(openBook.title);
+          return (
+            <div className="room-welcome" role="dialog" aria-modal="true" aria-label={`Welcome to ${openBook.title}`}>
+              <div className="room-welcome__card">
+                <span className="room-welcome__glow" aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={() => setOpenBook(null)}
+                  aria-label="Close"
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "rgb(255 255 255 / 0.08)", color: "#f2e8d5" }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <span
+                  className={"room-welcome__cover" + (openBook.cover_url ? "" : " room-welcome__cover--spine")}
+                  style={{
+                    backgroundImage: openBook.cover_url ? `url(${openBook.cover_url})` : undefined,
+                    "--h": ((shelf ? shelf.hue : 160) + (seed % 44) - 22 + 360) % 360,
+                  } as CSSProperties}
+                  aria-hidden="true"
+                />
+                <p className="room-welcome__eyebrow text-[11px] uppercase tracking-[0.18em] font-bold" style={{ color: "rgb(var(--b-300))" }}>
+                  Welcome to the {shelf ? shelf.label.toLowerCase() : "study"} shelf
+                </p>
+                <h3 className="room-welcome__title text-xl sm:text-2xl font-extrabold mt-1 leading-tight">{openBook.title}</h3>
+                <p className="room-welcome__by text-sm mt-1 opacity-75">
+                  {openBook.author || "Project Gutenberg"} · free to read here
+                </p>
+                <p className="room-welcome__blurb text-sm mt-3 opacity-85">
+                  {mark && mark.percent > 0
+                    ? `You stopped ${mark.percent}% through. Pick up exactly where the page left off.`
+                    : "Open it and CONNEXA keeps your place, so the next visit starts on this page."}
+                </p>
+                <div className="room-welcome__actions flex flex-wrap gap-2 mt-5">
+                  <Button
+                    size="sm"
+                    icon={<ArrowRight className="w-4 h-4" />}
+                    onClick={() => router.push(`/study/${openBook.id}`)}
+                  >
+                    {mark && mark.percent > 0 ? `Continue at ${mark.percent}%` : "Start reading"}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setOpenBook(null)}>
+                    Back to the shelves
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>

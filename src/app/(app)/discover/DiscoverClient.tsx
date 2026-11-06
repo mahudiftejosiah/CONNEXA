@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Users, Globe, TrendingUp, UserPlus, Newspaper, Radio, Gamepad2, Clapperboard, ArrowRight, GraduationCap, Play } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
@@ -47,6 +47,29 @@ interface DiscoverClientProps {
 export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, currentUserId, news, studyResources, studySites, studyBooks, watchReels }: DiscoverClientProps) {
   const [sentTo, setSentTo] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<"for-you" | "study">("for-you");
+  const [roomFull, setRoomFull] = useState(false);
+  const roomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onChange = () => setRoomFull(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  // Fullscreen has to be asked for inside the click itself, and the shell is
+  // always mounted so there is something to ask of.
+  function enterRoom() {
+    setTab("study");
+    roomRef.current?.requestFullscreen?.().catch(() => {});
+  }
+  function leaveRoom() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    setTab("for-you");
+  }
+  function toggleRoom() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else roomRef.current?.requestFullscreen().catch(() => {});
+  }
 
   async function handleAddFriend(userId: string) {
     const res = await sendFriendRequest(userId);
@@ -90,7 +113,7 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
           For you
         </button>
         <button
-          onClick={() => setTab("study")}
+          onClick={enterRoom}
           className={"inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition-colors " + (tab === "study" ? "text-white" : "hover:opacity-80")}
           style={tab === "study"
             ? { backgroundColor: "rgb(var(--a-800))", borderColor: "rgb(var(--a-800))" }
@@ -288,7 +311,19 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
         </>
       )}
 
-      {tab === "study" && <StudyRoom initial={studyResources} currentUserId={currentUserId} sites={studySites} books={studyBooks} />}
+      <div ref={roomRef} className="room-shell">
+        {tab === "study" && (
+          <StudyRoom
+            initial={studyResources}
+            currentUserId={currentUserId}
+            sites={studySites}
+            books={studyBooks}
+            isFullscreen={roomFull}
+            onToggleFullscreen={toggleRoom}
+            onLeave={leaveRoom}
+          />
+        )}
+      </div>
     </div>
   );
 }

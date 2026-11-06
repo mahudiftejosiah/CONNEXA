@@ -93,7 +93,7 @@ export function LiveGamePicker({ currentUserId, friends }: { currentUserId: stri
                       <Avatar src={f.avatar_url} name={f.display_name} size={40} online={online} />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate text-[var(--text-primary)]">{f.display_name}</p>
-                        <p className="text-xs truncate" style={{ color: online ? "#22c55e" : "var(--text-secondary)" }}>
+                        <p className="text-xs truncate" style={{ color: online ? "rgb(var(--a-600))" : "var(--text-secondary)" }}>
                           {online ? "Online now" : f.last_seen ? `Active ${new Date(f.last_seen).toLocaleDateString()}` : "Offline"}
                         </p>
                       </div>

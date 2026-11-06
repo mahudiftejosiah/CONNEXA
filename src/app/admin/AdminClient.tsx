@@ -307,16 +307,18 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
           <div className="p-4 border-b border-[var(--border)]">
             <p className="text-sm text-[var(--text-secondary)]">Showing most recent {users.length} users</p>
           </div>
-          <div className="divide-y divide-[var(--border)]">
+          {/* Rows keep their natural width and slide sideways instead of
+              crushing the name and the four action buttons together. */}
+          <div className="divide-y divide-[var(--border)] rail">
             {users.map((u) => (
-              <div key={u.id} className="flex items-center gap-3 px-4 py-3">
+              <div key={u.id} className="flex items-center gap-3 px-4 py-3 min-w-[40rem]">
                 <Avatar src={u.avatar_url} name={u.display_name} size={40} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate flex items-center gap-1.5">
+                  <p className="font-semibold text-sm whitespace-nowrap flex items-center gap-1.5">
                     {u.display_name}
                     {u.is_verified && <BadgeCheck className="w-4 h-4 text-[#1d9bf0]" />}
                   </p>
-                  <p className="text-xs text-[var(--text-secondary)]">@{u.username} · {formatRelativeTime(u.created_at)}</p>
+                  <p className="text-xs whitespace-nowrap text-[var(--text-secondary)]">@{u.username} · {formatRelativeTime(u.created_at)}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {u.is_admin && <span className="text-xs bg-brand-gold-400/20 text-brand-green-800 dark:text-brand-gold-400 px-2 py-0.5 rounded font-medium">Admin</span>}

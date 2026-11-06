@@ -46,7 +46,7 @@ export function Avatar({ src, name, size = 40, className, ring = false, online =
           className="absolute bottom-0 right-0 rounded-full border-2"
           style={{
             width: 10, height: 10,
-            backgroundColor: "#22c55e",
+            backgroundColor: "rgb(var(--a-500))",
             borderColor: "var(--bg-card)",
           }}
         />

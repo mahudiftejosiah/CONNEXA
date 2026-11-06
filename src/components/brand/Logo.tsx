@@ -62,7 +62,7 @@ export function Logo({ size = "md", variant = "full", className, href = "/" }: L
     <span className={cn("flex items-center gap-2 select-none", className)}>
       {icon}
       {variant === "full" && (
-        <span className={cn("font-extrabold tracking-tight text-brand-green-800 dark:text-white", s.text)}>
+        <span className={cn("logo3d__word font-extrabold tracking-tight text-brand-green-800 dark:text-white", s.text)}>
           CONN<span className="text-brand-gold-400">EXA</span>
         </span>
       )}

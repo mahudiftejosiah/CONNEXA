@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Messages" };
 
-export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ with?: string }> }) {
+export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ with?: string; tab?: string }> }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -74,7 +74,8 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   );
 
   // /messages?with=<id> — open (or create) the 1:1 thread with that person.
-  const { with: withParam } = await searchParams;
+  const { with: withParam, tab: tabParam } = await searchParams;
+  const initialTab = tabParam === "active" || tabParam === "offline" ? tabParam : "all";
   let openPeerId: string | null = null;
   let forced: any[] = [];
   if (withParam && withParam !== user.id) {
@@ -145,6 +146,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
         currentUserId={user.id}
         friends={friends}
         openPeerId={openPeerId}
+        initialTab={initialTab}
       />
     </AppLayout>
   );
