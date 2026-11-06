@@ -18,12 +18,19 @@ export function ActiveUsersButton() {
 
   useEffect(() => {
     let alive = true;
-    const load = () => {
+    const load = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!alive || !session) return;
       const since = new Date(Date.now() - ONLINE_WINDOW_MS).toISOString();
       supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
         .gte("last_seen", since)
+        // Everyone else — the Messages "Active" list shows friends, not the reader,
+        // so the header number has to match it.
+        .neq("id", session.user.id)
         .then(({ count: total, error }) => {
           if (alive && !error) setCount(total ?? 0);
         });
