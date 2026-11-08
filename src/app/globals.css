@@ -962,6 +962,13 @@
   .site-header .p-2 { padding: 0.375rem; }
   .site-header .logo3d__word { font-size: 0.875rem; }
 }
+/* The smallest phones in the wild are 320px wide. Everything gives a little more
+   here rather than the name disappearing, which is not ours to take away. */
+@media (max-width: 340px) {
+  .site-header .header-actions { gap: 0.25rem; }
+  .site-header .p-2 { padding: 0.3125rem; }
+  .site-header .logo3d__word { font-size: 0.8rem; }
+}
 @keyframes activePulse {
   0%, 100% { box-shadow: 0 0 0 0 rgb(var(--a-500) / 0.55); }
   70%      { box-shadow: 0 0 0 6px rgb(var(--a-500) / 0); }
