@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { cancelChallenge, respondToChallenge, requestRematch, submitGameState } from "@/lib/actions/games";
+import { useFullscreen } from "@/lib/useFullscreen";
 import ChessBoard from "@/components/games/live/ChessBoard";
 import LudoBoard from "@/components/games/live/LudoBoard";
 import WhotTable from "@/components/games/live/WhotTable";
@@ -48,9 +49,8 @@ export function LiveGameClient({
   myId: string;
 }) {
   const [row, setRow] = useState(initial);
-  const [isFs, setIsFs] = useState(false);
   const [busy, setBusy] = useState(false);
-  const frameRef = useRef<HTMLDivElement>(null);
+  const frame = useFullscreen<HTMLDivElement>();
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
 
@@ -63,17 +63,6 @@ export function LiveGameClient({
   const finished = row.status === "done" || winnerFromState !== undefined;
   const myTurn = !finished && row.status === "accepted" && myIndex !== null && ti === myIndex;
   const pending = row.status === "pending";
-
-  useEffect(() => {
-    const onChange = () => setIsFs(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
-
-  function toggleFullscreen() {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else frameRef.current?.requestFullscreen().catch(() => {});
-  }
 
   async function refresh() {
     const { data } = await supabase.from("game_requests").select("*").eq("id", row.id).single();
@@ -146,17 +135,17 @@ export function LiveGameClient({
   })();
 
   return (
-    <div ref={frameRef} className="game-frame space-y-4">
+    <div ref={frame.ref} className={`game-frame space-y-4${frame.active ? " pseudo-full" : ""}`}>
       <div className="flex items-center gap-2">
         <Link href="/games" className="p-2 rounded-xl hover:bg-[var(--border)]" aria-label="Back to games">
           <ArrowLeft className="w-5 h-5 text-[var(--text-secondary)]" />
         </Link>
         <h1 className="text-xl font-bold text-[var(--text-primary)]">{NAME[row.game] || "Live game"}</h1>
-        <button onClick={toggleFullscreen}
+        <button onClick={frame.toggle}
           className="ml-auto inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border"
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-primary)" }}>
-          {isFs ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          {isFs ? "Exit full screen" : "Full screen"}
+          {frame.active ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          {frame.active ? "Exit full screen" : "Full screen"}
         </button>
       </div>
 

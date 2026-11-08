@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, MessageCircle, Search, Menu, X, Settings, ShieldCheck } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Logo } from "@/components/brand/Logo";
-import { Avatar } from "@/components/ui/Avatar";
 import { ActiveUsersButton } from "./ActiveUsersButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -53,8 +52,9 @@ export function Navbar({ profile }: NavbarProps) {
           </div>
         </form>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-1 flex-none">
+        {/* Right actions — the profile itself lives in the bar at the bottom, so
+            nothing here is spendable on an avatar any more. */}
+        <div className="header-actions flex items-center gap-2 flex-none">
           <button
             className="md:hidden p-2 rounded-xl transition-colors hover:bg-[var(--border)]"
             style={{ color: "var(--text-secondary)" }}
@@ -128,15 +128,6 @@ export function Navbar({ profile }: NavbarProps) {
               </Link>
 
               <ActiveUsersButton />
-
-              <Link
-                href={`/profile/${profile.username}`}
-                className="ml-1 flex-none rounded-full"
-                style={{ boxShadow: "0 0 0 2px rgb(var(--a-600)), 0 0 0 6px rgb(var(--a-600) / 0.16)" }}
-                aria-label="My profile"
-              >
-                <Avatar src={profile.avatar_url} name={profile.display_name} size={34} />
-              </Link>
             </>
           ) : (
             <>

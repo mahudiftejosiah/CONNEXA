@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, Gamepad2, Bug, Car, Dices, Grid3x3, Zap, Brain, Target, Bomb, Feather, Circle, SquareStack, Maximize2, Minimize2 } from "lucide-react";
 import Snake from "@/components/games/Snake";
 import Racing from "@/components/games/Racing";
@@ -23,6 +23,7 @@ import { TRENDING_3D, trendingCover, type TrendingGame, type TrendingArt } from 
 import { GameUserContext } from "@/components/games/GameUserContext";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
 import { LiveGamePicker } from "@/components/games/live/LiveGamePicker";
+import { useFullscreen } from "@/lib/useFullscreen";
 
 const GAMES: { id: string; name: string; desc: string; icon: React.ReactNode; color: string; play: React.ReactNode }[] = [
   { id: "snake",      name: "Snake",         desc: "Eat, grow, don't bite yourself.",   icon: <Bug className="w-7 h-7" />,            color: "#22c55e", play: <Snake /> },
@@ -77,54 +78,42 @@ export default function GamesClient({
 }) {
   const [active, setActive] = useState<string | null>(null);
   const [trend, setTrend] = useState<TrendingGame | null>(null);
-  const [isFs, setIsFs] = useState(false);
-  const frameRef = useRef<HTMLDivElement>(null);
-  const trendRef = useRef<HTMLDivElement>(null);
+  const frame = useFullscreen<HTMLDivElement>();
+  const trendScreen = useFullscreen<HTMLDivElement>();
   const game = GAMES.find((g) => g.id === active);
 
   const bestBy = new Map(myScores.map((s) => [s.game_id, s.best]));
   const careerPoints = myScores.reduce((n, s) => n + (s.points || s.best || 0), 0);
 
-  useEffect(() => {
-    const onChange = () => setIsFs(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
-
-  function toggleFullscreen(el?: HTMLElement | null) {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else (el ?? frameRef.current)?.requestFullscreen().catch(() => {});
-  }
-
-  // Fullscreen must be requested synchronously inside the click gesture, so we
-  // target the always-mounted trend container then reveal the iframe inside it.
+  // Asked for inside the click itself, on the container that is already on the
+  // page; a browser that refuses the request gets the same screen from CSS.
   function openTrend(g: TrendingGame) {
     setActive(null);
     setTrend(g);
-    trendRef.current?.requestFullscreen?.().catch(() => {});
+    trendScreen.enter();
   }
   function closeTrend() {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    trendScreen.exit();
     setTrend(null);
   }
 
   if (game) {
     return (
-      <div ref={frameRef} className="game-frame space-y-4">
+      <div ref={frame.ref} className={`game-frame space-y-4${frame.active ? " pseudo-full" : ""}`}>
         <div className="flex items-center justify-between">
           <button
-            onClick={() => setActive(null)}
+            onClick={() => { frame.exit(); setActive(null); }}
             className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           >
             <ArrowLeft className="w-4 h-4" /> All games
           </button>
           <button
-            onClick={() => toggleFullscreen()}
+            onClick={frame.toggle}
             className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border"
             style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-primary)" }}
           >
-            {isFs ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            {isFs ? "Exit full screen" : "Full screen"}
+            {frame.active ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {frame.active ? "Exit full screen" : "Full screen"}
           </button>
         </div>
         <div
@@ -143,7 +132,7 @@ export default function GamesClient({
 
   return (
     <div className="space-y-4">
-      <div ref={trendRef} className={trend ? "trend-shell" : ""}>
+      <div ref={trendScreen.ref} className={trend ? `trend-shell${trendScreen.active ? " pseudo-full" : ""}` : ""}>
         {trend && (
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between gap-2 p-2 sm:p-3" style={{ backgroundColor: "#0b1512" }}>
@@ -153,11 +142,11 @@ export default function GamesClient({
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
-                  onClick={() => toggleFullscreen(trendRef.current)}
+                  onClick={trendScreen.toggle}
                   className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border border-white/15 text-white hover:bg-white/10"
                 >
-                  {isFs ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                  {isFs ? "Exit full screen" : "Full screen"}
+                  {trendScreen.active ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  {trendScreen.active ? "Exit full screen" : "Full screen"}
                 </button>
                 <button
                   onClick={closeTrend}

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Users, Globe, TrendingUp, UserPlus, Newspaper, Radio, Gamepad2, Clapperboard, ArrowRight, GraduationCap, Play } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { PostCard } from "@/components/posts/PostCard";
 import { StudyRoom } from "@/components/study/StudyRoom";
+import { useFullscreen } from "@/lib/useFullscreen";
 import { sendFriendRequest } from "@/lib/actions/friends";
 import type { Profile, PostWithAuthor, Group, SiteShortcut, StudyBook } from "@/lib/supabase/types";
 import type { PoolReel } from "@/lib/reel-pool";
@@ -47,28 +48,17 @@ interface DiscoverClientProps {
 export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, currentUserId, news, studyResources, studySites, studyBooks, watchReels }: DiscoverClientProps) {
   const [sentTo, setSentTo] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<"for-you" | "study">("for-you");
-  const [roomFull, setRoomFull] = useState(false);
-  const roomRef = useRef<HTMLDivElement>(null);
+  const room = useFullscreen<HTMLDivElement>();
 
-  useEffect(() => {
-    const onChange = () => setRoomFull(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
-
-  // Fullscreen has to be asked for inside the click itself, and the shell is
-  // always mounted so there is something to ask of.
+  // Asked for inside the click itself, so the browser honours it; a browser that
+  // refuses (iPhone Safari has no element fullscreen) fills the viewport by CSS.
   function enterRoom() {
     setTab("study");
-    roomRef.current?.requestFullscreen?.().catch(() => {});
+    room.enter();
   }
   function leaveRoom() {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    room.exit();
     setTab("for-you");
-  }
-  function toggleRoom() {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else roomRef.current?.requestFullscreen().catch(() => {});
   }
 
   async function handleAddFriend(userId: string) {
@@ -311,15 +301,15 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
         </>
       )}
 
-      <div ref={roomRef} className="room-shell">
+      <div ref={room.ref} className={`room-shell${room.active ? " pseudo-full" : ""}`}>
         {tab === "study" && (
           <StudyRoom
             initial={studyResources}
             currentUserId={currentUserId}
             sites={studySites}
             books={studyBooks}
-            isFullscreen={roomFull}
-            onToggleFullscreen={toggleRoom}
+            isFullscreen={room.active}
+            onToggleFullscreen={room.toggle}
             onLeave={leaveRoom}
           />
         )}
