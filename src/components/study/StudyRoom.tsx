@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, BookOpen, ExternalLink, Globe, GraduationCap, Library, LogOut,
-  Maximize2, Minimize2, Plus, Trash2, X,
+  Maximize2, Minimize2, Plus, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
@@ -38,11 +38,11 @@ const SHELVES: { key: StudyBook["category"]; label: string; hue: number }[] = [
   { key: "holy", label: "Holy books", hue: 268 },
 ];
 
-const SPINES_PER_SHELF = 12;
-const DESIGN_WIDTH = 720;
+const ROWS_PER_CASE = 4;
+const SPINES_PER_ROW = 10;
 
-// A stable little number from the title, used to vary spine colour and height so
-// no two books on a shelf look identical.
+// A stable little number from the title, used to vary spine width, colour and
+// height so the wall never looks like the same book standing forty times.
 function seedOf(text: string) {
   let n = 0;
   for (let i = 0; i < text.length; i++) n = (n * 31 + text.charCodeAt(i)) % 100000;
@@ -68,27 +68,31 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
   const [marks, setMarks] = useState<Record<string, Marker>>({});
   const [form, setForm] = useState({ title: "", url: "", cover_url: "", description: "" });
   const [saving, setSaving] = useState(false);
-  const [openBook, setOpenBook] = useState<StudyBook | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
-  const [scale, setScale] = useState(0.55);
-  const [view, setView] = useState({ turn: 0, tilt: 0 });
-  const [dragging, setDragging] = useState(false);
-  const frameRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ x: number; y: number; turn: number; tilt: number } | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [maxOffset, setMaxOffset] = useState(0);
+  const [gliding, setGliding] = useState(false);
+  const [peek, setPeek] = useState<StudyBook | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ x: number; offset: number } | null>(null);
   const movedRef = useRef(false);
 
+  // The wall is only as walkable as it is wide, so the travel limit is measured
+  // rather than guessed — it changes with the screen and with full screen.
   useEffect(() => {
-    const el = frameRef.current;
-    if (!el) return;
-    const measure = () => setScale(Math.min(1.2, Math.max(0.5, el.clientWidth / DESIGN_WIDTH)));
+    const stage = stageRef.current;
+    const track = trackRef.current;
+    if (!stage || !track) return;
+    const measure = () => setMaxOffset(Math.max(0, track.scrollWidth - stage.clientWidth));
     measure();
     const observer = new ResizeObserver(measure);
-    observer.observe(el);
+    observer.observe(stage);
+    observer.observe(track);
     return () => observer.disconnect();
-  }, []);
+  }, [books]);
 
-  // Empty on a database that has not had migration 018 yet — the room simply
-  // shows no bookmarks then.
   useEffect(() => {
     createClient()
       .from("study_progress")
@@ -123,30 +127,29 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
     [marks, books]
   );
 
-  const startDrag = useCallback((e: ReactPointerEvent) => {
-    dragRef.current = { x: e.clientX, y: e.clientY, turn: view.turn, tilt: view.tilt };
+  const clamp = useCallback((next: number) => Math.max(0, Math.min(maxOffset, next)), [maxOffset]);
+
+  const grab = useCallback((e: ReactPointerEvent) => {
+    dragRef.current = { x: e.clientX, offset };
     movedRef.current = false;
-    setDragging(true);
-  }, [view]);
+    setGliding(true);
+  }, [offset]);
 
   useEffect(() => {
-    if (!dragging) return;
+    if (!gliding) return;
     const move = (e: PointerEvent) => {
       const drag = dragRef.current;
       if (!drag) return;
       const dx = e.clientX - drag.x;
-      const dy = e.clientY - drag.y;
-      if (Math.abs(dx) < Math.abs(dy)) return; // the page is scrolling, not the room
       if (Math.abs(dx) > 4) movedRef.current = true;
-      setView({
-        turn: Math.max(-22, Math.min(22, drag.turn + dx * 0.14)),
-        tilt: Math.max(-9, Math.min(11, drag.tilt - dy * 0.05)),
-      });
+      setOffset(clamp(drag.offset - dx));
+      // Whatever the fingertip passes over is the book being looked at, so the
+      // shelf card follows the walk instead of waiting for a tap.
+      const hit = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      const id = hit?.closest<HTMLElement>("[data-book-id]")?.dataset.bookId;
+      if (id) setPeek((p) => (p?.id === id ? p : books.find((b) => b.id === id) || p));
     };
-    const up = () => {
-      setDragging(false);
-      dragRef.current = null;
-    };
+    const up = () => { setGliding(false); dragRef.current = null; };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
@@ -155,13 +158,25 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
     };
-  }, [dragging]);
+  }, [gliding, clamp, books]);
 
-  // A drag that travelled is not a tap on the book underneath it.
-  const tapped = useCallback((run: () => void) => {
-    if (movedRef.current) return;
-    run();
-  }, []);
+  // Walking the room from the keyboard, for anyone not using a finger.
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") { setOffset((o) => clamp(o + 160)); e.preventDefault(); }
+      if (e.key === "ArrowLeft") { setOffset((o) => clamp(o - 160)); e.preventDefault(); }
+      if (e.key === "Escape") setShowForm(false);
+    };
+    stage.addEventListener("keydown", onKey);
+    return () => stage.removeEventListener("keydown", onKey);
+  }, [clamp]);
+
+  const openBook = useCallback((b: StudyBook) => {
+    if (movedRef.current) return; // a walk that started on a spine is still a walk
+    router.push(`/study/${b.id}`);
+  }, [router]);
 
   async function add() {
     if (!form.title.trim() || !/^https?:\/\//.test(form.url.trim())) {
@@ -193,9 +208,13 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
   }
 
   const drawerBooks = openShelf === "all" ? books : openShelf ? byShelf.get(openShelf) || [] : [];
+  const peekMark = peek ? marks[peek.id] : undefined;
+  const peekShelf = peek ? SHELVES.find((s) => s.key === peek.category) : undefined;
 
   return (
-    <section className="space-y-4">
+    <section className={isFullscreen ? "space-y-4 room-only" : "space-y-4"}>
+      {/* .room-side is what full screen folds away — see globals.css */}
+      <div className="room-side">
       <div className="flex items-center gap-2">
         <GraduationCap className="w-6 h-6" style={{ color: "rgb(var(--a-800))" }} />
         <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Study Room</h2>
@@ -245,174 +264,155 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
           ))}
         </div>
       )}
+      </div>
 
-      {/* The room itself */}
+      {/* The library itself: one long wall of cases that the reader walks past. */}
       <div
-        ref={frameRef}
-        className={"room3d" + (dragging ? " room3d--dragging" : "")}
-        style={{ "--s": scale, "--turn": `${view.turn}deg`, "--tilt": `${view.tilt}deg` } as CSSProperties}
-        onPointerDown={startDrag}
-        aria-label="Study Room. Drag left or right to look around the shelves."
+        ref={stageRef}
+        className={"library" + (gliding ? " library--gliding" : "") + (isFullscreen ? " library--full" : "")}
+        style={{ "--shift": `${offset}px`, "--wall": `${Math.round(offset * 0.35)}px` } as CSSProperties}
+        onPointerDown={grab}
+        tabIndex={0}
+        role="application"
+        aria-label="Study Room library. Slide left or right along the shelves. Sliding over a book shows what it is; tapping it opens it to read."
       >
-        <div className="room3d__enter">
-          <div className="room3d__look">
-            <div className="room3d__sway">
-              <div className="room3d__wall room3d__wall--back">
-                <div className="room3d__picture" />
-                <div className="room3d__clock" />
-              </div>
-              <div className="room3d__wall room3d__wall--left"><div className="room3d__window" /></div>
-              <div className="room3d__wall room3d__wall--right" />
-              <div className="room3d__ceiling" />
-              <div className="room3d__floor">
-                <div className="room3d__rug" />
-                <div className="room3d__beam" />
-              </div>
+        <div className="library__wall" aria-hidden="true" />
+        <div className="library__light" aria-hidden="true" />
 
-              <div className="room3d__lamp">
-                <div className="room3d__shade" />
-                <div className="room3d__bulb" />
-              </div>
-
-              <div className="room3d__case">
-                <div className="room3d__cornice" />
-                {SHELVES.map((shelf) => {
-                  const stock = byShelf.get(shelf.key) || [];
-                  const faceOuts = scale > 0.72 ? 2 : 1;
-                  const visible = stock.slice(0, SPINES_PER_SHELF);
-                  return (
-                    <div key={shelf.key} className="room3d__shelf">
-                      <div className="room3d__books">
-                        {visible.map((b, i) => {
+        <div ref={trackRef} className="library__track">
+          {SHELVES.map((shelf) => {
+            const stock = byShelf.get(shelf.key) || [];
+            const onWall = stock.slice(0, ROWS_PER_CASE * SPINES_PER_ROW);
+            const rows: StudyBook[][] = [];
+            for (let i = 0; i < onWall.length; i += SPINES_PER_ROW) rows.push(onWall.slice(i, i + SPINES_PER_ROW));
+            return (
+              <section key={shelf.key} className="library__case" aria-label={`${shelf.label} case`}>
+                <div className="library__crown" />
+                <div className="library__tiers">
+                  {rows.map((row, r) => (
+                    <div key={r} className="library__row">
+                      <div className="library__spines">
+                        {row.map((b, i) => {
                           const seed = seedOf(b.title);
-                          const face = i < faceOuts && !!b.cover_url;
+                          const faceOut = r === 0 && i < 2 && !!b.cover_url;
                           const mark = marks[b.id];
                           return (
                             <button
                               key={b.id}
                               type="button"
-                              className={"room3d__book" + (face ? " room3d__book--face" : "")}
-                              style={{ height: `${face ? 100 : 82 + (seed % 18)}%` }}
-                              title={b.title}
-                              onClick={() => tapped(() => setOpenBook(b))}
+                              data-book-id={b.id}
+                              className={"library__book" + (faceOut ? " library__book--face" : "") + (peek?.id === b.id ? " library__book--lit" : "")}
+                              style={{
+                                height: `${faceOut ? 92 : 74 + (seed % 22)}%`,
+                                flex: `${faceOut ? 2.2 : 0.85 + (seed % 60) / 100} 0 0`,
+                                "--h": (shelf.hue + (seed % 44) - 22 + 360) % 360,
+                              } as CSSProperties}
+                              aria-label={`${b.title}${b.author ? " by " + b.author : ""}`}
+                              onPointerEnter={() => setPeek(b)}
+                              onClick={() => openBook(b)}
                             >
-                              {face ? (
-                                <span className="room3d__face" style={{ backgroundImage: `url(${b.cover_url})` }} />
+                              {faceOut ? (
+                                <span className="library__face" style={{ backgroundImage: `url(${b.cover_url})` }} />
                               ) : (
-                                <span className="room3d__spine" style={{ "--h": (shelf.hue + (seed % 44) - 22 + 360) % 360 } as CSSProperties}>
-                                  {b.title.length > 30 ? `${b.title.slice(0, 29)}…` : b.title}
-                                </span>
+                                <span className="library__spine">{b.title.length > 26 ? `${b.title.slice(0, 25)}…` : b.title}</span>
                               )}
-                              {mark && mark.percent > 0 && <span className="room3d__mark" />}
+                              {mark && mark.percent > 0 && <span className="library__ribbon" />}
                             </button>
                           );
                         })}
-                        {visible.length === 0 && (
-                          <span className="text-[11px] opacity-60" style={{ color: "#e8dcc0" }}>This shelf is waiting for books.</span>
-                        )}
                       </div>
-                      <button
-                        type="button"
-                        className="room3d__plate"
-                        onClick={() => tapped(() => setOpenShelf(shelf.key))}
-                      >
-                        {shelf.label}
-                        <span className="opacity-70">{stock.length}</span>
-                      </button>
+                      <div className="library__plank" />
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                  {rows.length === 0 && (
+                    <p className="library__empty">This case is waiting for books.</p>
+                  )}
+                </div>
+                <button type="button" className="library__plate" onClick={() => setOpenShelf(shelf.key)}>
+                  {shelf.label}
+                  <span className="opacity-70">{stock.length}</span>
+                </button>
+              </section>
+            );
+          })}
+        </div>
 
-              <div className="room3d__plant" />
-              <div className="room3d__desk">
-                <div className="room3d__desk-top" />
-                <div className="room3d__stack" />
-                <div className="room3d__open-book" />
-              </div>
-
-              <div className="room3d__dust" style={{ left: "22%", bottom: "26%", animationDelay: "0s" }} />
-              <div className="room3d__dust" style={{ left: "58%", bottom: "18%", animationDelay: "3s" }} />
-              <div className="room3d__dust" style={{ left: "76%", bottom: "34%", animationDelay: "6s" }} />
+        {/* The shelf card: what you are standing in front of right now. */}
+        {peek && (
+          <div className="library__card" role="status">
+            <span
+              className={"library__card-cover" + (peek.cover_url ? "" : " library__card-cover--spine")}
+              style={{
+                backgroundImage: peek.cover_url ? `url(${peek.cover_url})` : undefined,
+                "--h": ((peekShelf ? peekShelf.hue : 160) + (seedOf(peek.title) % 44) - 22 + 360) % 360,
+              } as CSSProperties}
+              aria-hidden="true"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] uppercase tracking-[0.16em] font-bold" style={{ color: "rgb(var(--b-300))" }}>
+                {peekShelf ? peekShelf.label : "Shelf"}
+              </p>
+              <p className="text-sm font-extrabold leading-tight truncate">{peek.title}</p>
+              <p className="text-[11px] opacity-75 mt-0.5">{peek.author || "Project Gutenberg"}</p>
+              <p className="text-xs opacity-90 mt-1.5 line-clamp-3">
+                {peek.description
+                  || (peekMark && peekMark.percent > 0
+                    ? `You stopped ${peekMark.percent}% through this one.`
+                    : "Open it and CONNEXA keeps your place, so the next visit starts on this page.")}
+              </p>
+              {peek.description && (
+                <p className="text-[10px] opacity-55 mt-1">Details from Wikipedia or the book&rsquo;s own title page</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5 flex-none">
+              <Button size="sm" icon={<ArrowRight className="w-4 h-4" />} onClick={() => router.push(`/study/${peek.id}`)}>
+                {peekMark && peekMark.percent > 0 ? `Read at ${peekMark.percent}%` : "Read"}
+              </Button>
+              <a
+                href={peek.pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1 text-[11px] font-semibold opacity-70 hover:opacity-100"
+              >
+                <ExternalLink className="w-3 h-3" /> Gutenberg
+              </a>
             </div>
           </div>
-        </div>
-        <div className="room3d__glare" />
+        )}
 
-        {/* Floating controls — leaving the room is one tap, not an escape key. */}
-        <div className="room3d__exit">
+        <div className="library__hint">
+          <Library className="w-3.5 h-3.5" />
+          <span>{maxOffset > 0 ? "Slide along the wall" : "The whole wall fits this screen"}</span>
+        </div>
+
+        {/* Floating over the room, so leaving is one tap, not an escape key. */}
+        <div className="library__controls">
           <button
             type="button"
-            className="room3d__exit-btn"
+            className="library__control"
             onClick={onToggleFullscreen}
             aria-label={isFullscreen ? "Leave full screen" : "Enter full screen"}
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             <span>{isFullscreen ? "Small screen" : "Full screen"}</span>
           </button>
-          <button type="button" className="room3d__exit-btn" onClick={onLeave} aria-label="Leave the study room">
+          <button type="button" className="library__control" onClick={onLeave} aria-label="Leave the study room">
             <LogOut className="w-4 h-4" />
             <span>Exit room</span>
           </button>
         </div>
 
-        {openBook && (() => {
-          const mark = marks[openBook.id];
-          const shelf = SHELVES.find((s) => s.key === openBook.category);
-          const seed = seedOf(openBook.title);
-          return (
-            <div className="room-welcome" role="dialog" aria-modal="true" aria-label={`Welcome to ${openBook.title}`}>
-              <div className="room-welcome__card">
-                <span className="room-welcome__glow" aria-hidden="true" />
-                <button
-                  type="button"
-                  onClick={() => setOpenBook(null)}
-                  aria-label="Close"
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "rgb(255 255 255 / 0.08)", color: "#f2e8d5" }}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <span
-                  className={"room-welcome__cover" + (openBook.cover_url ? "" : " room-welcome__cover--spine")}
-                  style={{
-                    backgroundImage: openBook.cover_url ? `url(${openBook.cover_url})` : undefined,
-                    "--h": ((shelf ? shelf.hue : 160) + (seed % 44) - 22 + 360) % 360,
-                  } as CSSProperties}
-                  aria-hidden="true"
-                />
-                <p className="room-welcome__eyebrow text-[11px] uppercase tracking-[0.18em] font-bold" style={{ color: "rgb(var(--b-300))" }}>
-                  Welcome to the {shelf ? shelf.label.toLowerCase() : "study"} shelf
-                </p>
-                <h3 className="room-welcome__title text-xl sm:text-2xl font-extrabold mt-1 leading-tight">{openBook.title}</h3>
-                <p className="room-welcome__by text-sm mt-1 opacity-75">
-                  {openBook.author || "Project Gutenberg"} · free to read here
-                </p>
-                <p className="room-welcome__blurb text-sm mt-3 opacity-85">
-                  {mark && mark.percent > 0
-                    ? `You stopped ${mark.percent}% through. Pick up exactly where the page left off.`
-                    : "Open it and CONNEXA keeps your place, so the next visit starts on this page."}
-                </p>
-                <div className="room-welcome__actions flex flex-wrap gap-2 mt-5">
-                  <Button
-                    size="sm"
-                    icon={<ArrowRight className="w-4 h-4" />}
-                    onClick={() => router.push(`/study/${openBook.id}`)}
-                  >
-                    {mark && mark.percent > 0 ? `Continue at ${mark.percent}%` : "Start reading"}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setOpenBook(null)}>
-                    Back to the shelves
-                  </Button>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        <div className="library__walk" aria-hidden="true">
+          <button type="button" onClick={() => setOffset((o) => clamp(o - 240))} disabled={offset <= 0} aria-label="Walk to the left">‹</button>
+          <span className="library__walk-track">
+            <span className="library__walk-dot" style={{ left: `${maxOffset ? (offset / maxOffset) * 100 : 0}%` }} />
+          </span>
+          <button type="button" onClick={() => setOffset((o) => clamp(o + 240))} disabled={offset >= maxOffset} aria-label="Walk to the right">›</button>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
-        <span>Drag the room to look around.</span>
+      <div className="room-side flex flex-wrap items-center gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
+        <span>Slide along the shelves — stop on a book and its details rise.</span>
         <button onClick={() => setOpenShelf("all")} className="inline-flex items-center gap-1 font-semibold underline underline-offset-2"
           style={{ color: "rgb(var(--a-800))" }}>
           <Library className="w-3.5 h-3.5" /> Browse all {books.length} books
@@ -482,34 +482,43 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
       )}
 
       {/* Add form */}
-      <div className="card p-4 space-y-3">
-        <p className="font-semibold text-sm flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
+      <div className="room-side card p-4 space-y-3">
+        <button
+          type="button"
+          className="w-full flex items-center gap-1.5 text-sm font-semibold text-left"
+          style={{ color: "var(--text-primary)" }}
+          onClick={() => setShowForm((v) => !v)}
+        >
           <Plus className="w-4 h-4" style={{ color: "rgb(var(--a-800))" }} /> Add a resource
-        </p>
-        <div className="grid sm:grid-cols-2 gap-2">
-          <input className={inputCls} style={inputStyle} placeholder="Title (e.g. WAEC past questions)"
-            value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
-          <input className={inputCls} style={inputStyle} placeholder="https://link-to-the-resource"
-            value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} />
-          <input className={inputCls} style={inputStyle} placeholder="Thumbnail image URL (optional)"
-            value={form.cover_url} onChange={(e) => setForm((f) => ({ ...f, cover_url: e.target.value }))} />
-          <input className={inputCls} style={inputStyle} placeholder="Short description (optional)"
-            value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-        </div>
-        <div className="flex justify-end">
-          <Button size="sm" onClick={add} disabled={saving} icon={<Plus className="w-3.5 h-3.5" />}>
-            {saving ? "Adding…" : "Add to Study Room"}
-          </Button>
-        </div>
+        </button>
+        {showForm && (
+          <div className="grid sm:grid-cols-2 gap-2">
+            <input className={inputCls} style={inputStyle} placeholder="Title (e.g. WAEC past questions)"
+              value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+            <input className={inputCls} style={inputStyle} placeholder="https://link-to-the-resource"
+              value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} />
+            <input className={inputCls} style={inputStyle} placeholder="Thumbnail image URL (optional)"
+              value={form.cover_url} onChange={(e) => setForm((f) => ({ ...f, cover_url: e.target.value }))} />
+            <input className={inputCls} style={inputStyle} placeholder="Short description (optional)"
+              value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+          </div>
+        )}
+        {showForm && (
+          <div className="flex justify-end">
+            <Button size="sm" onClick={add} disabled={saving} icon={<Plus className="w-3.5 h-3.5" />}>
+              {saving ? "Adding…" : "Add to Study Room"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {items.length === 0 ? (
-        <div className="card p-8 text-center">
+        <div className="room-side card p-8 text-center">
           <Library className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--text-secondary)" }} />
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>No study links yet — be the first to add one.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="room-side grid grid-cols-2 sm:grid-cols-3 gap-3">
           {items.map((g) => (
             <div key={g.id} className="rounded-2xl border overflow-hidden transition-transform hover:scale-[1.02] relative"
               style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
@@ -545,7 +554,7 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
           ))}
         </div>
       )}
-      <p className="text-sm -mt-2" style={{ color: "var(--text-secondary)" }}>
+      <p className="room-side text-sm -mt-2" style={{ color: "var(--text-secondary)" }}>
         Shared learning links. Drop a link, add a thumbnail to represent it, and everyone in CONNEXA can open it.
       </p>
     </section>

@@ -9,16 +9,13 @@ export async function getGlobalTheme(): Promise<string> {
   return data?.value && VALID_THEMES.includes(data.value) ? data.value : "connexa";
 }
 
+/**
+ * Everyone reads the theme the admin set for the site. Per-user colour themes
+ * are no longer honoured: a reader who picked one years ago would otherwise
+ * keep a colour they have no way left to change.
+ */
 export async function getEffectiveTheme(): Promise<string> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: prefs } = await supabase
-        .from("user_preferences").select("color_theme").eq("user_id", user.id).maybeSingle();
-      const t = prefs?.color_theme as string | undefined;
-      if (t && t !== "follow_site" && VALID_THEMES.includes(t)) return t;
-    }
     return await getGlobalTheme();
   } catch {
     return "connexa";

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Users, Globe, TrendingUp, UserPlus, Newspaper, Radio, Gamepad2, Clapperboard, ArrowRight, GraduationCap, Play } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { PostCard } from "@/components/posts/PostCard";
 import { StudyRoom } from "@/components/study/StudyRoom";
 import { useFullscreen } from "@/lib/useFullscreen";
@@ -49,6 +50,25 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
   const [sentTo, setSentTo] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<"for-you" | "study">("for-you");
   const room = useFullscreen<HTMLDivElement>();
+  const [story, setStory] = useState<NewsEntry | null>(null);
+  const [storyData, setStoryData] = useState<{ title: string; image: string | null; paragraphs: string[] } | null>(null);
+  const [storyError, setStoryError] = useState<string | null>(null);
+
+  // The story is read here rather than opened somewhere else: the server pulls
+  // the article and the paragraphs render in this modal.
+  async function openStory(n: NewsEntry) {
+    setStory(n);
+    setStoryData(null);
+    setStoryError(null);
+    try {
+      const res = await fetch(`/api/news?url=${encodeURIComponent(n.link)}`);
+      const json = await res.json();
+      if (!res.ok) { setStoryError(json.error || "The story could not be read just now."); return; }
+      setStoryData(json);
+    } catch {
+      setStoryError("The story could not be read just now.");
+    }
+  }
 
   // Asked for inside the click itself, so the browser honours it; a browser that
   // refuses (iPhone Safari has no element fullscreen) fills the viewport by CSS.
@@ -130,8 +150,8 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
           </div>
           <div className="rail flex gap-3 pb-2 snap-x snap-mandatory md:grid md:grid-cols-2 md:overflow-visible">
             {news.slice(0, 8).map((n) => (
-              <a key={n.link} href={n.link} target="_blank" rel="noopener noreferrer"
-                className="card p-4 min-w-[75%] sm:min-w-[45%] md:min-w-0 snap-start hover:shadow-md transition-shadow flex flex-col gap-1.5">
+              <button key={n.link} type="button" onClick={() => openStory(n)}
+                className="card p-4 min-w-[75%] sm:min-w-[45%] md:min-w-0 snap-start hover:shadow-md transition-shadow flex flex-col gap-1.5 text-left">
                 <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
                   <span className="font-bold uppercase tracking-wide" style={{ color: "rgb(var(--a-600))" }}>{n.channel}</span>
                   <span>·</span>
@@ -140,7 +160,8 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
                 </div>
                 <p className="font-semibold text-sm leading-snug" style={{ color: "var(--text-primary)" }}>{n.title}</p>
                 <p className="text-xs line-clamp-2" style={{ color: "var(--text-secondary)" }}>{n.description}</p>
-              </a>
+                <p className="text-[11px] font-bold uppercase tracking-wide mt-auto pt-1" style={{ color: "rgb(var(--a-800))" }}>Read it here</p>
+              </button>
             ))}
           </div>
         </section>
@@ -314,6 +335,34 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
           />
         )}
       </div>
+
+      <Modal open={!!story} onClose={() => setStory(null)} title={story?.title} size="xl">
+        <div className="p-5 space-y-4">
+          {storyError && (
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{storyError}</p>
+          )}
+          {!storyError && !storyData && (
+            <p className="text-sm animate-pulse" style={{ color: "var(--text-secondary)" }}>Reading the story…</p>
+          )}
+          {storyData && (
+            <>
+              {storyData.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={storyData.image} alt="" className="w-full max-h-72 object-cover rounded-xl" loading="lazy" />
+              )}
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-secondary)" }}>
+                {story?.channel} · {story?.description}
+              </p>
+              {storyData.paragraphs.map((p, i) => (
+                <p key={i} className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{p}</p>
+              ))}
+              <p className="text-[11px] pt-2 border-t" style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}>
+                Reported by BBC News, read here on CONNEXA.
+              </p>
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

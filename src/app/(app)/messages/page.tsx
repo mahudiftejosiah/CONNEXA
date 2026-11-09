@@ -19,7 +19,8 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   const { data: participantRows } = await supabase
     .from("conversation_participants")
     .select("conversation:conversations!inner(id, last_message_at, created_at)")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .is("deleted_at", null);
 
   type LightConv = { id: string; last_message_at: string | null; created_at: string };
   const recentIds: LightConv[] = (participantRows || [])
@@ -109,6 +110,10 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
       }
 
       if (convId) {
+        // Opening a chat you deleted puts it back in your inbox, the way
+        // Messenger restores a thread when the other person writes again.
+        await supabase.from("conversation_participants")
+          .update({ deleted_at: null }).eq("conversation_id", convId).eq("user_id", user.id);
         const { data: conv } = await supabase.from("conversations")
           .select(`*, participants:conversation_participants(*, profile:profiles(*))`)
           .eq("id", convId).single();

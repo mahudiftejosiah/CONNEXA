@@ -68,3 +68,92 @@ export async function getBbcNews(): Promise<(NewsItem & { channel: string })[]> 
     return cache.items;
   }
 }
+
+export interface NewsArticle {
+  title: string;
+  image: string | null;
+  paragraphs: string[];
+}
+
+// Only the feeds we read ourselves may be opened, so the proxy below can never
+// be pointed at an internal address by a crafted link.
+const ALLOWED_HOSTS = ["www.bbc.co.uk", "www.bbc.com", "feeds.bbci.co.uk"];
+
+export function isNewsLinkAllowed(raw: string) {
+  try {
+    const u = new URL(raw);
+    return u.protocol === "https:" && ALLOWED_HOSTS.includes(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
+type CacheEntry = { article: NewsArticle; at: number };
+const articles = new Map<string, CacheEntry>();
+const ARTICLE_TTL_MS = 30 * 60 * 1000;
+
+function metaContent(html: string, property: string) {
+  const m = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${property}["'][^>]+content=["']([^"']+)["']`))
+    || html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${property}["']`));
+  return m ? unescapeXml(m[1]) : "";
+}
+
+function plainText(fragment: string) {
+  return unescapeXml(
+    fragment
+      .replace(/<a[^>]*>/gi, "")
+      .replace(/<\/a>/gi, "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " ")
+  ).trim();
+}
+
+/**
+ * Reads the story here instead of sending the reader to another site: the
+ * article is fetched on the server and its paragraphs are pulled out of the
+ * page, so the whole thing renders inside CONNEXA.
+ */
+export async function fetchNewsArticle(url: string): Promise<NewsArticle | null> {
+  if (!isNewsLinkAllowed(url)) return null;
+  const hit = articles.get(url);
+  if (hit && Date.now() - hit.at < ARTICLE_TTL_MS) return hit.article;
+
+  const res = await fetch(url, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000),
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; ConnexaBot/1.0)" },
+  });
+  if (!res.ok) return null;
+  const html = await res.text();
+
+  // Everything before the first <article> is navigation and scripts.
+  const bodyStart = html.search(/<article[\s>]/i);
+  const body = bodyStart >= 0 ? html.slice(bodyStart) : html;
+  const bodyEnd = body.search(/<\/article>/i);
+  const scope = bodyEnd > 0 ? body.slice(0, bodyEnd) : body;
+
+  const paragraphs: string[] = [];
+  const seen = new Set<string>();
+  const para = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = para.exec(scope)) && paragraphs.length < 60) {
+    const text = plainText(match[1]);
+    // BBC wraps standfirsts and captions the same way; short lines are usually
+    // cookie banners, "read more" prompts or section labels.
+    if (text.length < 45) continue;
+    if (/^(?:related news|advertising|get more from|sign up|watch:|also read)/i.test(text)) continue;
+    if (seen.has(text)) continue;
+    seen.add(text);
+    paragraphs.push(text);
+  }
+
+  const title = metaContent(html, "og:title") || tag(html, "title");
+  const image = metaContent(html, "og:image");
+  const article: NewsArticle = {
+    title,
+    image: image && /^https:\/\//.test(image) ? image : null,
+    paragraphs,
+  };
+  if (article.paragraphs.length > 0) articles.set(url, { article, at: Date.now() });
+  return article;
+}

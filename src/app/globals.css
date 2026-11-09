@@ -520,420 +520,368 @@
   opacity: 0.6;
 }
 
-/* ===== Study Room: the 3D book room =====
-   Every measure comes from --s, the ratio between the frame's width and the
-   720px the room was drawn at, so walls, bookcase and depth scale together.
-   Side walls, floor and ceiling are anchored to the frame's edges and rotated
-   about them, which sends each plane away from the viewer into the scene. */
-@keyframes roomEnter {
-  from { opacity: 0; transform: translateZ(calc(var(--s) * -430px)); }
-  to   { opacity: 1; transform: translateZ(0); }
-}
-@keyframes roomSway {
-  0%, 100% { transform: rotateY(-1.5deg); }
-  50%      { transform: rotateY(1.5deg); }
-}
-@keyframes roomLamp {
-  0%, 100% { opacity: 0.5; }
-  50%      { opacity: 0.78; }
-}
-@keyframes roomDust {
-  0%   { opacity: 0; transform: translate3d(0, 0, calc(var(--s) * 40px)); }
-  30%  { opacity: 0.7; }
-  100% { opacity: 0; transform: translate3d(calc(var(--s) * 26px), calc(var(--s) * -120px), calc(var(--s) * -60px)); }
-}
-.room3d {
+/* ===== Study Room: the walkable library wall =====
+   The room is a photograph of a real library now, and it moves only when the
+   reader moves it. Two custom properties arrive from the component: --shift is
+   how far along the shelves we have walked, and --wall is the same distance
+   spent on the picture behind them, so the photo recedes like a backdrop while
+   the cases slide like the floor underfoot. */
+.library {
   position: relative;
-  height: clamp(430px, 64vh, 560px);
+  height: clamp(430px, 66vh, 620px);
   overflow: hidden;
   border-radius: 20px;
   border: 1px solid var(--border);
-  background: #0b1410;
-  perspective: calc(var(--s) * 940px);
+  background: #17110c;
   touch-action: pan-y;
   cursor: grab;
   user-select: none;
+  outline: none;
 }
-.room3d--dragging { cursor: grabbing; }
-.room3d__enter {
+.library:focus-visible { box-shadow: 0 0 0 3px rgb(var(--b-400) / 0.65); }
+.library--gliding { cursor: grabbing; }
+.library--full {
+  height: 100vh;
+  height: 100dvh;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Tiled horizontally so the wall never runs out however far you walk, and
+   blurred under the cases so it reads as depth rather than a pasted picture. */
+.library__wall {
   position: absolute;
   inset: 0;
-  transform-style: preserve-3d;
-  animation: roomEnter 0.9s ease-out both;
+  z-index: 0;
+  background-image: url("/images/library-wall.jpg");
+  background-size: auto 130%;
+  background-repeat: repeat-x;
+  background-position: calc(var(--wall, 0px) * -1) center;
+  filter: blur(3px) brightness(0.62) saturate(0.85);
+  opacity: 0.55;
+  transition: background-position 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.room3d__look {
+/* Lamplight from above, gloom at the skirting, so the wood sits in the room. */
+.library__light {
   position: absolute;
   inset: 0;
-  transform-style: preserve-3d;
-  transform: rotateX(var(--tilt, 0deg)) rotateY(var(--turn, 0deg));
-  transition: transform 0.25s ease-out;
-}
-.room3d--dragging .room3d__look { transition: none; }
-.room3d__sway {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  animation: roomSway 18s ease-in-out infinite;
-}
-.room3d__wall,
-.room3d__floor,
-.room3d__ceiling { position: absolute; }
-.room3d__wall--back {
-  inset: -24% -30%;
-  transform: translateZ(calc(var(--s) * -440px));
+  z-index: 1;
+  pointer-events: none;
   background:
-    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.028) 0 calc(var(--s) * 26px), transparent 0 calc(var(--s) * 52px)),
-    linear-gradient(180deg, #16271d 0%, #1c3025 55%, #10201a 100%);
+    radial-gradient(120% 70% at 50% -12%, rgb(255 226 170 / 0.22), transparent 62%),
+    linear-gradient(180deg, rgb(10 7 4 / 0.35) 0%, rgb(10 7 4 / 0.05) 34%, rgb(10 7 4 / 0.55) 86%, rgb(6 4 2 / 0.8) 100%);
 }
-.room3d__wall--left {
-  top: 0; left: 0;
-  height: 100%;
-  width: calc(var(--s) * 440px);
-  transform-origin: left center;
-  transform: rotateY(90deg);
-  background: linear-gradient(90deg, #0c1712, #1a2b21 70%, #21372a);
-}
-.room3d__wall--right {
-  top: 0; right: 0;
-  height: 100%;
-  width: calc(var(--s) * 440px);
-  transform-origin: right center;
-  transform: rotateY(-90deg);
-  background: linear-gradient(-90deg, #0c1712, #18271f 70%, #21372a);
-}
-.room3d__floor {
-  left: -10%; bottom: 0;
-  width: 120%;
-  height: calc(var(--s) * 440px);
-  transform-origin: bottom center;
-  transform: rotateX(90deg);
-  background:
-    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.34) 0 2px, transparent 2px calc(var(--s) * 74px)),
-    linear-gradient(180deg, #3f2a18, #5a3d24 60%, #6d4a2d);
-}
-.room3d__ceiling {
-  left: -10%; top: 0;
-  width: 120%;
-  height: calc(var(--s) * 440px);
-  transform-origin: top center;
-  transform: rotateX(-90deg);
-  background: linear-gradient(0deg, #14211b, #0e1814);
-}
-.room3d__rug {
-  position: absolute;
-  left: 50%; bottom: calc(var(--s) * 120px);
-  width: calc(var(--s) * 420px);
-  height: calc(var(--s) * 150px);
-  margin-left: calc(var(--s) * -210px);
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgb(120 41 33 / 0.85), rgb(74 24 20 / 0.7) 62%, transparent 72%);
-}
-.room3d__beam {
-  position: absolute;
-  top: calc(var(--s) * 90px);
-  left: calc(var(--s) * 130px);
-  width: calc(var(--s) * 300px);
-  height: calc(var(--s) * 330px);
-  background: radial-gradient(ellipse at 30% 0%, rgb(255 226 160 / 0.3), transparent 65%);
-}
-.room3d__window {
-  position: absolute;
-  top: 18%; bottom: 30%;
-  left: 26%;
-  width: 46%;
-  background: linear-gradient(180deg, #cfe4f2, #f6e6bd 70%, #d8bd85);
-  border: calc(var(--s) * 8px) solid #2a1c11;
-  box-shadow: 0 0 calc(var(--s) * 60px) calc(var(--s) * 6px) rgb(255 226 160 / 0.22);
-}
-.room3d__window::after {
-  content: "";
+.library__track {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(90deg, transparent 47%, #2a1c11 47% 53%, transparent 53%),
-    linear-gradient(180deg, transparent 47%, #2a1c11 47% 53%, transparent 53%);
+  z-index: 2;
+  width: max-content;
+  display: flex;
+  align-items: stretch;
+  gap: clamp(1rem, 5vw, 3.5rem);
+  padding: clamp(1rem, 3.5vw, 2.25rem);
+  transform: translate3d(calc(var(--shift, 0px) * -1), 0, 0);
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.room3d__picture {
-  position: absolute;
-  top: 14%;
-  left: 12%;
-  width: calc(var(--s) * 92px);
-  height: calc(var(--s) * 68px);
-  background: linear-gradient(150deg, #2f4d3a, #6d8a5f 60%, #a98f52);
-  border: calc(var(--s) * 5px) solid #b99a5f;
-  box-shadow: calc(var(--s) * 5px) calc(var(--s) * 7px) calc(var(--s) * 18px) rgb(0 0 0 / 0.45);
-}
-.room3d__clock {
-  position: absolute;
-  top: 10%;
-  right: 15%;
-  width: calc(var(--s) * 54px);
-  height: calc(var(--s) * 54px);
-  border-radius: 50%;
-  background: radial-gradient(circle, #f4ecd8 62%, #cbb27f 63%, #8f6f37);
-  box-shadow: calc(var(--s) * 3px) calc(var(--s) * 5px) calc(var(--s) * 14px) rgb(0 0 0 / 0.4);
-}
-.room3d__clock::after {
-  content: "";
-  position: absolute;
-  left: 50%; top: 50%;
-  width: 2px; height: 42%;
-  margin-left: -1px;
-  background: #23362a;
-  transform-origin: bottom center;
-  transform: translateY(-100%) rotate(38deg);
-}
-.room3d__case {
-  position: absolute;
-  left: 7%; right: 7%;
-  top: 15%; bottom: 13%;
-  transform: translateZ(calc(var(--s) * -330px));
-  transform-style: preserve-3d;
+.library--gliding .library__track,
+.library--gliding .library__wall { transition: none; }
+
+.library__case {
+  flex: 0 0 auto;
+  width: min(76vw, 620px);
   display: flex;
   flex-direction: column;
-  padding: calc(var(--s) * 6px) calc(var(--s) * 12px) calc(var(--s) * 4px);
-  border-radius: calc(var(--s) * 8px) calc(var(--s) * 8px) 0 0;
-  background: linear-gradient(96deg, #3c2716, #5b3a21 22%, #4a2f1b 55%, #6b4527 82%, #352314);
-  box-shadow:
-    inset 0 0 calc(var(--s) * 40px) rgb(0 0 0 / 0.6),
-    0 calc(var(--s) * 14px) calc(var(--s) * 34px) rgb(0 0 0 / 0.55);
+  gap: 0.45rem;
+  min-height: 0;
 }
-.room3d__cornice {
-  position: absolute;
-  left: -3%; right: -3%;
-  top: calc(var(--s) * -14px);
-  height: calc(var(--s) * 16px);
-  border-radius: calc(var(--s) * 4px);
-  background: linear-gradient(180deg, #7d522d, #45291a);
-  transform: translateZ(calc(var(--s) * 20px));
-  box-shadow: 0 calc(var(--s) * 5px) calc(var(--s) * 12px) rgb(0 0 0 / 0.5);
+.library__crown {
+  flex: none;
+  height: 16px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #8a6033 0%, #5d3f1e 60%, #3b2712 100%);
+  box-shadow: 0 3px 8px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 240 210 / 0.25);
 }
-.room3d__shelf {
-  position: relative;
+.library__tiers {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.45rem;
+  border-radius: 6px;
+  border: 1px solid #2a1a0c;
+  background: linear-gradient(180deg, #402b18 0%, #2c1d10 100%);
+  box-shadow: 0 20px 36px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 240 210 / 0.12);
+}
+.library__row {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.library__spines {
   flex: 1 1 0;
   min-height: 0;
   display: flex;
   align-items: flex-end;
-  transform-style: preserve-3d;
-  background: linear-gradient(180deg, #150d07, #241609 68%, #33200f);
-  box-shadow: inset 0 calc(var(--s) * 10px) calc(var(--s) * 16px) rgb(0 0 0 / 0.65);
+  gap: 2px;
+  padding: 0 0.3rem;
 }
-.room3d__shelf::after {
-  /* the plank the books stand on, standing proud of the case */
-  content: "";
-  position: absolute;
-  left: -2%; right: -2%; bottom: 0;
-  height: calc(var(--s) * 10px);
-  z-index: 5;
-  border-radius: calc(var(--s) * 2px);
-  background: linear-gradient(180deg, #855730, #40261520 6%, #3f2716);
-  box-shadow: 0 calc(var(--s) * 4px) calc(var(--s) * 9px) rgb(0 0 0 / 0.55);
-  transform: translateZ(calc(var(--s) * 12px));
+.library__plank {
+  flex: none;
+  height: 11px;
+  border-radius: 1px;
+  background: linear-gradient(180deg, #8a6033 0%, #563a1c 45%, #2e1f0e 100%);
+  box-shadow: 0 4px 7px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 240 210 / 0.22);
 }
-.room3d__shelf::before {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: calc(var(--s) * 10px);
-  height: calc(var(--s) * 12px);
-  background: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.5));
-  pointer-events: none;
+.library__empty {
+  margin: auto;
+  font-size: 12px;
+  color: rgb(246 236 216 / 0.55);
 }
-.room3d__books {
+
+.library__book {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  gap: calc(var(--s) * 2px);
-  width: 100%;
-  height: calc(100% - var(--s) * 10px);
-  padding: 0 calc(var(--s) * 6px);
-  transform-style: preserve-3d;
-}
-.room3d__book {
-  position: relative;
-  flex: 1 1 0;
-  min-width: 0;
-  border: 0;
+  align-self: flex-end;
+  min-width: 13px;
+  margin: 0;
   padding: 0;
-  background: none;
+  border: 0;
+  background: transparent;
   cursor: pointer;
-  transform-style: preserve-3d;
+  border-radius: 2px 2px 0 0;
+  transition: transform 0.18s ease-out, filter 0.18s ease-out;
 }
-.room3d__book--face { flex: 2.4 1 0; }
-.room3d__spine {
-  display: block;
+.library__book:hover,
+.library__book--lit {
+  transform: translateY(-9px);
+  filter: brightness(1.2);
+  z-index: 3;
+}
+.library__book:focus-visible {
+  outline: 2px solid rgb(var(--b-400));
+  outline-offset: 2px;
+}
+/* Vertical type so a shelf reads as spines, not as buttons. --h comes from the
+   shelf's hue plus the title's own seed, so a case looks collected, not
+   printed, but each category still keeps its colour family. */
+.library__spine {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   height: 100%;
-  border-radius: calc(var(--s) * 2px) calc(var(--s) * 2px) 0 0;
-  background: linear-gradient(90deg, rgb(0 0 0 / 0.42), transparent 22%, transparent 76%, rgb(0 0 0 / 0.5)),
-    hsl(var(--h) 38% 30%);
-  box-shadow: inset 0 calc(var(--s) * 3px) 0 rgb(255 255 255 / 0.18);
-  color: rgb(255 255 255 / 0.86);
-  font-size: max(8px, calc(var(--s) * 10px));
-  line-height: 1.05;
+  padding: 7px 2px;
+  border-radius: 2px 2px 0 0;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   white-space: nowrap;
   overflow: hidden;
-  padding: calc(var(--s) * 4px) 1px;
-  transition: transform 0.18s ease-out;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f4e6c8;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.6);
+  background:
+    linear-gradient(90deg,
+      rgb(0 0 0 / 0.42) 0%,
+      rgb(0 0 0 / 0.08) 24%,
+      rgb(255 255 255 / 0.18) 50%,
+      rgb(0 0 0 / 0.22) 78%,
+      rgb(0 0 0 / 0.48) 100%),
+    linear-gradient(180deg,
+      hsl(var(--h, 30) 32% 34%) 0%,
+      hsl(var(--h, 30) 34% 24%) 100%);
+  box-shadow: inset 0 7px 0 rgb(255 240 210 / 0.09), inset 0 -7px 0 rgb(0 0 0 / 0.28);
 }
-.room3d__book:hover .room3d__spine,
-.room3d__book:focus-visible .room3d__spine { transform: translateZ(calc(var(--s) * 18px)) rotateY(-16deg); }
-.room3d__mark {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: calc(var(--s) * 3px);
-  background: rgb(var(--b-300));
+.library__book--face {
+  box-shadow: 0 8px 16px rgb(0 0 0 / 0.55);
+  background: #0d0906;
 }
-.room3d__face {
+.library__face {
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 1px calc(var(--s) * 4px) calc(var(--s) * 4px) 1px;
+  border-radius: 2px;
   background-size: cover;
   background-position: top center;
-  box-shadow: calc(var(--s) * -5px) calc(var(--s) * 6px) calc(var(--s) * 16px) rgb(0 0 0 / 0.6);
-  transform-origin: left center;
-  transform: rotateY(-16deg) translateZ(calc(var(--s) * 12px));
-  transition: transform 0.2s ease-out;
+  box-shadow: inset -4px 0 7px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.2);
 }
-.room3d__book:hover .room3d__face { transform: rotateY(-6deg) translateZ(calc(var(--s) * 22px)); }
-.room3d__plate {
+/* The bookmark that says "you are part-way through this one". */
+.library__ribbon {
   position: absolute;
-  left: calc(var(--s) * 8px);
-  bottom: calc(var(--s) * 1px);
-  z-index: 7;
+  top: -4px;
+  right: 3px;
+  width: 7px;
+  height: 22px;
+  background: linear-gradient(180deg, rgb(var(--b-400)), rgb(var(--b-700)));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
+  pointer-events: none;
+}
+.library__plate {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 5px;
+  border: 1px solid #6b4a17;
+  background: linear-gradient(180deg, #d3ab60 0%, #96702d 100%);
+  color: #201204;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  box-shadow: 0 3px 7px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.4);
+}
+.library__plate:hover { filter: brightness(1.07); }
+
+/* What you are standing in front of. It rises out of the shelf rather than
+   covering it, so the wall stays readable while you browse. */
+@keyframes libraryCardRise {
+  from { opacity: 0; transform: translate(-50%, 14px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.library__card {
+  position: absolute;
+  left: 50%;
+  bottom: 72px;
+  z-index: 6;
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 2rem));
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem;
+  border-radius: 14px;
+  border: 1px solid rgb(var(--b-400) / 0.4);
+  background: rgb(14 10 6 / 0.9);
+  color: #f6ecd8;
+  box-shadow: 0 22px 46px rgb(0 0 0 / 0.55);
+  animation: libraryCardRise 0.22s ease-out both;
+}
+.library__card-cover {
+  flex: none;
+  width: 46px;
+  height: 66px;
+  border-radius: 2px 5px 5px 2px;
+  background-size: cover;
+  background-position: top center;
+  box-shadow: -4px 0 0 rgb(0 0 0 / 0.28) inset, 0 6px 12px rgb(0 0 0 / 0.45);
+}
+.library__card-cover--spine {
+  background-image: linear-gradient(155deg,
+    hsl(var(--h, 30) 40% 34%) 0%,
+    hsl(var(--h, 30) 38% 20%) 100%);
+}
+.library__hint {
+  position: absolute;
+  left: 12px;
+  bottom: 14px;
+  z-index: 5;
   display: inline-flex;
   align-items: center;
-  gap: calc(var(--s) * 4px);
-  padding: calc(var(--s) * 2px) calc(var(--s) * 8px);
-  border: 1px solid rgb(90 66 24);
-  border-radius: calc(var(--s) * 4px);
-  background: linear-gradient(180deg, #e3ca8b, #b9964d);
-  color: #24301f;
-  font-size: max(9px, calc(var(--s) * 11px));
+  gap: 0.4rem;
+  max-width: 52%;
+  padding: 0.3rem 0.6rem;
+  border-radius: 9999px;
+  background: rgb(8 6 3 / 0.62);
+  color: rgb(246 236 216 / 0.85);
+  font-size: 11px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.library__controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 7;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+.library__control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--b-400) / 0.5);
+  background: rgb(11 20 16 / 0.72);
+  color: #f2e8d5;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.01em;
   cursor: pointer;
-  transform: translateZ(calc(var(--s) * 16px));
+  transition: background 0.2s ease-out, transform 0.2s ease-out;
 }
-.room3d__lamp {
-  position: absolute;
-  top: calc(var(--s) * -8px);
-  left: 62%;
-  width: calc(var(--s) * 74px);
-  height: calc(var(--s) * 150px);
-  transform: translateZ(calc(var(--s) * -240px));
-  transform-style: preserve-3d;
+.library__control:hover {
+  background: rgb(11 20 16 / 0.92);
+  transform: scale(1.04);
 }
-.room3d__lamp::before {
-  content: "";
+/* Where you are along the wall. */
+.library__walk {
   position: absolute;
-  left: 50%; top: 0;
-  width: 2px; height: 46%;
-  background: #6c5a34;
+  right: 12px;
+  bottom: 14px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.35rem;
+  border-radius: 9999px;
+  background: rgb(8 6 3 / 0.55);
 }
-.room3d__shade {
-  position: absolute;
-  left: 0; top: 44%;
-  width: 100%; height: 30%;
-  background: linear-gradient(180deg, #d9b972, #8c6528);
-  clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%);
+.library__walk button {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 9999px;
+  background: rgb(246 236 216 / 0.14);
+  color: #f6ecd8;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
 }
-.room3d__bulb {
-  position: absolute;
-  left: 8%; top: 60%;
-  width: 84%; height: 90%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgb(255 236 190 / 0.95), rgb(255 214 140 / 0.28) 55%, transparent 72%);
-  animation: roomLamp 5.5s ease-in-out infinite;
+.library__walk button:hover:not(:disabled) { background: rgb(246 236 216 / 0.3); }
+.library__walk button:disabled { opacity: 0.35; cursor: default; }
+.library__walk-track {
+  position: relative;
+  width: 92px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgb(246 236 216 / 0.2);
 }
-.room3d__desk {
+.library__walk-dot {
   position: absolute;
-  left: 4%; right: 4%;
-  bottom: 2%;
-  height: calc(var(--s) * 96px);
-  transform: translateZ(calc(var(--s) * 150px));
-  transform-style: preserve-3d;
-  pointer-events: none;
+  top: -3px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 9999px;
+  background: rgb(var(--b-400));
+  box-shadow: 0 0 0 2px rgb(8 6 3 / 0.5);
+  transition: left 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.room3d__desk-top {
-  position: absolute;
-  left: 0; right: 0; top: 0;
-  height: calc(var(--s) * 16px);
-  border-radius: calc(var(--s) * 4px);
-  background: linear-gradient(96deg, #4a3018, #7c5228 30%, #59391d 62%, #8a5c2f);
-  box-shadow: 0 calc(var(--s) * 8px) calc(var(--s) * 22px) rgb(0 0 0 / 0.6);
-}
-.room3d__stack {
-  position: absolute;
-  bottom: calc(var(--s) * 14px);
-  width: calc(var(--s) * 74px);
-  height: calc(var(--s) * 40px);
-  border-radius: calc(var(--s) * 2px);
-  background: repeating-linear-gradient(180deg,
-    hsl(12 42% 32%) 0 calc(var(--s) * 8px),
-    #e8dcc0 calc(var(--s) * 8px) calc(var(--s) * 10px));
-  box-shadow: 0 calc(var(--s) * 3px) calc(var(--s) * 8px) rgb(0 0 0 / 0.5);
-}
-.room3d__open-book {
-  position: absolute;
-  bottom: calc(var(--s) * 14px);
-  right: calc(var(--s) * 30px);
-  width: calc(var(--s) * 132px);
-  height: calc(var(--s) * 30px);
-  background:
-    linear-gradient(90deg, transparent 48%, rgb(0 0 0 / 0.35) 49% 51%, transparent 52%),
-    linear-gradient(180deg, #f4ecd6, #d9cbaa);
-  border-radius: calc(var(--s) * 3px) calc(var(--s) * 3px) calc(var(--s) * 10px) calc(var(--s) * 10px);
-  transform: rotateX(62deg);
-  box-shadow: 0 calc(var(--s) * 6px) calc(var(--s) * 14px) rgb(0 0 0 / 0.45);
-}
-.room3d__plant {
-  position: absolute;
-  right: 2%;
-  bottom: 12%;
-  width: calc(var(--s) * 60px);
-  height: calc(var(--s) * 130px);
-  transform: translateZ(calc(var(--s) * -300px));
-}
-.room3d__plant::before {
-  content: "";
-  position: absolute;
-  left: 12%; bottom: 0;
-  width: 76%; height: 34%;
-  background: linear-gradient(180deg, #8d5b32, #5d3a1d);
-  clip-path: polygon(8% 0, 92% 0, 80% 100%, 20% 100%);
-}
-.room3d__plant::after {
-  content: "";
-  position: absolute;
-  left: 0; top: 0;
-  width: 100%; height: 74%;
-  background:
-    radial-gradient(ellipse at 30% 78%, rgb(58 106 68 / 0.95) 0 26%, transparent 27%),
-    radial-gradient(ellipse at 62% 60%, rgb(72 124 78 / 0.95) 0 24%, transparent 25%),
-    radial-gradient(ellipse at 42% 34%, rgb(52 96 60 / 0.95) 0 22%, transparent 23%);
-}
-.room3d__dust {
-  position: absolute;
-  width: calc(var(--s) * 4px);
-  height: calc(var(--s) * 4px);
-  border-radius: 50%;
-  background: rgb(255 240 200 / 0.8);
-  animation: roomDust 9s linear infinite;
-}
-.room3d__glare {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 50% 12%, rgb(255 255 255 / 0.06), transparent 45%),
-    radial-gradient(ellipse at 50% 120%, rgb(0 0 0 / 0.5), transparent 55%);
+
+/* Phones: the cases take most of the screen and the buttons go icon-only. */
+@media (max-width: 767px) {
+  .library { height: clamp(400px, 72dvh, 560px); }
+  .library__case { width: 86vw; }
+  .library__card { bottom: 84px; }
+  .library__spine { font-size: 9px; }
+  .library__control span { display: none; }
+  .library__hint { max-width: 44%; }
+  .library__walk-track { width: 54px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .room3d__enter, .room3d__sway, .room3d__lamp .room3d__bulb, .room3d__dust {
-    animation-name: none;
-    opacity: 1;
-  }
+  .library__track,
+  .library__wall,
+  .library__book,
+  .library__walk-dot { transition: none; }
+  .library__card { animation-name: none; }
 }
 
 /* ===== Header: presence dot and small-screen fit =====
@@ -988,166 +936,24 @@
   .active-dot { animation-name: none; box-shadow: none; }
 }
 
-/* ===== Study Room: fullscreen and the welcome card =====
-   The shell is what goes fullscreen, so the room keeps its own scroll and the
-   page behind it is never left half-drawn. It is pinned and sized here rather
-   than trusting `.pseudo-full` alone, because `.room-shell`'s own
-   position:relative is declared after it and would otherwise keep the room at
-   its old scroll offset; and the comments that used to sit inside these braces
-   turned out to stop the whole rule from ever reaching the browser. */
-.room-shell { position: relative; }
+/* ===== Study Room: the shell that goes full screen =====
+   `.pseudo-full` near the top of this file is what pins the shell to the
+   viewport, and it does that job on its own, so this block only dresses the
+   shell once it is pinned. Nothing here repeats position, inset or size — an
+   earlier version did, in a rule that never reached the browser, and the room
+   stayed half off-screen behind it. */
+.room-shell.pseudo-full,
 .room-shell:fullscreen,
-.room-shell:-webkit-full-screen,
-.room-shell.pseudo-full {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
+.room-shell:-webkit-full-screen {
+  background: #17110c;
   padding: 0;
-  background: #0b1410;
   overflow-y: auto;
-  overflow-x: hidden;
-}
-.room-shell:fullscreen .room3d,
-.room-shell:-webkit-full-screen .room3d,
-.room-shell.pseudo-full .room3d {
-  height: 100dvh;
-  border: 0;
-  border-radius: 0;
 }
 
-/* Floating over the room, so leaving is one tap, not an escape key. */
-.room3d__exit {
-  position: absolute;
-  top: calc(var(--s) * 14px);
-  right: calc(var(--s) * 14px);
-  z-index: 9;
-  display: flex;
-  align-items: center;
-  gap: calc(var(--s) * 8px);
-}
-.room3d__exit-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: max(4px, calc(var(--s) * 6px));
-  padding: max(6px, calc(var(--s) * 7px)) max(10px, calc(var(--s) * 12px));
-  border-radius: 9999px;
-  border: 1px solid rgb(var(--b-400) / 0.5);
-  background: rgb(11 20 16 / 0.72);
-  color: #f2e8d5;
-  font-size: max(11px, calc(var(--s) * 13px));
-  font-weight: 700;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: background 0.2s ease-out, transform 0.2s ease-out;
-}
-.room3d__exit-btn:hover {
-  background: rgb(11 20 16 / 0.92);
-  transform: scale(1.04);
-}
-
-@keyframes welcomeVeil {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes welcomeRise {
-  from { opacity: 0; transform: translateY(26px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
-}
-/* The jacket swings off the shelf and settles upright. */
-@keyframes welcomeBook {
-  0%   { opacity: 0; transform: rotateY(-70deg) translateZ(-30px); }
-  62%  { opacity: 1; transform: rotateY(9deg)   translateZ(10px); }
-  100% { opacity: 1; transform: rotateY(0)      translateZ(0); }
-}
-@keyframes welcomeLine {
-  from { opacity: 0; transform: translateY(9px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes welcomeGlow {
-  0%, 100% { opacity: 0.4; }
-  50%      { opacity: 0.9; }
-}
-.room-welcome {
-  position: absolute;
-  inset: 0;
-  z-index: 12;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgb(6 12 9 / 0.62);
-  animation: welcomeVeil 0.28s ease-out both;
-}
-.room-welcome__card {
-  position: relative;
-  width: min(520px, 100%);
-  max-height: 100%;
-  overflow-y: auto;
-  padding: clamp(1.1rem, 4vw, 1.8rem);
-  border-radius: 22px;
-  border: 1px solid rgb(var(--b-400) / 0.45);
-  background: linear-gradient(160deg, #17251d 0%, #0e1a14 100%);
-  color: #f2e8d5;
-  box-shadow: 0 26px 60px rgb(0 0 0 / 0.55);
-  transform-style: preserve-3d;
-  animation: welcomeRise 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
-}
-.room-welcome__cover {
-  display: block;
-  width: 104px;
-  height: 150px;
-  margin: 0 auto 1rem;
-  border-radius: 4px 8px 8px 4px;
-  border: 1px solid rgb(var(--b-400) / 0.5);
-  background-size: cover;
-  background-position: top center;
-  box-shadow: -6px 0 0 rgb(0 0 0 / 0.22) inset, 0 14px 26px rgb(0 0 0 / 0.45);
-  transform-origin: left center;
-  animation: welcomeBook 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1) 0.1s both;
-}
-.room-welcome__cover--spine {
-  background: linear-gradient(155deg,
-    hsl(var(--h, 160) 40% 34%) 0%,
-    hsl(var(--h, 160) 38% 22%) 100%);
-}
-.room-welcome__eyebrow {
-  animation: welcomeLine 0.4s ease-out 0.3s both;
-}
-.room-welcome__title {
-  animation: welcomeLine 0.4s ease-out 0.38s both;
-}
-.room-welcome__by {
-  animation: welcomeLine 0.4s ease-out 0.46s both;
-}
-.room-welcome__blurb {
-  animation: welcomeLine 0.4s ease-out 0.54s both;
-}
-.room-welcome__actions {
-  animation: welcomeLine 0.4s ease-out 0.62s both;
-}
-.room-welcome__glow {
-  position: absolute;
-  inset: -18% -8% auto -8%;
-  height: 46%;
-  border-radius: 9999px;
-  background: radial-gradient(ellipse at center, rgb(var(--b-400) / 0.34), transparent 62%);
-  animation: welcomeGlow 3.4s ease-in-out infinite;
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .room-welcome,
-  .room-welcome__card,
-  .room-welcome__cover,
-  .room-welcome__eyebrow,
-  .room-welcome__title,
-  .room-welcome__by,
-  .room-welcome__blurb,
-  .room-welcome__actions,
-  .room-welcome__glow {
-    animation-name: none;
-    opacity: 1;
-    transform: none;
-  }
-}
+/* In full screen the room is the page. The cards that frame it on Discover
+   step back so the wall owns every pixel; the shelf drawer stays reachable.
+   The margin reset repeats the space-y utility's own selector on purpose — it
+   has to tie it on specificity and win on coming later in this file, or a
+   folded-away card would still push the 100dvh wall off the bottom. */
+.room-only .room-side { display: none; }
+.room-only > :not([hidden]) ~ :not([hidden]) { margin-top: 0; }

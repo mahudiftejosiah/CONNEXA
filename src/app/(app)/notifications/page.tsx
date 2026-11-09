@@ -25,7 +25,7 @@ export default async function NotificationsPage() {
 
   return (
     <AppLayout>
-      <NotificationsClient notifications={(notifications || []) as any} />
+      <NotificationsClient notifications={(notifications || []) as any} currentUserId={user.id} />
     </AppLayout>
   );
 }

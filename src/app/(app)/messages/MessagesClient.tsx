@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck } from "lucide-react";
+import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
+import { ConfirmDialog } from "@/components/ui/Modal";
 import { VerifiedTick } from "@/components/ui/VerifiedTick";
 import { createClient } from "@/lib/supabase/client";
 import type { ConversationWithDetails, Profile, Message, MessageAttachmentKind } from "@/lib/supabase/types";
@@ -87,6 +88,8 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const [viewer, setViewer] = useState<ViewOnceView | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [pendingDelete, setPendingDelete] = useState<ConversationWithDetails | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const urlsRef = useRef<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -193,6 +196,24 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
 
     setConversations((p) => p.map((c) => c.id === conv.id ? { ...c, unread_count: 0 } : c));
     setTimeout(() => bottomRef.current?.scrollIntoView(), 100);
+  }
+
+  // The way Messenger does it: the thread leaves your inbox, the other person
+  // keeps theirs, and a fresh message from them brings it back.
+  async function deleteConversation(conv: ConversationWithDetails) {
+    setDeleting(true);
+    const { error } = await supabase
+      .from("conversation_participants")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("conversation_id", conv.id)
+      .eq("user_id", currentUserId);
+    setDeleting(false);
+    setPendingDelete(null);
+    if (error) { toast.error("Could not delete that chat."); return; }
+    setConversations((p) => p.filter((c) => c.id !== conv.id));
+    if (active?.id === conv.id) { setActive(null); setMessages([]); }
+    window.dispatchEvent(new Event("connexa-unread-refresh"));
+    toast.success("Chat deleted.");
   }
 
   function pickFile(next: File | null) {
@@ -400,35 +421,44 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
               const other = row.person;
               const online = isOnline(other.last_seen);
               return (
-                <button
-                  key={row.key}
-                  onClick={() => openConversation(conv)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--border)] transition-colors text-left ${active?.id === conv.id ? "bg-brand-green-800/5 dark:bg-brand-gold-400/5" : ""}`}
-                >
-                  <Avatar src={other.avatar_url} name={other.display_name} size={48} online={online} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline">
-                      <p className="font-semibold text-sm truncate text-[var(--text-primary)] flex items-center gap-1.5">
-                        {other.display_name}
-                        {(other as Profile).is_verified && <VerifiedTick size={14} />}
+                <div key={row.key} className="flex items-stretch">
+                  <button
+                    onClick={() => openConversation(conv)}
+                    className={`flex-1 min-w-0 flex items-center gap-3 px-4 py-3 hover:bg-[var(--border)] transition-colors text-left ${active?.id === conv.id ? "bg-brand-green-800/5 dark:bg-brand-gold-400/5" : ""}`}
+                  >
+                    <Avatar src={other.avatar_url} name={other.display_name} size={48} online={online} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline">
+                        <p className="font-semibold text-sm truncate text-[var(--text-primary)] flex items-center gap-1.5">
+                          {other.display_name}
+                          {(other as Profile).is_verified && <VerifiedTick size={14} />}
+                        </p>
+                        {conv.last_message && (
+                          <span className="text-xs text-[var(--text-secondary)] flex-shrink-0 ml-2">
+                            {formatRelativeTime(conv.last_message.created_at)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] truncate">
+                        {conv.last_message
+                          ? (conv.last_message.content ||
+                              attachmentPreview(conv.last_message.attachment_kind, conv.last_message.view_once))
+                          : "No messages yet"}
                       </p>
-                      {conv.last_message && (
-                        <span className="text-xs text-[var(--text-secondary)] flex-shrink-0 ml-2">
-                          {formatRelativeTime(conv.last_message.created_at)}
-                        </span>
-                      )}
                     </div>
-                    <p className="text-xs text-[var(--text-secondary)] truncate">
-                      {conv.last_message
-                        ? (conv.last_message.content ||
-                            attachmentPreview(conv.last_message.attachment_kind, conv.last_message.view_once))
-                        : "No messages yet"}
-                    </p>
-                  </div>
-                  {conv.unread_count > 0 && (
-                    <span className="badge flex-shrink-0">{conv.unread_count}</span>
-                  )}
-                </button>
+                    {conv.unread_count > 0 && (
+                      <span className="badge flex-shrink-0">{conv.unread_count}</span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingDelete(conv)}
+                    aria-label={`Delete the chat with ${other.display_name}`}
+                    className="px-3 flex items-center justify-center text-[var(--text-secondary)] hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               );
             })
           )}
@@ -678,6 +708,17 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => { if (pendingDelete) void deleteConversation(pendingDelete); }}
+        title="Delete chat"
+        message="This removes the conversation from your inbox. The other person keeps their copy, and a new message from them brings the thread back."
+        confirmLabel="Delete chat"
+        danger
+        loading={deleting}
+      />
     </div>
   );
 }

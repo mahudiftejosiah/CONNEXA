@@ -180,10 +180,11 @@ export interface Database {
           conversation_id: string
           user_id: string
           last_read_at: string | null
+          deleted_at: string | null
           created_at: string
         }
         Insert: Partial<Omit<Database["public"]["Tables"]["conversation_participants"]["Row"], "id" | "created_at">>
-        Update: Partial<Pick<Database["public"]["Tables"]["conversation_participants"]["Row"], "last_read_at">>
+        Update: Partial<Pick<Database["public"]["Tables"]["conversation_participants"]["Row"], "last_read_at" | "deleted_at">>
       }
       messages: {
         Row: {
@@ -392,6 +393,7 @@ export interface Database {
           author: string | null
           pdf_url: string
           cover_url: string | null
+          description: string | null
           created_at: string
         }
         Insert: Omit<Database["public"]["Tables"]["study_books"]["Row"], "id" | "created_at">

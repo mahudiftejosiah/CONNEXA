@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import {
   Shield, Bell, User, Trash2, LogOut, Eye, Palette,
   FileText, Users, BookOpen, Info, ChevronRight, Heart,
@@ -11,7 +12,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { toggleBlock } from "@/lib/actions/friends";
 import { updatePreferences, requestAccountDeletion } from "@/lib/actions/profile";
-import type { Profile, UserPreferences, UserBlock, SiteContent, ColorTheme } from "@/lib/supabase/types";
+import type { Profile, UserPreferences, UserBlock, SiteContent } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -24,26 +25,13 @@ interface SettingsClientProps {
   blockedUsers: BlockWithProfile[];
   email: string;
   siteContent: Record<string, SiteContent>;
-  globalTheme: string;
 }
 
 type Section = "account" | "notifications" | "privacy" | "appearance" | "blocked" | "terms" | "rules" | "privacy_policy" | "about" | "credits" | "danger";
 
-const THEME_OPTIONS: { key: ColorTheme | "follow_site"; label: string; a: string; b: string }[] = [
-  { key: "follow_site",   label: "Site default",  a: "var(--a-800)", b: "var(--b-400)" },
-  { key: "connexa",       label: "Connexa",       a: "#12372A", b: "#D6B875" },
-  { key: "crimson",       label: "Crimson",       a: "#B1161C", b: "#F97066" },
-  { key: "ocean",         label: "Ocean",         a: "#03557A", b: "#67C3EC" },
-  { key: "violet",        label: "Violet",        a: "#290776", b: "#B7A5F7" },
-  { key: "amber",         label: "Amber",         a: "#7A4103", b: "#F5C242" },
-];
-
-function previewThemeColor(key: string, globalTheme: string) {
-  return key === "follow_site" ? globalTheme : key;
-}
-
-export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: initBlocked, email, siteContent, globalTheme }: SettingsClientProps) {
+export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: initBlocked, email, siteContent }: SettingsClientProps) {
   const router = useRouter();
+  const { setTheme } = useTheme();
   const [section, setSection] = useState<Section>("account");
   const [blocked, setBlocked] = useState(initBlocked);
   const defaultPrefs = {
@@ -69,7 +57,6 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
         }
       : {}),
   });
-  const [colorTheme, setColorTheme] = useState<ColorTheme>((initPrefs?.color_theme as ColorTheme) || "follow_site");
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -94,7 +81,6 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
     setSavingPrefs(true);
     const fd = new FormData();
     Object.entries(prefs).forEach(([k, v]) => fd.set(k, String(v)));
-    fd.set("color_theme", colorTheme);
     if (extra) Object.entries(extra).forEach(([k, v]) => fd.set(k, v));
     const res = await updatePreferences(fd);
     setSavingPrefs(false);
@@ -103,11 +89,6 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
       toast.success("Preferences saved!");
       router.refresh();
     }
-  }
-
-  function pickTheme(t: ColorTheme) {
-    setColorTheme(t);
-    document.documentElement.dataset.theme = previewThemeColor(t, globalTheme);
   }
 
   async function handleUnblock(userId: string) {
@@ -247,27 +228,15 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
           {section === "appearance" && (
             <div className="card p-6 space-y-4">
               <h2 className="font-bold text-lg text-[var(--text-primary)]">Appearance</h2>
-              <div>
-                <label className="label">Color theme</label>
-                <p className="text-sm text-[var(--text-secondary)] mb-3">Pick a color theme for CONNEXA. It adapts to both light and dark mode.</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {THEME_OPTIONS.map((t) => (
-                    <button key={t.key} type="button" onClick={() => pickTheme(t.key)}
-                      className={`card p-3 text-left transition-all ${colorTheme === t.key ? "ring-2 ring-[rgb(var(--a-600))]" : "hover:ring-1 hover:ring-[var(--border)]"}`}>
-                      <span className="flex items-center gap-1.5 mb-2">
-                        <span className="w-6 h-6 rounded-lg" style={{ backgroundColor: t.a === "var(--a-800)" ? "rgb(var(--a-800))" : t.a }} />
-                        <span className="w-6 h-6 rounded-lg" style={{ backgroundColor: t.b === "var(--b-400)" ? "rgb(var(--b-400))" : t.b }} />
-                      </span>
-                      <span className="text-sm font-semibold text-[var(--text-primary)]">{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <p className="text-sm text-[var(--text-secondary)]">
+                CONNEXA keeps one colour scheme for everyone, set under Admin → Appearance. Here you only choose
+                whether the site reads light or dark to you.
+              </p>
               <div>
                 <label className="label">Mode</label>
                 <div className="flex gap-2">
                   {(["light", "dark", "system"] as const).map((m) => (
-                    <button key={m} type="button" onClick={() => setPrefs((p) => ({ ...p, theme: m }))}
+                    <button key={m} type="button" onClick={() => { setPrefs((p) => ({ ...p, theme: m })); setTheme(m); }}
                       className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-colors ${prefs.theme === m ? "bg-[rgb(var(--a-800))] text-white" : "bg-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}>
                       {m}
                     </button>
