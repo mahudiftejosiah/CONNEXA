@@ -195,8 +195,14 @@
 }
 
 /* Where a browser refuses to hand over the screen (iPhone Safari never does it
-   for a <div>), the same layout is applied from the class instead. */
-.pseudo-full {
+   for a <div>), the same layout is applied from the class instead.
+   The :not([hidden]) is not decoration: Tailwind's `space-y-*` puts a margin on
+   this element through `> :not([hidden]) ~ :not([hidden])`, which is two
+   attributes strong and would shift a pinned shell down by that margin, leaving
+   a strip of the old page at the top and pushing the bottom off-screen. Writing
+   the selector in the same shape ties it, and sitting below @tailwind utilities
+   wins. */
+.pseudo-full:not([hidden]) {
   position: fixed;
   inset: 0;
   z-index: 80;
@@ -869,6 +875,9 @@
 /* Phones: the cases take most of the screen and the buttons go icon-only. */
 @media (max-width: 767px) {
   .library { height: clamp(400px, 72dvh, 560px); }
+  /* Full screen still means the whole screen, so the shortened height above is
+     given back — it is the same tie on purpose, decided by file order. */
+  .library--full { height: 100vh; height: 100dvh; }
   .library__case { width: 86vw; }
   .library__card { bottom: 84px; }
   .library__spine { font-size: 9px; }

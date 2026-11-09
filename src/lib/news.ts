@@ -20,12 +20,14 @@ function stripCdata(s: string) {
 
 function unescapeXml(s: string) {
   return s
-    .replace(/&amp;/g, "&")
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)));
+    .replace(/&amp;/g, "&");
 }
 
 function tag(block: string, name: string): string {
@@ -132,16 +134,28 @@ export async function fetchNewsArticle(url: string): Promise<NewsArticle | null>
   const bodyEnd = body.search(/<\/article>/i);
   const scope = bodyEnd > 0 ? body.slice(0, bodyEnd) : body;
 
+  // BBC marks up its own structure, so the story can be cut out of the page
+  // rather than guessed at: the reporter's words live inside data-block="text",
+  // and everything after the first topic or related-links block is a prompt to
+  // read something else. Taking that span is what keeps "To play this video…"
+  // and the related-headline captions out of the paragraphs below.
+  const storyStart = scope.search(/data-block="text"/);
+  const storyEnd = scope.search(/data-block="(promoList|topicList|ads)"/);
+  const story = storyStart >= 0
+    ? scope.slice(storyStart, storyEnd > storyStart ? storyEnd : scope.length)
+    : scope;
+
   const paragraphs: string[] = [];
   const seen = new Set<string>();
   const para = /<p[^>]*>([\s\S]*?)<\/p>/gi;
   let match: RegExpExecArray | null;
-  while ((match = para.exec(scope)) && paragraphs.length < 60) {
+  while ((match = para.exec(story)) && paragraphs.length < 60) {
     const text = plainText(match[1]);
     // BBC wraps standfirsts and captions the same way; short lines are usually
     // cookie banners, "read more" prompts or section labels.
     if (text.length < 45) continue;
-    if (/^(?:related news|advertising|get more from|sign up|watch:|also read)/i.test(text)) continue;
+    if (/^(?:related news|advertising|get more from|sign up|watch:|also read|more on|image source|image caption|to play this video)/i.test(text)) continue;
+    if (/enable JavaScript/i.test(text)) continue;
     if (seen.has(text)) continue;
     seen.add(text);
     paragraphs.push(text);
