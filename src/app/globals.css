@@ -195,14 +195,8 @@
 }
 
 /* Where a browser refuses to hand over the screen (iPhone Safari never does it
-   for a <div>), the same layout is applied from the class instead.
-   The :not([hidden]) is not decoration: Tailwind's `space-y-*` puts a margin on
-   this element through `> :not([hidden]) ~ :not([hidden])`, which is two
-   attributes strong and would shift a pinned shell down by that margin, leaving
-   a strip of the old page at the top and pushing the bottom off-screen. Writing
-   the selector in the same shape ties it, and sitting below @tailwind utilities
-   wins. */
-.pseudo-full:not([hidden]) {
+   for a <div>), the same layout is applied from the class instead. */
+.pseudo-full {
   position: fixed;
   inset: 0;
   z-index: 80;
@@ -213,6 +207,24 @@
   margin: 0;
   border: 0;
   border-radius: 0;
+}
+
+/* A fixed box still honours its own margin, and a pinned shell is nearly always
+   a later child of some `space-y-*` stack, so Tailwind's own rule
+   `.space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top }` — three classes
+   worth — quietly moved the full screen 32px down the page and off the bottom,
+   leaving a strip of the old site along the top. `margin: 0` above is only one
+   class and loses that fight. Repeating the shape but naming the pinned class
+   outright ties it at three, and living below @tailwind utilities wins.
+   [class*="space-y"] rather than .space-y-8 because every tab builds its stack
+   with a different gap. */
+[class*="space-y"] > .room-shell.pseudo-full,
+[class*="space-y"] > .game-frame.pseudo-full,
+[class*="space-y"] > .trend-shell.pseudo-full,
+[class*="space-y"] > :not([hidden]) ~ .room-shell.pseudo-full,
+[class*="space-y"] > :not([hidden]) ~ .game-frame.pseudo-full,
+[class*="space-y"] > :not([hidden]) ~ .trend-shell.pseudo-full {
+  margin-top: 0;
 }
 
 /* Full-screen game frame (Games tab) */
