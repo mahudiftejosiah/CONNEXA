@@ -995,6 +995,10 @@
 .room-shell:fullscreen,
 .room-shell:-webkit-full-screen,
 .room-shell.pseudo-full {
+  /* Pinned here as well, because `.room-shell` further down the file would
+     otherwise keep the room in the page's flow at its old scroll position. */
+  position: fixed;
+  inset: 0;
   width: 100vw;
   height: 100vh;
   height: 100dvh;

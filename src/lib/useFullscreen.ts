@@ -15,6 +15,10 @@ export function useFullscreen<T extends HTMLElement = HTMLDivElement>() {
   const ref = useRef<T | null>(null);
   const [refused, setRefused] = useState(false);
   const [granted, setGranted] = useState(false);
+  // The browser answers a request a beat later, so every request gets a number
+  // and an answer to an older one is dropped — otherwise leaving full screen and
+  // coming straight back can be undone by the rejection we already gave up on.
+  const asked = useRef(0);
 
   useEffect(() => {
     const onChange = () => {
@@ -39,6 +43,7 @@ export function useFullscreen<T extends HTMLElement = HTMLDivElement>() {
     const el = ref.current as FsElement | null;
     if (!el) return;
     const request = el.requestFullscreen || el.webkitRequestFullscreen;
+    const ticket = ++asked.current;
     if (typeof request !== "function") {
       setRefused(true);
       return;
@@ -46,7 +51,9 @@ export function useFullscreen<T extends HTMLElement = HTMLDivElement>() {
     try {
       const outcome = request.call(el) as unknown;
       if (outcome && typeof (outcome as Promise<void>).then === "function") {
-        (outcome as Promise<void>).catch(() => setRefused(true));
+        (outcome as Promise<void>).catch(() => {
+          if (asked.current === ticket) setRefused(true);
+        });
       } else if (!document.fullscreenElement) {
         setRefused(true);
       }
@@ -56,6 +63,7 @@ export function useFullscreen<T extends HTMLElement = HTMLDivElement>() {
   }, []);
 
   const exit = useCallback(() => {
+    asked.current += 1;
     if (document.fullscreenElement) {
       const done = document.exitFullscreen();
       if (done && typeof done.catch === "function") done.catch(() => {});
