@@ -990,13 +990,15 @@
 
 /* ===== Study Room: fullscreen and the welcome card =====
    The shell is what goes fullscreen, so the room keeps its own scroll and the
-   page behind it is never left half-drawn. */
+   page behind it is never left half-drawn. It is pinned and sized here rather
+   than trusting `.pseudo-full` alone, because `.room-shell`'s own
+   position:relative is declared after it and would otherwise keep the room at
+   its old scroll offset; and the comments that used to sit inside these braces
+   turned out to stop the whole rule from ever reaching the browser. */
 .room-shell { position: relative; }
 .room-shell:fullscreen,
 .room-shell:-webkit-full-screen,
 .room-shell.pseudo-full {
-  /* Pinned here as well, because `.room-shell` further down the file would
-     otherwise keep the room in the page's flow at its old scroll position. */
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -1004,8 +1006,6 @@
   height: 100dvh;
   padding: 0;
   background: #0b1410;
-  /* Scrolling stays available so the shelf drawer below the room is still
-     reachable while the display is taken over. */
   overflow-y: auto;
   overflow-x: hidden;
 }
