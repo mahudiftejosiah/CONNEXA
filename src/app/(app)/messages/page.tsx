@@ -19,11 +19,23 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   // hundreds of ids into one in() and push the request past PostgREST's URL
   // limit. If this reads empty on a site that has chats, migration 019 has not
   // been applied yet — deleted_at is what the per-reader delete is stored in.
-  const { data: participantRows } = await supabase
+  // The per-reader delete is stored in conversation_participants.deleted_at,
+  // which only exists once migration 019 has been run. Asking for a column the
+  // database does not have makes the whole read fail, and `data: null` looks
+  // exactly like an empty inbox — every chat on the site would seem to vanish.
+  // So a refusal falls back to every thread, which is the correct answer
+  // before the migration: nobody has been able to delete anything yet.
+  const filtered = await supabase
     .from("conversation_participants")
     .select("conversation_id")
     .eq("user_id", user.id)
     .is("deleted_at", null);
+  const { data: participantRows } = filtered.error
+    ? await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("user_id", user.id)
+    : filtered;
 
   type LightConv = { id: string; last_message_at: string | null; created_at: string };
   const myIds = Array.from(new Set((participantRows || []).map((r) => r.conversation_id)));
