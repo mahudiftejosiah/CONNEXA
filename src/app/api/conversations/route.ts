@@ -42,6 +42,14 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (shared && shared.length > 0) {
+      // Reopening a chat you deleted brings it back, the way Messenger does.
+      // The 019 trigger can only restore the recipient's row — a sender has no
+      // right to write another participant's row, so ours is cleared here.
+      await supabase
+        .from("conversation_participants")
+        .update({ deleted_at: null })
+        .eq("conversation_id", shared[0].conversation_id)
+        .eq("user_id", user.id);
       return NextResponse.json({ conversationId: shared[0].conversation_id });
     }
   }

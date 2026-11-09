@@ -14,21 +14,30 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
   if (!profile) redirect("/login");
 
-  // Inbox: fetch ids via participants (one filter, no huge IN list),
-  // sort by most recent message, render the 30 newest threads.
+  // Inbox: which threads are still in front of me. The ids come out plainly and
+  // are read back in batches, because a long-lived account would otherwise put
+  // hundreds of ids into one in() and push the request past PostgREST's URL
+  // limit. If this reads empty on a site that has chats, migration 019 has not
+  // been applied yet — deleted_at is what the per-reader delete is stored in.
   const { data: participantRows } = await supabase
     .from("conversation_participants")
-    .select("conversation:conversations!inner(id, last_message_at, created_at)")
+    .select("conversation_id")
     .eq("user_id", user.id)
     .is("deleted_at", null);
 
   type LightConv = { id: string; last_message_at: string | null; created_at: string };
-  const recentIds: LightConv[] = (participantRows || [])
-    .map((r) => {
-      const c = r.conversation as unknown as LightConv | LightConv[] | null;
-      return Array.isArray(c) ? c[0] : c;
-    })
-    .filter((c): c is LightConv => Boolean(c))
+  const myIds = Array.from(new Set((participantRows || []).map((r) => r.conversation_id)));
+
+  const lightRows: LightConv[] = [];
+  for (let i = 0; i < myIds.length; i += 100) {
+    const { data } = await supabase
+      .from("conversations")
+      .select("id, last_message_at, created_at")
+      .in("id", myIds.slice(i, i + 100));
+    lightRows.push(...((data ?? []) as unknown as LightConv[]));
+  }
+
+  const recentIds = lightRows
     .sort(
       (a, b) =>
         new Date(b.last_message_at || b.created_at).getTime() -
