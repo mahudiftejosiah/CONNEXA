@@ -72,7 +72,7 @@ export function CommentSection({ postId, currentProfile }: CommentSectionProps) 
       {/* Input */}
       {currentProfile && (
         <form onSubmit={handleSubmit} className="flex gap-2 items-center">
-          <Avatar src={currentProfile.avatar_url} name={currentProfile.display_name} size={32} />
+          <Avatar src={currentProfile.avatar_url} name={currentProfile.display_name} size={32} userId={currentProfile.id} />
           <div className="flex-1 relative">
             <input
               type="text"
@@ -107,7 +107,7 @@ export function CommentSection({ postId, currentProfile }: CommentSectionProps) 
           {comments.map((c) => (
             <div key={c.id} className="flex gap-2">
               <Link href={`/profile/${c.author.username}`}>
-                <Avatar src={c.author.avatar_url} name={c.author.display_name} size={32} />
+                <Avatar src={c.author.avatar_url} name={c.author.display_name} size={32} userId={c.author.id} />
               </Link>
               <div className="flex-1">
                 <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "var(--bg)" }}>

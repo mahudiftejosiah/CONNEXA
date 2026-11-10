@@ -151,7 +151,7 @@ export function LiveGameClient({
 
       <div className="card p-3 flex items-center gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Avatar src={challenger.avatar_url} name={challenger.display_name} size={40} />
+          <Avatar src={challenger.avatar_url} name={challenger.display_name} size={40} userId={challenger.id} />
           <div className="min-w-0">
             <p className="font-semibold text-sm truncate text-[var(--text-primary)]">{challenger.display_name}</p>
             <p className="text-xs text-[var(--text-secondary)]">@{challenger.username}</p>
@@ -163,7 +163,7 @@ export function LiveGameClient({
             <p className="font-semibold text-sm truncate text-[var(--text-primary)]">{opponent.display_name}</p>
             <p className="text-xs text-[var(--text-secondary)]">@{opponent.username}</p>
           </div>
-          <Avatar src={opponent.avatar_url} name={opponent.display_name} size={40} />
+          <Avatar src={opponent.avatar_url} name={opponent.display_name} size={40} userId={opponent.id} />
         </div>
       </div>
 

@@ -90,7 +90,7 @@ export function LiveGamePicker({ currentUserId, friends }: { currentUserId: stri
                   return (
                     <button key={f.id} onClick={() => send(picking, f.id)} disabled={busy === f.id}
                       className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[var(--border)] transition-colors text-left disabled:opacity-50">
-                      <Avatar src={f.avatar_url} name={f.display_name} size={40} online={online} />
+                      <Avatar src={f.avatar_url} name={f.display_name} size={40} online={online} userId={f.id} />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate text-[var(--text-primary)]">{f.display_name}</p>
                         <p className="text-xs truncate" style={{ color: online ? "rgb(var(--a-600))" : "var(--text-secondary)" }}>

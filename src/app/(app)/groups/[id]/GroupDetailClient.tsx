@@ -98,7 +98,7 @@ export function GroupDetailClient({ group, membership: initMembership, posts, me
             <div className="flex items-center gap-1 mt-3">
               {members.slice(0, 5).map((m) => (
                 <Link key={m.user_id} href={`/profile/${m.profile.username}`}>
-                  <Avatar src={m.profile.avatar_url} name={m.profile.display_name} size={28} className="-ml-1 first:ml-0 border-2 border-[var(--bg-card)]" />
+                  <Avatar src={m.profile.avatar_url} name={m.profile.display_name} size={28} className="-ml-1 first:ml-0 border-2 border-[var(--bg-card)]" userId={m.profile.id} />
                 </Link>
               ))}
               {group.member_count > 5 && (

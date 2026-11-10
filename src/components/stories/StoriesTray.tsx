@@ -55,7 +55,7 @@ export function StoriesTray({ stories, profile, currentUserId }: StoriesTrayProp
           <Link key={g.author.id} href="/stories" className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16">
             <span
               className="relative block w-14 h-14 rounded-full p-[2px]"
-              style={{ background: g.hasUnviewed ? "var(--brand-gold)" : "var(--border)" }}
+              style={{ background: g.hasUnviewed ? "#22c55e" : "var(--border)" }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

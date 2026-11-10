@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
+import { refreshStoryRings } from "@/components/layout/StoryRingProvider";
 import { signStoryMedia } from "@/lib/media";
 import type { StoryWithAuthor, Profile } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
@@ -67,6 +68,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
     const [signedStory] = await signStoryMedia(supabase, [story]);
     setStories((p) => [signedStory as unknown as StoryWithAuthor, ...p]);
     setCreating(false); setFile(null); setPreview(null); setCaption("");
+    refreshStoryRings();
     toast.success("Story published!");
   }
 
@@ -75,6 +77,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
     await supabase.from("stories").delete().eq("id", storyId).eq("author_id", currentUserId);
     setStories((p) => p.filter((s) => s.id !== storyId));
     setViewing(null);
+    refreshStoryRings();
     toast.success("Story deleted.");
   }
 
@@ -85,6 +88,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
     if (!already) {
       await supabase.from("story_views").insert({ story_id: storyId, viewer_id: currentUserId });
       setStories((p) => p.map((s) => s.id === storyId ? { ...s, has_viewed: true } : s));
+      refreshStoryRings();
     }
   }
 
@@ -127,7 +131,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
               className="flex-shrink-0 flex flex-col items-center gap-1.5"
             >
               <div className="w-16 h-24 rounded-2xl overflow-hidden relative"
-                style={{ outline: `2px solid ${hasUnviewed ? "rgb(var(--a-800))" : "var(--border)"}`, outlineOffset: "2px" }}>
+                style={{ outline: `2px solid ${hasUnviewed ? "#22c55e" : "var(--border)"}`, outlineOffset: "2px" }}>
                 {firstStory.media_type === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={firstStory.media_url} alt={g.author.display_name} className="w-full h-full object-cover" />
@@ -135,7 +139,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
                   <video src={firstStory.media_url} className="w-full h-full object-cover" muted />
                 )}
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
-                  <Avatar src={g.author.avatar_url} name={g.author.display_name} size={24} />
+                  <Avatar src={g.author.avatar_url} name={g.author.display_name} size={24} userId={g.author.id} />
                 </div>
               </div>
               <span className="text-xs font-medium w-16 truncate text-center" style={{ color: "var(--text-secondary)" }}>
@@ -173,7 +177,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
             {/* Author info */}
             <div className="absolute top-4 left-4 right-4 z-10 flex items-center gap-3">
               <Link href={`/profile/${viewingStory.author.username}`}>
-                <Avatar src={viewingStory.author.avatar_url} name={viewingStory.author.display_name} size={36} />
+                <Avatar src={viewingStory.author.avatar_url} name={viewingStory.author.display_name} size={36} userId={viewingStory.author.id} />
               </Link>
               <div>
                 <p className="text-white font-semibold text-sm">{viewingStory.author.display_name}</p>

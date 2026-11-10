@@ -169,7 +169,7 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
             <div className="card p-6 space-y-4">
               <h2 className="font-bold text-lg text-[var(--text-primary)]">Account</h2>
               <div className="flex items-center gap-4 p-4 bg-[var(--bg)] rounded-xl">
-                <Avatar src={profile.avatar_url} name={profile.display_name} size={56} />
+                <Avatar src={profile.avatar_url} name={profile.display_name} size={56} userId={profile.id} />
                 <div>
                   <p className="font-semibold text-[var(--text-primary)]">{profile.display_name}</p>
                   <p className="text-sm text-[var(--text-secondary)]">@{profile.username}</p>
@@ -257,7 +257,7 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
                 <div className="space-y-3">
                   {blocked.map((b) => (
                     <div key={b.id} className="flex items-center gap-3 p-3 bg-[var(--bg)] rounded-xl">
-                      <Avatar src={b.blocked.avatar_url} name={b.blocked.display_name} size={40} />
+                      <Avatar src={b.blocked.avatar_url} name={b.blocked.display_name} size={40} userId={b.blocked.id} />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate">{b.blocked.display_name}</p>
                         <p className="text-xs text-[var(--text-secondary)]">@{b.blocked.username}</p>

@@ -75,7 +75,7 @@ export function Sidebar({ profile, isAdmin = false }: SidebarProps) {
             href={`/profile/${profile.username}`}
             className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--border)] transition-colors mb-2"
           >
-            <Avatar src={profile.avatar_url} name={profile.display_name} size={40} />
+            <Avatar src={profile.avatar_url} name={profile.display_name} size={40} userId={profile.id} />
             <div className="min-w-0">
               <p className="font-semibold text-sm truncate" style={{ color: "var(--text-primary)" }}>
                 {profile.display_name}

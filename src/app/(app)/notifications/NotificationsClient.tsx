@@ -127,7 +127,7 @@ export function NotificationsClient({ notifications, currentUserId }: Notificati
                 >
                   <div className="relative flex-shrink-0">
                     {n.actor ? (
-                      <Avatar src={n.actor.avatar_url} name={n.actor.display_name} size={40} />
+                      <Avatar src={n.actor.avatar_url} name={n.actor.display_name} size={40} userId={n.actor.id} />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-brand-green-800/10 flex items-center justify-center">
                         <Bell className="w-5 h-5 text-brand-green-800 dark:text-brand-gold-400" />

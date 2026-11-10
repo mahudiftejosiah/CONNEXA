@@ -183,7 +183,7 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
       <div className="p-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link href={`/profile/${post.author.username}`}>
-            <Avatar src={post.author.avatar_url} name={post.author.display_name} size={44} />
+            <Avatar src={post.author.avatar_url} name={post.author.display_name} size={44} userId={post.author.id} />
           </Link>
           <div className="min-w-0">
             <Link href={`/profile/${post.author.username}`} className="font-semibold text-[var(--text-primary)] hover:underline truncate block">
@@ -264,7 +264,7 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
       {post.is_shared && post.shared_post?.author && (
         <div className="mx-4 mb-3 border border-[var(--border)] rounded-xl p-3 bg-[var(--bg)]">
           <div className="flex items-center gap-2 mb-2">
-            <Avatar src={post.shared_post.author.avatar_url} name={post.shared_post.author.display_name} size={28} />
+            <Avatar src={post.shared_post.author.avatar_url} name={post.shared_post.author.display_name} size={28} userId={post.shared_post.author.id} />
             <Link href={`/profile/${post.shared_post.author.username}`} className="text-sm font-semibold hover:underline">
               {post.shared_post.author.display_name}
             </Link>
@@ -409,7 +409,7 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
           {previewComments.map((c) => (
             <div key={c.id} className="flex gap-2 items-start">
               <Link href={`/profile/${c.author.username}`} className="flex-shrink-0">
-                <Avatar src={c.author.avatar_url} name={c.author.display_name} size={32} />
+                <Avatar src={c.author.avatar_url} name={c.author.display_name} size={32} userId={c.author.id} />
               </Link>
               <div className="min-w-0">
                 <div className="bg-[var(--border)] rounded-2xl px-3 py-2 inline-block max-w-full">

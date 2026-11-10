@@ -50,6 +50,12 @@ function attachmentPreview(kind?: MessageAttachmentKind | null, viewOnce?: boole
   return "No messages yet";
 }
 
+// Newest activity first, regardless of the order the rows arrived in or the
+// person's name. last_message_at is kept current by the message_sent trigger.
+function recencyKey(conv: ConversationWithDetails) {
+  return new Date(conv.last_message_at || conv.last_message?.created_at || conv.created_at).getTime();
+}
+
 interface MessagesClientProps {
   conversations: ConversationWithDetails[];
   profile: Profile;
@@ -93,8 +99,10 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const urlsRef = useRef<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const activeIdRef = useRef<string | null>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
+  activeIdRef.current = active?.id ?? null;
 
   // The header's active-users button points here, so a arriving ?tab= has to
   // move the list even when this view was already open.
@@ -153,25 +161,41 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     });
   }
 
-  // Real-time subscription
+  // Move a thread to the top of the inbox and refresh its preview, the way
+  // Messenger does the moment a message lands in it.
+  function bumpConversation(convId: string, msg: Message) {
+    setConversations((p) => {
+      const existing = p.find((c) => c.id === convId);
+      if (!existing) return p;
+      const updated = { ...existing, last_message: msg, last_message_at: msg.created_at };
+      return [updated, ...p.filter((c) => c.id !== convId)];
+    });
+  }
+
+  // One subscription for every thread I'm in — RLS limits the feed to my own
+  // conversations. A new message bumps its thread to the top and appends to the
+  // open chat. This replaces the old active-thread-only subscription, which left
+  // every other thread stale (and out of order) until a full reload.
   useEffect(() => {
-    if (!active) return;
     const channel = supabase
-      .channel(`messages:${active.id}`)
+      .channel(`inbox:${currentUserId}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
         table: "messages",
-        filter: `conversation_id=eq.${active.id}`,
       }, (payload) => {
         const row = payload.new as Message;
-        setMessages((p) => p.some((m) => m.id === row.id) ? p : [...p, row]);
-        void signAttachments([row]);
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        bumpConversation(row.conversation_id, row);
+        if (row.conversation_id === activeIdRef.current) {
+          setMessages((p) => p.some((m) => m.id === row.id) ? p : [...p, row]);
+          void signAttachments([row]);
+          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [active?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId]);
 
   async function openConversation(conv: ConversationWithDetails) {
     setActive(conv);
@@ -283,6 +307,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     if (attachment) void signAttachments([data]);
     // Render it immediately; the realtime echo can also arrive, so dedupe by id.
     setMessages((p) => p.some((m) => m.id === data.id) ? p : [...p, data]);
+    bumpConversation(active.id, data);
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }
 
@@ -324,7 +349,8 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     | { kind: "thread"; key: string; conv: ConversationWithDetails; person: Profile }
     | { kind: "friend"; key: string; friend: FriendLite };
 
-  const threadRows: Row[] = conversations
+  const threadRows: Row[] = [...conversations]
+    .sort((a, b) => recencyKey(b) - recencyKey(a))
     .map((conv) => {
       const person = getOtherParticipant(conv);
       return person ? ({ kind: "thread", key: conv.id, conv, person } as Row) : null;
@@ -403,7 +429,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                 return (
                   <button key={row.key} onClick={() => void startChatWith(f)}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--border)] transition-colors text-left">
-                    <Avatar src={f.avatar_url} name={f.display_name} size={48} online={online} />
+                    <Avatar src={f.avatar_url} name={f.display_name} size={48} online={online} userId={f.id} />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm truncate text-[var(--text-primary)] flex items-center gap-1.5">
                         {f.display_name}{f.is_verified && <VerifiedTick size={14} />}
@@ -426,7 +452,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     onClick={() => openConversation(conv)}
                     className={`flex-1 min-w-0 flex items-center gap-3 px-4 py-3 hover:bg-[var(--border)] transition-colors text-left ${active?.id === conv.id ? "bg-brand-green-800/5 dark:bg-brand-gold-400/5" : ""}`}
                   >
-                    <Avatar src={other.avatar_url} name={other.display_name} size={48} online={online} />
+                    <Avatar src={other.avatar_url} name={other.display_name} size={48} online={online} userId={other.id} />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline">
                         <p className="font-semibold text-sm truncate text-[var(--text-primary)] flex items-center gap-1.5">
@@ -482,7 +508,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                 const other = getOtherParticipant(active);
                 return other ? (
                   <>
-                    <Avatar src={other.avatar_url} name={other.display_name} size={40} online={isOnline(other.last_seen)} />
+                    <Avatar src={other.avatar_url} name={other.display_name} size={40} online={isOnline(other.last_seen)} userId={other.id} />
                     <div>
                       <p className="font-semibold text-[var(--text-primary)]">{other.display_name}</p>
                       <p className="text-xs" style={{ color: isOnline(other.last_seen) ? "rgb(var(--a-600))" : "var(--text-secondary)" }}>

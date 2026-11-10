@@ -119,7 +119,7 @@ export function ReelsClient({ reels, currentUserId }: ReelsClientProps) {
       {/* Right actions */}
       <div className="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-10">
         <Link href={`/profile/${reel.author.username}`}>
-          <Avatar src={reel.author.avatar_url} name={reel.author.display_name} size={44} className="border-2 border-white" />
+          <Avatar src={reel.author.avatar_url} name={reel.author.display_name} size={44} className="border-2 border-white" userId={reel.author.id} />
         </Link>
         <button onClick={() => handleLike(current)} className="flex flex-col items-center gap-1 text-white">
           <Heart className={`w-7 h-7 ${liked[current] ? "fill-red-500 text-red-500" : ""}`} />

@@ -108,7 +108,7 @@ export function FriendsClient({ friends: initFriends, sentRequests: initSent, re
             {received.map((req) => (
               <div key={req.id} className="card p-4 flex items-center gap-3">
                 <Link href={`/profile/${req.sender.username}`}>
-                  <Avatar src={req.sender.avatar_url} name={req.sender.display_name} size={48} />
+                  <Avatar src={req.sender.avatar_url} name={req.sender.display_name} size={48} userId={req.sender.id} />
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link href={`/profile/${req.sender.username}`} className="font-semibold text-[var(--text-primary)] hover:underline block truncate">
@@ -139,7 +139,7 @@ export function FriendsClient({ friends: initFriends, sentRequests: initSent, re
             {friends.map((f) => (
               <div key={f.friend_id} className="card p-4 flex items-center gap-3">
                 <Link href={`/profile/${f.friend.username}`}>
-                  <Avatar src={f.friend.avatar_url} name={f.friend.display_name} size={48} />
+                  <Avatar src={f.friend.avatar_url} name={f.friend.display_name} size={48} userId={f.friend.id} />
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link href={`/profile/${f.friend.username}`} className="font-semibold text-[var(--text-primary)] hover:underline block truncate">
@@ -169,7 +169,7 @@ export function FriendsClient({ friends: initFriends, sentRequests: initSent, re
             {sent.map((req) => (
               <div key={req.id} className="card p-4 flex items-center gap-3">
                 <Link href={`/profile/${req.receiver.username}`}>
-                  <Avatar src={req.receiver.avatar_url} name={req.receiver.display_name} size={48} />
+                  <Avatar src={req.receiver.avatar_url} name={req.receiver.display_name} size={48} userId={req.receiver.id} />
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link href={`/profile/${req.receiver.username}`} className="font-semibold hover:underline block truncate">{req.receiver.display_name}</Link>

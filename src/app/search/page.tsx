@@ -70,7 +70,7 @@ export default async function SearchPage({ searchParams }: Props) {
                 <div className="space-y-2">
                   {profiles.map((p) => (
                     <Link key={p.id} href={`/profile/${p.username}`} className="card p-3 flex items-center gap-3 hover:shadow-md transition-shadow">
-                      <Avatar src={p.avatar_url} name={p.display_name} size={44} />
+                      <Avatar src={p.avatar_url} name={p.display_name} size={44} userId={p.id} />
                       <div className="min-w-0">
                         <p className="font-semibold text-[var(--text-primary)] truncate">{p.display_name}</p>
                         <p className="text-xs text-[var(--text-secondary)]">@{p.username}</p>
@@ -108,7 +108,7 @@ export default async function SearchPage({ searchParams }: Props) {
                   {posts.map((p) => (
                     <div key={p.id} className="card p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Avatar src={p.author.avatar_url} name={p.author.display_name} size={32} />
+                        <Avatar src={p.author.avatar_url} name={p.author.display_name} size={32} userId={p.author.id} />
                         <Link href={`/profile/${p.author.username}`} className="text-sm font-semibold hover:underline">{p.author.display_name}</Link>
                       </div>
                       <p className="text-sm text-[var(--text-secondary)] line-clamp-3">{p.content}</p>

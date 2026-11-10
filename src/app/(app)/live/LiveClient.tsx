@@ -148,7 +148,7 @@ export function LiveClient({ profile }: { profile: Profile }) {
         </div>
 
         <div className="p-4 flex flex-wrap items-center gap-3">
-          <Avatar src={profile.avatar_url} name={profile.display_name} size={40} />
+          <Avatar src={profile.avatar_url} name={profile.display_name} size={40} userId={profile.id} />
           <div className="flex-1 min-w-[8rem]">
             <p className="text-sm font-semibold text-[var(--text-primary)]">{profile.display_name}</p>
             <p className="text-xs text-[var(--text-secondary)]">@{profile.username}</p>

@@ -109,7 +109,7 @@ export function CreatePost({ profile, onCreated, groupId }: CreatePostProps) {
   return (
     <div className="card p-4">
       <div className="flex gap-3 items-start">
-        <Avatar src={profile.avatar_url} name={profile.display_name} size={44} />
+        <Avatar src={profile.avatar_url} name={profile.display_name} size={44} userId={profile.id} />
         <div className="flex-1">
           <textarea
             placeholder={`What's on your mind, ${profile.display_name.split(" ")[0]}?`}

@@ -229,7 +229,7 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
             {suggestedPeople.map((person) => (
               <div key={person.id} className="card p-4 flex items-center gap-3">
                 <Link href={`/profile/${person.username}`}>
-                  <Avatar src={person.avatar_url} name={person.display_name} size={48} />
+                  <Avatar src={person.avatar_url} name={person.display_name} size={48} userId={person.id} />
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link

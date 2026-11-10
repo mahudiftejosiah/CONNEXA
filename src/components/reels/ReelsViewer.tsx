@@ -208,7 +208,7 @@ export function ReelsViewer() {
               {reel.kind === "post" ? (
                 <>
                   <div className="flex items-center gap-2 mb-2">
-                    <Avatar src={reel.author.avatar_url} name={reel.author.display_name} size={36} />
+                    <Avatar src={reel.author.avatar_url} name={reel.author.display_name} size={36} userId={reel.author.id} />
                     <div>
                       <Link href={`/profile/${reel.author.username}`} className="font-semibold text-sm text-white hover:underline block leading-tight pointer-events-auto">
                         {reel.author.display_name}

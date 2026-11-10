@@ -2,6 +2,7 @@ import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { UnreadProvider } from "./UnreadProvider";
+import { StoryRingProvider } from "./StoryRingProvider";
 import { PresenceHeartbeat } from "./PresenceHeartbeat";
 import { getUnreadCounts } from "@/lib/unread-counts";
 import { createClient } from "@/lib/supabase/server";
@@ -29,19 +30,23 @@ export async function AppLayout({ children, rightSidebar }: AppLayoutProps) {
 
     return (
       <UnreadProvider userId={user.id} initial={counts}>
-        <PresenceHeartbeat userId={user.id} />
-        <Shell signedIn profile={profile} isAdmin={isAdmin} rightSidebar={rightSidebar}>
-          {children}
-        </Shell>
+        <StoryRingProvider userId={user.id}>
+          <PresenceHeartbeat userId={user.id} />
+          <Shell signedIn profile={profile} isAdmin={isAdmin} rightSidebar={rightSidebar}>
+            {children}
+          </Shell>
+        </StoryRingProvider>
       </UnreadProvider>
     );
   }
 
   return (
     <UnreadProvider userId={null} initial={{ notifications: 0, messages: 0 }}>
-      <Shell signedIn={false} profile={null} isAdmin={false} rightSidebar={rightSidebar}>
-        {children}
-      </Shell>
+      <StoryRingProvider userId={null}>
+        <Shell signedIn={false} profile={null} isAdmin={false} rightSidebar={rightSidebar}>
+          {children}
+        </Shell>
+      </StoryRingProvider>
     </UnreadProvider>
   );
 }
