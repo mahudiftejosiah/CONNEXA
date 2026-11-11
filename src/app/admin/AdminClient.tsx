@@ -6,6 +6,7 @@ import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, User
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
+import { ImageField } from "@/components/ui/ImageField";
 import { AssistantBot } from "./AssistantBot";
 import type { HealthCheck } from "@/lib/botHealth";
 import { createClient } from "@/lib/supabase/client";
@@ -470,8 +471,8 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
               <input className="input" placeholder="Play link (https://…) *" value={newGame.play_url}
                 onChange={(e) => setNewGame((p) => ({ ...p, play_url: e.target.value }))} />
             </div>
-            <input className="input" placeholder="Cover / thumbnail image link (optional)" value={newGame.cover_url}
-              onChange={(e) => setNewGame((p) => ({ ...p, cover_url: e.target.value }))} />
+            <ImageField placeholder="Cover / thumbnail image link (optional)" value={newGame.cover_url}
+              onChange={(v) => setNewGame((p) => ({ ...p, cover_url: v }))} userId={currentAdminId} />
             <input className="input" placeholder="Short description (optional)" value={newGame.description}
               onChange={(e) => setNewGame((p) => ({ ...p, description: e.target.value }))} />
             <Button onClick={addExternalGame} loading={savingGame} icon={<Plus className="w-4 h-4" />}>Add game</Button>
@@ -585,8 +586,8 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
                 onChange={(e) => setNewSite((p) => ({ ...p, title: e.target.value }))} />
               <input className="input" placeholder="Link (https://…) *" value={newSite.url}
                 onChange={(e) => setNewSite((p) => ({ ...p, url: e.target.value }))} />
-              <input className="input" placeholder="Logo image link (optional)" value={newSite.logo_url}
-                onChange={(e) => setNewSite((p) => ({ ...p, logo_url: e.target.value }))} />
+              <ImageField placeholder="Logo image link (optional)" value={newSite.logo_url}
+                onChange={(v) => setNewSite((p) => ({ ...p, logo_url: v }))} userId={currentAdminId} />
             </div>
             <p className="text-xs text-[var(--text-secondary)]">
               No logo link? The site&apos;s own favicon is used automatically, so the icon always matches the brand.

@@ -385,6 +385,22 @@ export interface Database {
         Insert: Omit<Database["public"]["Tables"]["site_shortcuts"]["Row"], "id" | "created_at" | "logo_url" | "description" | "created_by" | "sort"> & { logo_url?: string | null; description?: string | null; created_by?: string | null; sort?: number }
         Update: Partial<Omit<Database["public"]["Tables"]["site_shortcuts"]["Row"], "id" | "created_at">>
       }
+      live_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          status: "live" | "ended"
+          started_at: string
+          ended_at: string | null
+          clip_seq: number
+          clip_path: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database["public"]["Tables"]["live_sessions"]["Row"], "id" | "started_at" | "ended_at" | "clip_seq" | "clip_path" | "created_at" | "updated_at" | "title" | "status"> & { title?: string; status?: "live" | "ended" }
+        Update: Partial<Omit<Database["public"]["Tables"]["live_sessions"]["Row"], "id" | "user_id" | "created_at">>
+      }
       study_books: {
         Row: {
           id: string
@@ -544,6 +560,7 @@ export type ExternalGame = Database["public"]["Tables"]["external_games"]["Row"]
 export type StudyResource = Database["public"]["Tables"]["study_resources"]["Row"]
 export type ReelEmbed = Database["public"]["Tables"]["reel_embeds"]["Row"]
 export type SiteShortcut = Database["public"]["Tables"]["site_shortcuts"]["Row"]
+export type LiveSession = Database["public"]["Tables"]["live_sessions"]["Row"]
 export type StudyBook = Database["public"]["Tables"]["study_books"]["Row"]
 export type StudyProgress = Database["public"]["Tables"]["study_progress"]["Row"]
 export type StudyProgressInsert = Database["public"]["Tables"]["study_progress"]["Insert"]

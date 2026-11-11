@@ -8,9 +8,26 @@ interface StoriesTrayProps {
   stories: StoryWithAuthor[];
   profile: Profile;
   currentUserId: string;
+  // On the stories page the tray opens the viewer in place instead of linking
+  // back to /stories, which would just reload the same page.
+  onCreate?: () => void;
+  onOpen?: (authorId: string) => void;
 }
 
-export function StoriesTray({ stories, profile, currentUserId }: StoriesTrayProps) {
+function TrayTile({ href, onClick, className, children }: {
+  href: string;
+  onClick?: () => void;
+  className: string;
+  children: React.ReactNode;
+}) {
+  return onClick ? (
+    <button onClick={onClick} className={className}>{children}</button>
+  ) : (
+    <Link href={href} className={className}>{children}</Link>
+  );
+}
+
+export function StoriesTray({ stories, profile, currentUserId, onCreate, onOpen }: StoriesTrayProps) {
   const grouped = stories.reduce((acc, story) => {
     const id = story.author_id;
     if (!acc[id]) acc[id] = { author: story.author, hasUnviewed: false, first: story };
@@ -27,7 +44,7 @@ export function StoriesTray({ stories, profile, currentUserId }: StoriesTrayProp
     <div className="card p-3">
       <div className="rail flex items-start gap-4 pb-1">
         {/* Your story */}
-        <Link href="/stories" className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16 group">
+        <TrayTile href="/stories" onClick={onCreate} className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16 group">
           <span className="relative block w-14 h-14 rounded-full p-[2px]" style={{ background: "var(--border)" }}>
             <span className="relative block w-full h-full rounded-full overflow-hidden" style={{ backgroundColor: "var(--bg)" }}>
               {profile.avatar_url ? (
@@ -49,10 +66,10 @@ export function StoriesTray({ stories, profile, currentUserId }: StoriesTrayProp
           <span className="text-xs font-medium truncate w-full text-center" style={{ color: "var(--text-secondary)" }}>
             Your story
           </span>
-        </Link>
+        </TrayTile>
 
         {groups.map((g) => (
-          <Link key={g.author.id} href="/stories" className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16">
+          <TrayTile key={g.author.id} href="/stories" onClick={onOpen && (() => onOpen(g.author.id))} className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16">
             <span
               className="relative block w-14 h-14 rounded-full p-[2px]"
               style={{ background: g.hasUnviewed ? "#22c55e" : "var(--border)" }}
@@ -76,7 +93,7 @@ export function StoriesTray({ stories, profile, currentUserId }: StoriesTrayProp
             <span className="text-xs font-medium truncate w-full text-center" style={{ color: "var(--text-secondary)" }}>
               {g.author.id === currentUserId ? "You" : g.author.display_name.split(" ")[0]}
             </span>
-          </Link>
+          </TrayTile>
         ))}
       </div>
     </div>

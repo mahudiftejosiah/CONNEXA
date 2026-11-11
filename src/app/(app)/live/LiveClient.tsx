@@ -1,31 +1,47 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Video, VideoOff, Radio, Square, Send, RotateCcw, ArrowLeft } from "lucide-react";
+import { Video, VideoOff, Radio, Square, Send, RotateCcw, ArrowLeft, SwitchCamera } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
+import { createClient } from "@/lib/supabase/client";
+import { CLIP_SLICE_MS, LIVE_BUCKET, clipPath } from "@/lib/live";
 import { createPost } from "@/lib/actions/posts";
-import type { Profile, PostVisibility } from "@/lib/supabase/types";
+import { useFullscreen } from "@/lib/useFullscreen";
+import type { LiveSession, Profile, PostVisibility } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 export function LiveClient({ profile }: { profile: Profile }) {
   const router = useRouter();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // The clips leave the browser one at a time, in order: a second upload
+  // starting while the first is still running would land them out of sequence.
+  const queueRef = useRef<Blob[]>([]);
+  const uploadingRef = useRef(false);
+  const seqRef = useRef(0);
+  const pathsRef = useRef<string[]>([]);
+  const sessionRef = useRef<LiveSession | null>(null);
 
   const [cameraOn, setCameraOn] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [facing, setFacing] = useState<"user" | "environment">("environment");
   const [live, setLive] = useState(false);
   const [seconds, setSeconds] = useState(0);
-  const [clipUrl, setClipUrl] = useState<string | null>(null);
+  const [clipsUp, setClipsUp] = useState(0);
+  const [clipUrl, setClipLocalUrl] = useState<string | null>(null);
   const [clipFile, setClipFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [posting, setPosting] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const screen = useFullscreen<HTMLDivElement>();
 
   useEffect(() => {
     return () => {
@@ -35,10 +51,17 @@ export function LiveClient({ profile }: { profile: Profile }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function startCamera() {
+  async function startCamera(mode: "user" | "environment" = facing) {
     setCameraError(null);
+    streamRef.current?.getTracks().forEach((t) => t.stop());
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+      // Nothing here mirrors the picture: the stream is shown and recorded
+      // exactly as the lens sees it, which is what the viewers get.
+      const constraints: MediaStreamConstraints = {
+        audio: true,
+        video: { facingMode: { ideal: mode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -51,47 +74,115 @@ export function LiveClient({ profile }: { profile: Profile }) {
     }
   }
 
+  async function flipCamera() {
+    const next = facing === "user" ? "environment" : "user";
+    setFacing(next);
+    await startCamera(next);
+  }
+
   function stopCamera() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setCameraOn(false);
-    if (live) stopBroadcast(false);
+    if (sessionRef.current && recorderRef.current) stopBroadcast(false);
   }
 
-  function startBroadcast() {
+  /** Pushes one finished clip into storage and moves the session pointer to it. */
+  async function drainQueue() {
+    if (uploadingRef.current) return;
+    const blob = queueRef.current.shift();
+    const s = sessionRef.current;
+    if (!blob || !s) return;
+    uploadingRef.current = true;
+    try {
+      const seq = seqRef.current + 1;
+      const path = clipPath(profile.id, s.id, seq);
+      const { error } = await supabase.storage
+        .from(LIVE_BUCKET)
+        .upload(path, blob, { contentType: "video/webm", upsert: true });
+      if (error) return;
+      seqRef.current = seq;
+      pathsRef.current.push(path);
+      await supabase.from("live_sessions")
+        .update({ clip_seq: seq, clip_path: path })
+        .eq("id", s.id);
+      setClipsUp(seq);
+    } finally {
+      uploadingRef.current = false;
+      if (queueRef.current.length > 0) void drainQueue();
+    }
+  }
+
+  // Full screen is asked for in the click itself, before any await, or the
+  // browser treats the later request as an unsolicited one and says no.
+  async function startBroadcast() {
     const stream = streamRef.current;
     if (!stream) { toast.error("Turn the camera on first."); return; }
-    const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus") ? "video/webm;codecs=vp9,opus" : "video/webm";
+    screen.enter();
+
+    const { data, error } = await supabase.from("live_sessions")
+      .insert({ user_id: profile.id, title: title.trim(), status: "live" })
+      .select("*")
+      .single();
+    if (error || !data) {
+      toast.error("The session could not start. Check your connection and try again.");
+      screen.exit();
+      return;
+    }
+    sessionRef.current = data;
+
+    const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+      ? "video/webm;codecs=vp9,opus" : "video/webm";
     const recorder = new MediaRecorder(stream, { mimeType: mime });
-    const chunks: BlobPart[] = [];
-    recorder.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
+    const parts: BlobPart[] = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size === 0) return;
+      parts.push(e.data);
+      // Each slice is its own playable WebM, so it can go up straight away.
+      queueRef.current.push(new Blob([e.data], { type: mime }));
+      void drainQueue();
+    };
     recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: "video/webm" });
-      const file = new File([blob], `live_${Date.now()}.webm`, { type: "video/webm" });
-      setClipFile(file);
-      setClipUrl(URL.createObjectURL(blob));
+      const blob = new Blob(parts, { type: "video/webm" });
+      setClipFile(new File([blob], `live_${Date.now()}.webm`, { type: "video/webm" }));
+      setClipLocalUrl(URL.createObjectURL(blob));
       setLive(false);
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     };
-    recorder.start(1000);
+    recorder.start(CLIP_SLICE_MS);
     recorderRef.current = recorder;
     setLive(true);
     setSeconds(0);
-    timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
-    toast.success("You're live! Your session is recorded and can be shared to your feed when you stop.");
+    setClipsUp(0);
+    timerRef.current = setInterval(() => setSeconds((v) => v + 1), 1000);
+    toast.success("You're live — your profile cover now shows the broadcast.");
   }
 
-  function stopBroadcast(keepCamera = true) {
+  async function stopBroadcast(exitScreen = true) {
+    const s = sessionRef.current;
     if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop();
     recorderRef.current = null;
     setLive(false);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-    if (!keepCamera) stopCamera();
+    if (exitScreen) screen.exit();
+    if (!s) return;
+    sessionRef.current = null;
+    // Let the last few slices finish uploading, then close the session and
+    // clear the clips: the recap stays on the broadcaster's own screen.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await supabase.from("live_sessions")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("id", s.id);
+    if (pathsRef.current.length > 0) {
+      await supabase.storage.from(LIVE_BUCKET).remove(pathsRef.current);
+      pathsRef.current = [];
+    }
+    toast("Your live session has ended.", { icon: "🔴" });
   }
 
   function discardClip() {
     if (clipUrl) URL.revokeObjectURL(clipUrl);
-    setClipUrl(null);
+    setClipLocalUrl(null);
     setClipFile(null);
   }
 
@@ -132,19 +223,42 @@ export function LiveClient({ profile }: { profile: Profile }) {
 
       {/* Stage */}
       <div className="card overflow-hidden">
-        <div className="relative aspect-video bg-black">
-          <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${cameraOn ? "" : "opacity-0"}`} />
-          {!cameraOn && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/70">
-              <VideoOff className="w-12 h-12" />
-              <p className="text-sm">{cameraError || "Camera is off — turn it on to start your session."}</p>
-            </div>
-          )}
-          {live && (
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> REC {fmt}
-            </div>
-          )}
+        <div ref={screen.ref} className={`live-shell${screen.active ? " pseudo-full" : ""}`}>
+          <div className={`relative bg-black ${screen.active ? "h-full" : "aspect-video"}`}>
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+            {!cameraOn && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/70">
+                <VideoOff className="w-12 h-12" />
+                <p className="text-sm">{cameraError || "Camera is off — turn it on to start your session."}</p>
+              </div>
+            )}
+            {live && (
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> REC {fmt}
+              </div>
+            )}
+            {live && (
+              <p className="absolute top-3 right-3 text-white/70 text-[11px] font-semibold">
+                {clipsUp} clip{clipsUp === 1 ? "" : "s"} sent to viewers
+              </p>
+            )}
+            {screen.active && (
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                {!live && cameraOn && (
+                  <Button variant="danger" onClick={startBroadcast} icon={<Radio className="w-4 h-4" />}>Start live</Button>
+                )}
+                {live && (
+                  <Button variant="danger" onClick={() => void stopBroadcast(true)} icon={<Square className="w-4 h-4 fill-current" />}>Stop session</Button>
+                )}
+                {cameraOn && !live && (
+                  <button onClick={flipCamera} aria-label="Flip camera"
+                    className="p-3 rounded-full bg-white/15 text-white hover:bg-white/25">
+                    <SwitchCamera className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="p-4 flex flex-wrap items-center gap-3">
@@ -154,14 +268,15 @@ export function LiveClient({ profile }: { profile: Profile }) {
             <p className="text-xs text-[var(--text-secondary)]">@{profile.username}</p>
           </div>
           {!cameraOn ? (
-            <Button onClick={startCamera} icon={<Video className="w-4 h-4" />}>Turn on camera</Button>
+            <Button onClick={() => void startCamera()} icon={<Video className="w-4 h-4" />}>Turn on camera</Button>
           ) : !live ? (
             <>
-              <Button variant="danger" onClick={startBroadcast} icon={<Radio className="w-4 h-4" />}>Start live session</Button>
+              <Button variant="danger" onClick={() => void startBroadcast()} icon={<Radio className="w-4 h-4" />}>Start live session</Button>
+              <Button variant="ghost" onClick={flipCamera} icon={<SwitchCamera className="w-4 h-4" />}>Flip</Button>
               <Button variant="ghost" onClick={stopCamera} icon={<VideoOff className="w-4 h-4" />}>Turn off</Button>
             </>
           ) : (
-            <Button variant="danger" onClick={() => stopBroadcast(true)} icon={<Square className="w-4 h-4 fill-current" />}>Stop session</Button>
+            <Button variant="danger" onClick={() => void stopBroadcast(true)} icon={<Square className="w-4 h-4 fill-current" />}>Stop session</Button>
           )}
         </div>
       </div>
@@ -181,7 +296,8 @@ export function LiveClient({ profile }: { profile: Profile }) {
       )}
 
       <p className="text-xs text-[var(--text-secondary)] text-center leading-relaxed">
-        Your session runs in your browser — CONNEXA records it and posts it to your feed, no third‑party streaming service involved.
+        While you are live your profile cover shows the broadcast to everyone. CONNEXA keeps the recording in
+        your browser, so you can post it to your feed when you stop — no third‑party streaming service involved.
         Your camera never turns on until you press “Turn on camera”.
       </p>
     </div>

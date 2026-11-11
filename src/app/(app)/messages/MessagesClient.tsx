@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck, Trash2 } from "lucide-react";
+import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck, Trash2, Image as ImageIcon, Bot } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { VerifiedTick } from "@/components/ui/VerifiedTick";
+import { HelpThread } from "@/components/messages/HelpThread";
 import { createClient } from "@/lib/supabase/client";
 import type { ConversationWithDetails, Profile, Message, MessageAttachmentKind } from "@/lib/supabase/types";
 import {
@@ -83,6 +84,7 @@ function isViewOnceMedia(kind: MessageAttachmentKind) {
 export function MessagesClient({ conversations: initConvs, profile, currentUserId, friends, openPeerId, initialTab = "all" }: MessagesClientProps) {
   const [conversations, setConversations] = useState(initConvs);
   const [active, setActive] = useState<ConversationWithDetails | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [input, setInput] = useState("");
@@ -98,6 +100,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const [deleting, setDeleting] = useState(false);
   const urlsRef = useRef<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef<string | null>(null);
   const supabaseRef = useRef(createClient());
@@ -199,6 +202,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
 
   async function openConversation(conv: ConversationWithDetails) {
     setActive(conv);
+    setHelpOpen(false);
     setViewer(null);
     setLoadingMsgs(true);
     const { data } = await supabase
@@ -394,7 +398,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   return (
     <div className="flex h-[calc(100dvh-8rem)] md:h-[calc(100dvh-5rem)] -mx-4 -mt-6 -mb-20 md:-mb-6">
       {/* Conversation list */}
-      <div className={`w-full md:w-80 border-r border-[var(--border)] flex flex-col ${active ? "hidden md:flex" : "flex"}`}>
+      <div className={`w-full md:w-80 border-r border-[var(--border)] flex flex-col ${active || helpOpen ? "hidden md:flex" : "flex"}`}>
         <div className="p-4 border-b border-[var(--border)]">
           <h2 className="font-bold text-lg text-[var(--text-primary)]">Messages</h2>
           <div className="mt-2 relative">
@@ -418,6 +422,21 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
         </div>
 
         <div className="flex-1 overflow-y-auto">
+          {/* The helper sits above every conversation: it is always "online" and
+              answers where a feature lives without anyone having to reply. */}
+          <button
+            onClick={() => { setActive(null); setHelpOpen(true); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--border)] transition-colors text-left border-b ${helpOpen ? "bg-brand-green-800/5 dark:bg-brand-gold-400/5" : ""}`}
+            style={{ borderColor: "var(--border)" }}
+          >
+            <span className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ backgroundColor: "rgb(var(--a-800))" }}>
+              <Bot className="w-6 h-6" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm truncate text-[var(--text-primary)]">CONNEXA Helper</p>
+              <p className="text-xs truncate" style={{ color: "rgb(var(--a-600))" }}>Ask how anything works · instant answers</p>
+            </div>
+          </button>
           {rows.length === 0 ? (
             <EmptyState icon={<MessageCircle className="w-8 h-8" />} title="No messages"
               description={tab === "active" ? "No one is online right now." : tab === "offline" ? "No offline friends yet." : "Start a conversation from someone's profile."} />
@@ -492,8 +511,10 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
       </div>
 
       {/* Chat pane */}
-      <div className={`flex-1 flex flex-col ${!active ? "hidden md:flex" : "flex"}`}>
-        {!active ? (
+      <div className={`flex-1 flex flex-col ${!active && !helpOpen ? "hidden md:flex" : "flex"}`}>
+        {helpOpen ? (
+          <HelpThread userId={currentUserId} displayName={profile.display_name} onBack={() => setHelpOpen(false)} />
+        ) : !active ? (
           <div className="flex-1 flex items-center justify-center">
             <EmptyState icon={<MessageCircle className="w-8 h-8" />} title="Select a conversation" description="Choose a conversation from the list to start chatting." />
           </div>
@@ -643,17 +664,32 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
               )}
               <div className="px-4 py-3 flex gap-2 items-end">
                 <input
+                  ref={photoInputRef}
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+                />
+                <input
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
-                  accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip"
+                  accept="video/*,.pdf,.doc,.docx,.txt,.zip"
                   onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
                 />
+                <button
+                  onClick={() => photoInputRef.current?.click()}
+                  disabled={sending}
+                  className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 flex-shrink-0"
+                  aria-label="Send a photo from your device"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={sending}
                   className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 flex-shrink-0"
-                  aria-label="Attach a photo, video or document"
+                  aria-label="Attach a video or document"
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>

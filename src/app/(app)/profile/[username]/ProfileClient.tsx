@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   MapPin, Link as LinkIcon, Calendar, UserPlus, UserMinus,
   UserCheck, MessageCircle, Bell, BellOff, Shield, Edit, Users,
-  Camera,
+  Camera, Radio,
 } from "lucide-react";
 import Image from "next/image";
 import { Avatar } from "@/components/ui/Avatar";
@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/Button";
 import { PostCard } from "@/components/posts/PostCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/Modal";
+import { LiveViewer } from "@/components/live/LiveViewer";
+import { createClient } from "@/lib/supabase/client";
+import { clipUrl, isOpen } from "@/lib/live";
 import {
   sendFriendRequest, acceptFriendRequest, cancelFriendRequest,
   removeFriend, toggleFollow, toggleBlock,
@@ -20,7 +23,7 @@ import {
 import { formatJoinDate } from "@/lib/utils";
 import { VerifiedTick } from "@/components/ui/VerifiedTick";
 import { UpgradePanel, type UpgradeStatus } from "@/components/profile/UpgradePanel";
-import type { Profile, PostWithAuthor } from "@/lib/supabase/types";
+import type { LiveSession, Profile, PostWithAuthor } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 
 interface ProfileClientProps {
@@ -36,6 +39,7 @@ interface ProfileClientProps {
   followingCount: number;
   friendsCount: number;
   initialPosts: PostWithAuthor[];
+  initialLive: LiveSession | null;
   upgradeConfigText: string;
   upgradeStatus: UpgradeStatus;
   upgradeReference: string | null;
@@ -45,7 +49,7 @@ export function ProfileClient({
   profile, currentProfile, isOwn,
   isFriend: initFriend, isFollowing: initFollowing, isBlocked: initBlocked,
   friendRequestStatus: initReqStatus, friendRequestId: initReqId,
-  followersCount, followingCount, friendsCount, initialPosts,
+  followersCount, followingCount, friendsCount, initialPosts, initialLive,
   upgradeConfigText, upgradeStatus, upgradeReference,
 }: ProfileClientProps) {
   const [isFriend, setIsFriend] = useState(initFriend);
@@ -57,6 +61,50 @@ export function ProfileClient({
   const [confirmUnfriend, setConfirmUnfriend] = useState(false);
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [activeTab, setActiveTab] = useState<"posts" | "about" | "upgrade">("posts");
+  const [live, setLive] = useState<LiveSession | null>(initialLive);
+  const [watching, setWatching] = useState(false);
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
+
+  // The cover belongs to the broadcast only while it is running, so the row is
+  // followed here: the start puts the live picture over the photo, the end —
+  // or a broadcaster who vanished — takes it away again by itself.
+  useEffect(() => {
+    let cancelled = false;
+    async function read() {
+      const { data } = await supabase
+        .from("live_sessions")
+        .select("*")
+        .eq("user_id", profile.id)
+        .eq("status", "live")
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!cancelled) setLive(isOpen(data) ? data : null);
+    }
+    void read();
+    // Realtime makes the cover flip the second the broadcast starts or stops;
+    // the poll is there for the connections that never open.
+    const channel = supabase
+      .channel(`live-cover:${profile.id}`)
+      .on("postgres_changes", {
+        event: "*", schema: "public", table: "live_sessions", filter: `user_id=eq.${profile.id}`,
+      }, (payload) => {
+        // Every clip upload rewrites this row, but only the start and the end
+        // change what the cover has to show.
+        const next = payload.new as LiveSession | undefined;
+        const previous = payload.old as LiveSession | undefined;
+        if (payload.eventType === "INSERT" || next?.status !== previous?.status) void read();
+      })
+      .subscribe();
+    const poll = setInterval(() => void read(), 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, profile.id]);
+
 
   async function handleFriendAction() {
     setLoading(true);
@@ -121,10 +169,32 @@ export function ProfileClient({
       <div className="card overflow-hidden">
         {/* Cover */}
         <div className="relative h-48" style={{ background: "linear-gradient(135deg, rgb(var(--a-800)), rgb(var(--a-700)))" }}>
-          {profile.cover_url && (
+          {profile.cover_url && !live && (
             <Image src={profile.cover_url} alt="Cover photo" fill className="object-cover" sizes="100vw" priority />
           )}
-          {isOwn && (
+          {/* While a broadcast runs it owns the cover, and gives the photo back
+              on its own the moment the session ends. */}
+          {live && (
+            <button onClick={() => setWatching(true)} aria-label={`Watch ${profile.display_name} live`}
+              className="absolute inset-0 overflow-hidden">
+              {live.clip_path && (
+                <video key={live.clip_path} src={clipUrl(supabase, live.clip_path)}
+                  autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+              )}
+              <span className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full animate-pulse">
+                <Radio className="w-3 h-3" /> LIVE
+              </span>
+              <span className="absolute bottom-3 left-3 max-w-[60%] truncate text-white text-xs font-semibold px-3 py-1.5 rounded-xl"
+                style={{ background: "rgba(0,0,0,0.5)" }}>
+                {live.title || "Live now"}
+              </span>
+              <span className="absolute bottom-3 right-3 text-white text-xs font-semibold px-3 py-1.5 rounded-xl"
+                style={{ background: "rgba(0,0,0,0.5)" }}>
+                Tap to watch
+              </span>
+            </button>
+          )}
+          {isOwn && !live && (
             <Link
               href="/settings/profile"
               className="absolute bottom-3 right-3 text-white text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors"
@@ -380,6 +450,14 @@ export function ProfileClient({
         confirmLabel={isBlocked ? "Unblock" : "Block"}
         danger
       />
+
+      {watching && live && (
+        <LiveViewer
+          session={live}
+          authorName={profile.display_name}
+          onClose={() => setWatching(false)}
+        />
+      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
+import { ImageField } from "@/components/ui/ImageField";
 import { createClient } from "@/lib/supabase/client";
 import type { SiteShortcut, StudyBook } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
@@ -497,8 +498,9 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
               value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
             <input className={inputCls} style={inputStyle} placeholder="https://link-to-the-resource"
               value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} />
-            <input className={inputCls} style={inputStyle} placeholder="Thumbnail image URL (optional)"
-              value={form.cover_url} onChange={(e) => setForm((f) => ({ ...f, cover_url: e.target.value }))} />
+            <ImageField placeholder="Thumbnail image URL (optional)" value={form.cover_url}
+              onChange={(v) => setForm((f) => ({ ...f, cover_url: v }))} userId={currentUserId}
+              inputClassName={inputCls} inputStyle={inputStyle} />
             <input className={inputCls} style={inputStyle} placeholder="Short description (optional)"
               value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           </div>

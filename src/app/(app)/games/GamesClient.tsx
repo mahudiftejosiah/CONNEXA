@@ -2,17 +2,24 @@
 
 import { useState } from "react";
 import { ArrowLeft, Gamepad2, Bug, Car, Dices, Grid3x3, Zap, Brain, Target, Bomb, Feather, Circle, SquareStack, Maximize2, Minimize2 } from "lucide-react";
-import Snake from "@/components/games/Snake";
-import Racing from "@/components/games/Racing";
-import Pong from "@/components/games/Pong";
-import Breakout from "@/components/games/Breakout";
-import Game2048 from "@/components/games/Game2048";
-import TicTacToe from "@/components/games/TicTacToe";
-import MemoryMatch from "@/components/games/MemoryMatch";
-import WhackAMole from "@/components/games/WhackAMole";
-import SimonSays from "@/components/games/SimonSays";
-import Minesweeper from "@/components/games/Minesweeper";
-import Flappy from "@/components/games/Flappy";
+import dynamic from "next/dynamic";
+// Eleven games is a lot of canvas code to pull in just to show a menu, so each
+// one becomes its own chunk and only downloads when it is actually opened.
+function GameLoading() {
+  return <div className="py-10 text-center text-sm" style={{ color: "var(--text-secondary)" }}>Loading game…</div>;
+}
+const load = (p: () => Promise<{ default: React.ComponentType }>) => dynamic(p, { ssr: false, loading: GameLoading });
+const Snake = load(() => import("@/components/games/Snake"));
+const Racing = load(() => import("@/components/games/Racing"));
+const Pong = load(() => import("@/components/games/Pong"));
+const Breakout = load(() => import("@/components/games/Breakout"));
+const Game2048 = load(() => import("@/components/games/Game2048"));
+const TicTacToe = load(() => import("@/components/games/TicTacToe"));
+const MemoryMatch = load(() => import("@/components/games/MemoryMatch"));
+const WhackAMole = load(() => import("@/components/games/WhackAMole"));
+const SimonSays = load(() => import("@/components/games/SimonSays"));
+const Minesweeper = load(() => import("@/components/games/Minesweeper"));
+const Flappy = load(() => import("@/components/games/Flappy"));
 import { ExternalLink, Box, Play, Trophy, CircleDollarSign, Swords } from "lucide-react";
 import {
   Truck, Crosshair, Volleyball, Snowflake, Skull, Ghost, Rocket, Flame,
@@ -22,6 +29,7 @@ import type { ExternalGame, SiteShortcut } from "@/lib/supabase/types";
 import { TRENDING_3D, trendingCover, type TrendingGame, type TrendingArt } from "@/lib/trending-games";
 import { GameUserContext } from "@/components/games/GameUserContext";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
+import { ScoreBoard } from "@/components/games/ScoreBoard";
 import { LiveGamePicker } from "@/components/games/live/LiveGamePicker";
 import { useFullscreen } from "@/lib/useFullscreen";
 
@@ -78,6 +86,7 @@ export default function GamesClient({
 }) {
   const [active, setActive] = useState<string | null>(null);
   const [trend, setTrend] = useState<TrendingGame | null>(null);
+  const [scoreSite, setScoreSite] = useState<SiteShortcut | null>(null);
   const frame = useFullscreen<HTMLDivElement>();
   const trendScreen = useFullscreen<HTMLDivElement>();
   const game = GAMES.find((g) => g.id === active);
@@ -89,12 +98,23 @@ export default function GamesClient({
   // page; a browser that refuses the request gets the same screen from CSS.
   function openTrend(g: TrendingGame) {
     setActive(null);
+    setScoreSite(null);
     setTrend(g);
     trendScreen.enter();
   }
   function closeTrend() {
     trendScreen.exit();
     setTrend(null);
+  }
+
+  // The score sites refuse to be framed and only fill in once their own
+  // scripts run, so their icon opens our fixture board rather than leaving
+  // the app.
+  function openScores(s: SiteShortcut) {
+    setActive(null);
+    setTrend(null);
+    setScoreSite(s);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   if (game) {
@@ -167,7 +187,17 @@ export default function GamesClient({
         )}
       </div>
 
-      {!trend && (
+      {scoreSite && (
+        <ScoreBoard
+          site={scoreSite}
+          onClose={() => {
+            setScoreSite(null);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
+      )}
+
+      {!trend && !scoreSite && (
         <>
       <div className="flex items-center gap-2">
         <Gamepad2 className="w-6 h-6" style={{ color: "rgb(var(--a-800))" }} />
@@ -319,7 +349,7 @@ export default function GamesClient({
               Live scores
             </span>
           </div>
-          <SiteIconGrid items={sportsSites} />
+          <SiteIconGrid items={sportsSites} onOpen={openScores} />
         </>
       )}
 

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signPostMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
+import { isOpen } from "@/lib/live";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProfileClient } from "./ProfileClient";
 import type { Metadata } from "next";
@@ -27,6 +28,18 @@ export default async function ProfilePage({ params }: Props) {
     : { data: null };
 
   const isOwn = user?.id === profile.id;
+
+  // A broadcaster whose tab died leaves the row saying "live", so isOpen()
+  // drops any session that has stopped uploading.
+  const { data: liveRow } = await supabase
+    .from("live_sessions")
+    .select("*")
+    .eq("user_id", profile.id)
+    .eq("status", "live")
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const liveSession = isOpen(liveRow) ? liveRow : null;
 
   let isFriend = false;
   let isFollowing = false;
@@ -125,6 +138,7 @@ export default async function ProfilePage({ params }: Props) {
         followingCount={followingCount.count ?? 0}
         friendsCount={friendsCount.count ?? 0}
         initialPosts={enrichedPosts as any}
+        initialLive={liveSession}
         upgradeConfigText={upgradeConfigText}
         upgradeStatus={upgradeStatus}
         upgradeReference={upgradeReference}

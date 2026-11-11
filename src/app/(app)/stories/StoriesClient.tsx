@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Plus, X, ChevronLeft, ChevronRight, Eye, Trash2, Upload } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Eye, Trash2, Upload } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { StoriesTray } from "@/components/stories/StoriesTray";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
@@ -94,61 +95,27 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
 
   const viewingStory = viewing !== null ? stories[viewing] : null;
 
+  // Tray tiles open that author's first story they have not seen yet.
+  function openAuthor(authorId: string) {
+    const unviewed = stories.findIndex((s) => s.author_id === authorId && !s.has_viewed);
+    const i = unviewed === -1 ? stories.findIndex((s) => s.author_id === authorId) : unviewed;
+    if (i < 0) return;
+    setViewing(i);
+    void handleView(stories[i].id);
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold" style={{ color: "var(--text-primary)" }}>Stories</h1>
 
-      {/* Story row */}
-      <div className="rail flex gap-3 pb-2">
-        {/* Create story button */}
-        <button
-          onClick={() => setCreating(true)}
-          className="flex-shrink-0 flex flex-col items-center gap-1.5 group"
-          aria-label="Create story"
-        >
-          <div className="w-16 h-24 rounded-2xl border-2 border-dashed flex items-center justify-center relative overflow-hidden transition-colors"
-            style={{ backgroundColor: "var(--bg-card)", borderColor: "rgb(var(--a-800) / 0.3)" }}>
-            {profile.avatar_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatar_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
-            )}
-            <div className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgb(var(--a-800))" }}>
-              <Plus className="w-4 h-4 text-white" />
-            </div>
-          </div>
-          <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Your story</span>
-        </button>
-
-        {/* Stories */}
-        {groups.map((g) => {
-          const hasUnviewed = g.stories.some((s) => !s.has_viewed);
-          const firstStory = g.stories[0];
-          const globalIndex = stories.findIndex((s) => s.id === firstStory.id);
-          return (
-            <button
-              key={g.author.id}
-              onClick={() => { setViewing(globalIndex); handleView(firstStory.id); }}
-              className="flex-shrink-0 flex flex-col items-center gap-1.5"
-            >
-              <div className="w-16 h-24 rounded-2xl overflow-hidden relative"
-                style={{ outline: `2px solid ${hasUnviewed ? "#22c55e" : "var(--border)"}`, outlineOffset: "2px" }}>
-                {firstStory.media_type === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={firstStory.media_url} alt={g.author.display_name} className="w-full h-full object-cover" />
-                ) : (
-                  <video src={firstStory.media_url} className="w-full h-full object-cover" muted />
-                )}
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
-                  <Avatar src={g.author.avatar_url} name={g.author.display_name} size={24} userId={g.author.id} />
-                </div>
-              </div>
-              <span className="text-xs font-medium w-16 truncate text-center" style={{ color: "var(--text-secondary)" }}>
-                {g.author.id === currentUserId ? "Your story" : g.author.display_name.split(" ")[0]}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {/* The same tray the feed shows, so the two pages are one design */}
+      <StoriesTray
+        stories={stories}
+        profile={profile}
+        currentUserId={currentUserId}
+        onCreate={() => setCreating(true)}
+        onOpen={openAuthor}
+      />
 
       {groups.length === 0 && (
         <EmptyState

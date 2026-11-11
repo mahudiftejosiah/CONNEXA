@@ -275,6 +275,51 @@
 }
 .trend-shell > div { height: 100%; }
 
+/* In-app live-scores board (Games tab). Same pinning rules as the 3D player,
+   but the light card theme rather than black. */
+[class*="space-y"] > .score-shell.pseudo-full,
+[class*="space-y"] > :not([hidden]) ~ .score-shell.pseudo-full {
+  margin-top: 0;
+}
+.score-shell {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  height: 80vh;
+  height: 80dvh;
+}
+@media (max-width: 767px) {
+  .score-shell { height: 72dvh; }
+}
+.score-shell:fullscreen,
+.score-shell.pseudo-full {
+  border-radius: 0;
+  border: 0;
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+}
+
+/* The camera stage on "Go live": takes the whole screen the moment the
+   broadcast starts. */
+[class*="space-y"] > .live-shell.pseudo-full,
+[class*="space-y"] > :not([hidden]) ~ .live-shell.pseudo-full {
+  margin-top: 0;
+}
+.live-shell {
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #000;
+}
+.live-shell:fullscreen,
+.live-shell.pseudo-full {
+  border-radius: 0;
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+}
+
 @layer components {
   .card {
     background-color: var(--bg-card);
