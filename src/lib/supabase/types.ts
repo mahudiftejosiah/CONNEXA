@@ -200,9 +200,15 @@ export interface Database {
           attachment_size: number | null
           view_once: boolean
           viewed_at: string | null
+          edited_at: string | null
+          deleted_at: string | null
+          pinned_at: string | null
+          pinned_by: string | null
+          reply_to: string | null
+          forwarded_from: string | null
         }
         Insert: Partial<Omit<Database["public"]["Tables"]["messages"]["Row"], "id" | "is_read" | "created_at">>
-        Update: Partial<Pick<Database["public"]["Tables"]["messages"]["Row"], "is_read">>
+        Update: Partial<Omit<Database["public"]["Tables"]["messages"]["Row"], "id" | "conversation_id" | "sender_id" | "created_at">>
       }
       groups: {
         Row: {
@@ -524,6 +530,10 @@ export interface Database {
       open_view_once: {
         Args: { p_message_id: string }
         Returns: { attachment_path: string; media_kind: MessageAttachmentKind; ttl_seconds: number }[]
+      }
+      delete_message_for_everyone: {
+        Args: { p_message_id: string }
+        Returns: boolean
       }
     }
     Enums: {

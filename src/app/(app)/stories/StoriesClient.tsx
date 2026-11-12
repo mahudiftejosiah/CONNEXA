@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, Eye, Trash2, Upload } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { StoriesTray } from "@/components/stories/StoriesTray";
+import { CreateStory } from "@/components/stories/CreateStory";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { refreshStoryRings } from "@/components/layout/StoryRingProvider";
-import { signStoryMedia } from "@/lib/media";
 import type { StoryWithAuthor, Profile } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 import { formatRelativeTime } from "@/lib/utils";
@@ -24,11 +24,6 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
   const [stories, setStories] = useState(initStories);
   const [viewing, setViewing] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
-  const [caption, setCaption] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const grouped = stories.reduce((acc, story) => {
     const id = story.author_id;
@@ -38,40 +33,6 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
   }, {} as Record<string, { author: Profile; stories: StoryWithAuthor[] }>);
 
   const groups = Object.values(grouped);
-
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (preview) URL.revokeObjectURL(preview);
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
-  }
-
-  async function handlePublish() {
-    if (!file) return;
-    setUploading(true);
-    const supabase = createClient();
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const path = `${currentUserId}/story_${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from("stories").upload(path, file);
-    if (uploadError) { toast.error("Upload failed."); setUploading(false); return; }
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    const mediaType = file.type.startsWith("video/") ? "video" : "image";
-    const { data: story, error } = await supabase.from("stories").insert({
-      author_id: currentUserId,
-      media_url: path,
-      media_type: mediaType,
-      caption: caption.trim() || null,
-      expires_at: expiresAt,
-    }).select("*, author:profiles(*)").single();
-    setUploading(false);
-    if (error || !story) { toast.error("Failed to create story."); return; }
-    const [signedStory] = await signStoryMedia(supabase, [story]);
-    setStories((p) => [signedStory as unknown as StoryWithAuthor, ...p]);
-    setCreating(false); setFile(null); setPreview(null); setCaption("");
-    refreshStoryRings();
-    toast.success("Story published!");
-  }
 
   async function handleDelete(storyId: string) {
     const supabase = createClient();
@@ -199,57 +160,12 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
         </div>
       )}
 
-      {/* Create modal */}
-      {creating && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)" }}>
-          <div className="card w-full max-w-md p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Create story</h2>
-              <button onClick={() => { setCreating(false); setFile(null); setPreview(null); }}
-                className="p-1 rounded-lg hover:bg-[var(--border)]" aria-label="Close">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {preview ? (
-              <div className="relative h-64 rounded-xl overflow-hidden bg-black">
-                {file?.type.startsWith("video/") ? (
-                  <video src={preview} controls className="w-full h-full object-contain" />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={preview} alt="Preview" className="w-full h-full object-contain" />
-                )}
-                <button onClick={() => { setFile(null); setPreview(null); }}
-                  className="absolute top-2 right-2 bg-black/60 rounded-full p-1 text-white" aria-label="Remove">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => fileRef.current?.click()}
-                className="w-full h-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors"
-                style={{ borderColor: "var(--border)" }}>
-                <Upload className="w-8 h-8" style={{ color: "var(--text-secondary)" }} />
-                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Click to upload photo or video</p>
-              </button>
-            )}
-            <input ref={fileRef} type="file" accept="image/*,video/mp4,video/webm" className="hidden" onChange={handleFileSelect} />
-
-            <input
-              type="text"
-              placeholder="Add a caption… (optional)"
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              maxLength={500}
-              className="input text-sm"
-              aria-label="Caption"
-            />
-
-            <Button onClick={handlePublish} disabled={!file} loading={uploading} className="w-full">
-              Publish story
-            </Button>
-          </div>
-        </div>
-      )}
+      <CreateStory
+        open={creating}
+        onClose={() => setCreating(false)}
+        currentUserId={currentUserId}
+        onPublished={(story) => setStories((p) => [story, ...p])}
+      />
     </div>
   );
 }

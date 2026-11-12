@@ -2,15 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   MapPin, Link as LinkIcon, Calendar, UserPlus, UserMinus,
   UserCheck, MessageCircle, Bell, BellOff, Shield, Edit, Users,
-  Camera, Radio,
+  Camera, Radio, Image as ImageIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { PostCard } from "@/components/posts/PostCard";
+import { CreatePost } from "@/components/posts/CreatePost";
+import { CreateStory } from "@/components/stories/CreateStory";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { LiveViewer } from "@/components/live/LiveViewer";
@@ -63,6 +66,8 @@ export function ProfileClient({
   const [activeTab, setActiveTab] = useState<"posts" | "about" | "upgrade">("posts");
   const [live, setLive] = useState<LiveSession | null>(initialLive);
   const [watching, setWatching] = useState(false);
+  const [storyOpen, setStoryOpen] = useState(false);
+  const router = useRouter();
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
 
@@ -195,13 +200,22 @@ export function ProfileClient({
             </button>
           )}
           {isOwn && !live && (
-            <Link
-              href="/settings/profile"
-              className="absolute bottom-3 right-3 text-white text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors"
-              style={{ background: "rgba(0,0,0,0.5)" }}
-            >
-              <Camera className="w-3.5 h-3.5" /> Edit cover
-            </Link>
+            <div className="absolute bottom-3 right-3 flex gap-2">
+              <button
+                onClick={() => setStoryOpen(true)}
+                className="text-white text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors hover:bg-black/70"
+                style={{ background: "rgba(0,0,0,0.5)" }}
+              >
+                <ImageIcon className="w-3.5 h-3.5" /> Add to story
+              </button>
+              <Link
+                href="/settings/profile"
+                className="text-white text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors"
+                style={{ background: "rgba(0,0,0,0.5)" }}
+              >
+                <Camera className="w-3.5 h-3.5" /> Edit cover
+              </Link>
+            </div>
           )}
         </div>
 
@@ -365,6 +379,11 @@ export function ProfileClient({
       {/* Posts tab */}
       {activeTab === "posts" && (
         <div className="space-y-4">
+          {/* Your own profile is as good a place as any to publish, so the feed
+              is not the only way in. */}
+          {isOwn && currentProfile && (
+            <CreatePost profile={currentProfile} onCreated={() => router.refresh()} />
+          )}
           {initialPosts.length === 0 ? (
             <EmptyState
               icon={<Users className="w-8 h-8" />}
@@ -456,6 +475,15 @@ export function ProfileClient({
           session={live}
           authorName={profile.display_name}
           onClose={() => setWatching(false)}
+        />
+      )}
+
+      {isOwn && currentProfile && (
+        <CreateStory
+          open={storyOpen}
+          onClose={() => setStoryOpen(false)}
+          currentUserId={currentProfile.id}
+          onPublished={() => router.refresh()}
         />
       )}
     </div>

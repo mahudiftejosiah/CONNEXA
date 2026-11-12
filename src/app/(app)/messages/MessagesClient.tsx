@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck, Trash2, Image as ImageIcon, Bot } from "lucide-react";
+import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck, Trash2, Image as ImageIcon, Bot, Pin, PinOff, CornerUpLeft, Share, Pencil } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { VerifiedTick } from "@/components/ui/VerifiedTick";
 import { HelpThread } from "@/components/messages/HelpThread";
+import { MessageMenu, type MessageAction } from "@/components/messages/MessageMenu";
+import { ForwardDialog, type ForwardTarget } from "@/components/messages/ForwardDialog";
 import { createClient } from "@/lib/supabase/client";
 import type { ConversationWithDetails, Profile, Message, MessageAttachmentKind } from "@/lib/supabase/types";
 import {
@@ -98,9 +100,16 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [pendingDelete, setPendingDelete] = useState<ConversationWithDetails | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [editing, setEditing] = useState<Message | null>(null);
+  const [editText, setEditText] = useState("");
+  const [forwarding, setForwarding] = useState<Message | null>(null);
+  const [pendingUnsend, setPendingUnsend] = useState<Message | null>(null);
+  const [unsending, setUnsending] = useState(false);
   const urlsRef = useRef<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef<string | null>(null);
   const supabaseRef = useRef(createClient());
@@ -195,6 +204,17 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
           bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         }
       })
+      // An edit, a pin or an unsend has to land in the other person's open
+      // chat too, otherwise they keep seeing words that no longer exist.
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "messages",
+      }, (payload) => {
+        const row = payload.new as Message;
+        if (row.conversation_id !== activeIdRef.current) return;
+        setMessages((p) => p.map((m) => (m.id === row.id ? row : m)));
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -204,6 +224,9 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     setActive(conv);
     setHelpOpen(false);
     setViewer(null);
+    setReplyTo(null);
+    setEditing(null);
+    setForwarding(null);
     setLoadingMsgs(true);
     const { data } = await supabase
       .from("messages")
@@ -281,10 +304,12 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     }
 
     const asViewOnce = viewOnce && !!attachment && isViewOnceMedia(attachment.kind);
+    const quoted = replyTo?.id ?? null;
 
     setInput("");
     setFile(null);
     setViewOnce(false);
+    setReplyTo(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
 
     const payload = {
@@ -298,13 +323,18 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
       // Left out entirely when off, so an un-migrated database still accepts the
       // message rather than rejecting an unknown column.
       ...(asViewOnce ? { view_once: true } : {}),
+      ...(quoted ? { reply_to: quoted } : {}),
     };
 
     const { data, error } = await supabase.from("messages").insert(payload).select().single();
     setSending(false);
     if (error) {
-      toast.error(asViewOnce ? "Failed to send. Has migration 017 been applied?" : "Failed to send message.");
+      const needsMigration = asViewOnce || !!quoted;
+      toast.error(needsMigration
+        ? `Failed to send${quoted ? " the reply" : ""}. Has migration ${asViewOnce ? "017" : "023"} been applied?`
+        : "Failed to send message.");
       setInput(content);
+      setReplyTo(quoted ? messages.find((m) => m.id === quoted) ?? null : null);
       if (attachment) void supabase.storage.from("chat-files").remove([attachment.url]);
       return;
     }
@@ -345,10 +375,164 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     await openConversation(conv);
   }
 
-  // Threads first, then friends we have never messaged (clicking one opens / creates the thread).
+  // ---------------------------------------------------------------------
+  // Message actions: reply, edit, copy, forward, pin, unsend
+  // ---------------------------------------------------------------------
+  function replaceMessage(next: Message) {
+    setMessages((p) => p.map((m) => (m.id === next.id ? next : m)));
+    // Keep the inbox preview honest when the edited row is the one it shows.
+    setConversations((p) => p.map((c) => (c.last_message?.id === next.id ? { ...c, last_message: next } : c)));
+  }
+
+  function beginEdit(msg: Message) {
+    setEditing(msg);
+    setEditText(msg.content);
+    setReplyTo(null);
+  }
+
+  function cancelEdit() {
+    setEditing(null);
+    setEditText("");
+  }
+
+  async function saveEdit() {
+    if (!editing) return;
+    const content = editText.trim();
+    if (!content) { toast.error("A message needs some text."); return; }
+    const { data, error } = await supabase
+      .from("messages")
+      .update({ content, edited_at: new Date().toISOString() })
+      .eq("id", editing.id)
+      .eq("sender_id", currentUserId)
+      .select()
+      .single();
+    if (error || !data) {
+      toast.error("Could not edit that. Has migration 023 been applied?");
+      return;
+    }
+    replaceMessage(data);
+    cancelEdit();
+  }
+
+  async function copyText(msg: Message) {
+    const text = msg.content || msg.attachment_name || "";
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied.");
+    } catch {
+      toast.error("Your browser would not allow the copy.");
+    }
+  }
+
+  async function togglePin(msg: Message) {
+    const pinning = !msg.pinned_at;
+    const { data, error } = await supabase
+      .from("messages")
+      .update({ pinned_at: pinning ? new Date().toISOString() : null, pinned_by: pinning ? currentUserId : null })
+      .eq("id", msg.id)
+      .select()
+      .single();
+    if (error || !data) {
+      toast.error(pinning ? "Could not pin that. Has migration 023 been applied?" : "Could not unpin that.");
+      return;
+    }
+    replaceMessage(data);
+    toast.success(pinning ? "Pinned to the top of this chat." : "Unpinned.");
+  }
+
+  function jumpTo(messageId: string) {
+    document.getElementById(`msg-${messageId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function unsendMessage(msg: Message) {
+    setUnsending(true);
+    const { error } = await supabase.rpc("delete_message_for_everyone", { p_message_id: msg.id });
+    setUnsending(false);
+    setPendingUnsend(null);
+    if (error) {
+      toast.error("Could not unsend. Has migration 023 been applied?");
+      return;
+    }
+    // The row stays, emptied: both people see that something was removed.
+    replaceMessage({
+      ...msg,
+      content: "",
+      attachment_url: null,
+      attachment_kind: null,
+      attachment_name: null,
+      attachment_size: null,
+      pinned_at: null,
+      deleted_at: new Date().toISOString(),
+    });
+    toast.success("Message unsent.");
+  }
+
+  // Threads the inbox already knows about, and the friends still without one.
   const chattedIds = new Set(
     conversations.map((c) => getOtherParticipant(c)?.id).filter((id): id is string => Boolean(id))
   );
+
+  // Everyone you could send a copy to: your threads, then friends you have
+  // never messaged (forwarding opens that thread on the way).
+  const forwardTargets: ForwardTarget[] = [
+    ...conversations
+      .map((c) => ({ person: getOtherParticipant(c), conversationId: c.id }))
+      .filter((t): t is { person: Profile; conversationId: string } => !!t.person && t.person.id !== currentUserId),
+    ...friends
+      .filter((f) => !chattedIds.has(f.id) && f.id !== currentUserId)
+      .map((f) => ({ person: f, conversationId: null })),
+  ];
+
+  async function forwardTo(msg: Message, target: ForwardTarget) {
+    setForwarding(null);
+    let conversationId = target.conversationId;
+
+    if (!conversationId) {
+      const res = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ participantId: target.person.id }),
+      });
+      const json = await res.json().catch(() => ({}));
+      conversationId = json.conversationId || null;
+      if (!conversationId) { toast.error("Could not open that chat."); return; }
+      const created = {
+        id: conversationId,
+        participants: [
+          { conversation_id: conversationId, user_id: currentUserId, profile },
+          { conversation_id: conversationId, user_id: target.person.id, profile: target.person },
+        ],
+        last_message: null,
+        unread_count: 0,
+      } as unknown as ConversationWithDetails;
+      setConversations((p) => [created, ...p]);
+    }
+
+    const { data, error } = await supabase.from("messages").insert({
+      conversation_id: conversationId,
+      sender_id: currentUserId,
+      content: msg.content,
+      attachment_url: msg.attachment_url,
+      attachment_kind: msg.attachment_kind,
+      attachment_name: msg.attachment_name,
+      attachment_size: msg.attachment_size,
+      forwarded_from: msg.id,
+    }).select().single();
+
+    if (error || !data) {
+      toast.error("Could not forward that. Has migration 023 been applied?");
+      return;
+    }
+    if (conversationId === activeIdRef.current) {
+      void signAttachments([data]);
+      setMessages((p) => p.some((m) => m.id === data.id) ? p : [...p, data]);
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      bumpConversation(conversationId, data);
+    }
+    toast.success(`Sent to ${target.person.display_name}.`);
+  }
+
   type Row =
     | { kind: "thread"; key: string; conv: ConversationWithDetails; person: Profile }
     | { kind: "friend"; key: string; friend: FriendLite };
@@ -394,6 +578,20 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     const conv = conversations.find((c) => getOtherParticipant(c)?.id === openPeerId);
     if (conv) { autoOpened.current = openPeerId; void openConversation(conv); }
   }, [openPeerId, conversations, active]);
+
+  // The bubble list is the only place a reply or a pin can be resolved from:
+  // both point at another row in the same thread, which is already loaded.
+  const byId = new Map(messages.map((m) => [m.id, m]));
+  const nameOf = (senderId: string) =>
+    active?.participants.find((p) => p.user_id === senderId)?.profile.display_name ?? "Earlier message";
+  const pinnedMessages = messages.filter((m) => m.pinned_at && !m.deleted_at);
+  const mostRecentPin = pinnedMessages.slice().sort((a, b) =>
+    new Date(b.pinned_at || 0).getTime() - new Date(a.pinned_at || 0).getTime())[0];
+
+  // The composer borrows one shape for both "editing" and "replying to".
+  const composerQuote = editing ?? replyTo;
+  const composerLabel = editing ? "Editing your message"
+    : replyTo ? `Replying to ${nameOf(replyTo.sender_id)}` : "";
 
   return (
     <div className="flex h-[calc(100dvh-8rem)] md:h-[calc(100dvh-5rem)] -mx-4 -mt-6 -mb-20 md:-mb-6">
@@ -541,6 +739,32 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
               })()}
             </div>
 
+            {/* Pinned messages stay one tap away from the top of the thread. */}
+            {mostRecentPin && (
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--border)]"
+                style={{ backgroundColor: "var(--bg-card)" }}>
+                <Pin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "rgb(var(--a-600))" }} />
+                <button onClick={() => jumpTo(mostRecentPin.id)} className="min-w-0 flex-1 text-left">
+                  <p className="text-xs truncate" style={{ color: "var(--text-secondary)" }}>
+                    <span className="font-semibold" style={{ color: "rgb(var(--a-600))" }}>
+                      {nameOf(mostRecentPin.sender_id)}:
+                    </span>{" "}
+                    {mostRecentPin.content || attachmentPreview(mostRecentPin.attachment_kind, mostRecentPin.view_once)}
+                  </p>
+                </button>
+                {pinnedMessages.length > 1 && (
+                  <span className="text-[11px] flex-shrink-0" style={{ color: "var(--text-secondary)" }}>
+                    {pinnedMessages.length} pinned
+                  </span>
+                )}
+                <button onClick={() => void togglePin(mostRecentPin)}
+                  className="p-1 rounded-lg flex-shrink-0 text-[var(--text-secondary)] hover:bg-[var(--border)]"
+                  aria-label="Unpin this message">
+                  <PinOff className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {loadingMsgs ? (
@@ -613,24 +837,80 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     ) : <p className="px-4 pt-2.5 text-xs opacity-60">Loading file…</p>;
                   }
 
+                  const deleted = !!msg.deleted_at;
+                  const quoted = msg.reply_to ? byId.get(msg.reply_to) : null;
+
+                  // Which actions apply is decided here, so the menu itself
+                  // stays a list of things the thread can actually do.
+                  const actions: MessageAction[] = deleted ? [] : ([
+                    "reply",
+                    isMe && msg.content ? "edit" : null,
+                    msg.content ? "copy" : null,
+                    msg.view_once ? null : "forward",
+                    "pin",
+                    isMe ? "unsend" : null,
+                  ] as (MessageAction | null)[]).filter((a): a is MessageAction => !!a);
+
+                  const menu = actions.length > 0 && (
+                    <MessageMenu
+                      actions={actions}
+                      align={isMe ? "left" : "right"}
+                      pinned={!!msg.pinned_at}
+                      label={msg.content || attachmentPreview(msg.attachment_kind, msg.view_once)}
+                      onAction={(a) => {
+                        if (a === "reply") { setReplyTo(msg); setEditing(null); messageInputRef.current?.focus(); }
+                        if (a === "edit") { beginEdit(msg); messageInputRef.current?.focus(); }
+                        if (a === "copy") void copyText(msg);
+                        if (a === "forward") setForwarding(msg);
+                        if (a === "pin") void togglePin(msg);
+                        if (a === "unsend") setPendingUnsend(msg);
+                      }}
+                    />
+                  );
+
                   return (
-                    <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                    <div key={msg.id} id={`msg-${msg.id}`}
+                      className={`group flex items-start gap-1.5 ${isMe ? "justify-end" : "justify-start"} ${menu && isMe ? "flex-row-reverse" : ""}`}>
+                      {menu}
                       <div className={`max-w-[80%] md:max-w-[75%] rounded-2xl text-sm overflow-hidden ${
                         isMe
                           ? "bg-brand-green-800 text-white rounded-br-sm"
                           : "bg-[var(--border)] text-[var(--text-primary)] rounded-bl-sm"
                       }`}>
-                        {attachment}
-                        {msg.view_once && isMe && (
-                          <p className="flex items-center gap-1.5 px-4 pt-1.5 text-[11px] text-white/70">
-                            <Eye className="w-3.5 h-3.5 flex-shrink-0" />
-                            View once{msg.viewed_at ? " · opened" : " · waiting"}
+                        {deleted ? (
+                          <p className={`italic px-4 py-2.5 text-xs ${isMe ? "text-white/70" : "text-[var(--text-secondary)]"}`}>
+                            This message was deleted
                           </p>
+                        ) : (
+                          <>
+                            {quoted && (
+                              <div className={`mx-4 mt-2.5 rounded-lg px-2.5 py-1.5 text-[11px] border-l-2 ${
+                                isMe ? "bg-black/15 border-white/50" : "bg-[var(--bg-card)] border-[rgb(var(--a-700))]"
+                              }`}>
+                                <p className="opacity-80 truncate">{nameOf(quoted.sender_id)}</p>
+                                <p className="truncate">{quoted.content || attachmentPreview(quoted.attachment_kind, quoted.view_once)}</p>
+                              </div>
+                            )}
+                            {msg.forwarded_from && (
+                              <p className={`flex items-center gap-1.5 px-4 pt-2.5 text-[11px] ${isMe ? "text-white/70" : "text-[var(--text-secondary)]"}`}>
+                                <Share className="w-3 h-3 flex-shrink-0" /> Forwarded
+                              </p>
+                            )}
+                            {attachment}
+                            {msg.view_once && isMe && (
+                              <p className="flex items-center gap-1.5 px-4 pt-1.5 text-[11px] text-white/70">
+                                <Eye className="w-3.5 h-3.5 flex-shrink-0" />
+                                View once{msg.viewed_at ? " · opened" : " · waiting"}
+                              </p>
+                            )}
+                            {msg.content && <p className="leading-relaxed px-4 pt-2.5">{msg.content}</p>}
+                            <p className={`flex items-center gap-1.5 text-[10px] px-4 pt-1 pb-2 ${isMe ? "text-white/60" : "text-[var(--text-secondary)]"}`}>
+                              {msg.pinned_at && <Pin className="w-3 h-3 flex-shrink-0" />}
+                              <span>{formatMessageTime(msg.created_at)}</span>
+                              {msg.edited_at && <span>· edited</span>}
+                            </p>
+                          </>
                         )}
-                        {msg.content && <p className="leading-relaxed px-4 pt-2.5">{msg.content}</p>}
-                        <p className={`text-[10px] px-4 pt-1 pb-2 ${isMe ? "text-white/60" : "text-[var(--text-secondary)]"}`}>
-                          {formatMessageTime(msg.created_at)}
-                        </p>
                       </div>
                     </div>
                   );
@@ -641,6 +921,31 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
 
             {/* Input */}
             <div className="border-t border-[var(--border)]">
+              {/* Editing reuses the composer: the bar above it says what is
+                  happening, because the box itself looks like a new message. */}
+              {(editing || replyTo) && composerQuote && (
+                <div className="px-4 pt-3">
+                  <div className="flex items-center gap-2 max-w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
+                    {editing ? <Pencil className="w-4 h-4 flex-shrink-0" style={{ color: "rgb(var(--a-600))" }} />
+                      : <CornerUpLeft className="w-4 h-4 flex-shrink-0" style={{ color: "rgb(var(--a-600))" }} />}
+                    <span className="min-w-0 text-xs" style={{ color: "var(--text-secondary)" }}>
+                      <span className="font-semibold block" style={{ color: "var(--text-primary)" }}>
+                        {composerLabel}
+                      </span>
+                      <span className="block truncate">
+                        {composerQuote.content || attachmentPreview(composerQuote.attachment_kind, composerQuote.view_once)}
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => { cancelEdit(); setReplyTo(null); }}
+                      className="ml-auto p-1 rounded hover:bg-[var(--border)] flex-shrink-0"
+                      aria-label={editing ? "Cancel editing" : "Cancel reply"}
+                    >
+                      <X className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                    </button>
+                  </div>
+                </div>
+              )}
               {file && (
                 <div className="px-4 pt-3">
                   <div className="inline-flex items-center gap-2 max-w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
@@ -679,7 +984,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                 />
                 <button
                   onClick={() => photoInputRef.current?.click()}
-                  disabled={sending}
+                  disabled={sending || !!editing}
                   className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 flex-shrink-0"
                   aria-label="Send a photo from your device"
                 >
@@ -687,7 +992,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={sending}
+                  disabled={sending || !!editing}
                   className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 flex-shrink-0"
                   aria-label="Attach a video or document"
                 >
@@ -707,21 +1012,26 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   <Eye className="w-4 h-4" />
                 </button>
                 <input
+                  ref={messageInputRef}
                   type="text"
-                  placeholder="Type a message…"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                  placeholder={editing ? "Edit your message…" : "Type a message…"}
+                  value={editing ? editText : input}
+                  onChange={(e) => (editing ? setEditText(e.target.value) : setInput(e.target.value))}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter" || e.shiftKey) return;
+                    e.preventDefault();
+                    if (editing) void saveEdit(); else void sendMessage();
+                  }}
                   className="input flex-1"
                   maxLength={5000}
                 />
                 <button
-                  onClick={sendMessage}
-                  disabled={(!input.trim() && !file) || sending}
+                  onClick={() => (editing ? saveEdit() : sendMessage())}
+                  disabled={sending || (editing ? !editText.trim() : (!input.trim() && !file))}
                   className="btn-primary px-4 py-2.5 rounded-xl disabled:opacity-40 flex-shrink-0"
-                  aria-label="Send message"
+                  aria-label={editing ? "Save the edited message" : "Send message"}
                 >
-                  <Send className="w-4 h-4" />
+                  {editing ? <CheckCheck className="w-4 h-4" /> : <Send className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -781,6 +1091,26 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
         danger
         loading={deleting}
       />
+      <ConfirmDialog
+        open={!!pendingUnsend}
+        onClose={() => setPendingUnsend(null)}
+        onConfirm={() => { if (pendingUnsend) void unsendMessage(pendingUnsend); }}
+        title="Unsend message"
+        message="This removes the message for both of you. They will see that it was deleted."
+        confirmLabel="Unsend"
+        danger
+        loading={unsending}
+      />
+
+      {forwarding && (
+        <ForwardDialog
+          open
+          onClose={() => setForwarding(null)}
+          targets={forwardTargets}
+          preview={`Forwarding: ${forwarding.content || attachmentPreview(forwarding.attachment_kind, forwarding.view_once)}`}
+          onPick={(target) => void forwardTo(forwarding, target)}
+        />
+      )}
     </div>
   );
 }

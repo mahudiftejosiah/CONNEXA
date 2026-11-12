@@ -39,6 +39,13 @@ from (
   ('022 live video bucket',
     case when exists (select 1 from storage.buckets where id = 'live')
          then 'yes' else 'no' end),
+  ('023 message actions columns',
+    case when exists (select 1 from pg_attribute
+                      where relid = 'public.messages'::regclass
+                        and attname = 'pinned_at') then 'yes' else 'no' end),
+  ('023 unsend function',
+    case when to_regprocedure('public.delete_message_for_everyone(uuid)') is not null
+         then 'yes' else 'no' end),
   ('seed: book covers filled in',
     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
       from public.study_books where cover_url is not null)),
