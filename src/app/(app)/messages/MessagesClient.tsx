@@ -83,6 +83,30 @@ function isViewOnceMedia(kind: MessageAttachmentKind) {
   return kind === "image" || kind === "video";
 }
 
+// Some browsers refuse the async clipboard unless the page has that permission
+// explicitly, so a plain selection copy is tried before giving up.
+async function writeClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      const box = document.createElement("textarea");
+      box.value = text;
+      box.setAttribute("readonly", "");
+      box.style.position = "fixed";
+      box.style.opacity = "0";
+      document.body.appendChild(box);
+      box.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(box);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
+
 export function MessagesClient({ conversations: initConvs, profile, currentUserId, friends, openPeerId, initialTab = "all" }: MessagesClientProps) {
   const [conversations, setConversations] = useState(initConvs);
   const [active, setActive] = useState<ConversationWithDetails | null>(null);
@@ -416,12 +440,8 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
 
   async function copyText(msg: Message) {
     const text = msg.content || msg.attachment_name || "";
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success("Copied.");
-    } catch {
-      toast.error("Your browser would not allow the copy.");
-    }
+    if (await writeClipboard(text)) toast.success("Copied.");
+    else toast.error("Your browser would not allow the copy.");
   }
 
   async function togglePin(msg: Message) {
