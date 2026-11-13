@@ -69,6 +69,11 @@ const TREND_ART: Record<TrendingArt, React.ReactNode> = {
   waves: <Waves className="w-8 h-8" />,
 };
 
+// What the in-app game viewer needs, whether the game came from our own
+// trending list or from a link an admin pasted. `original` is only set for
+// those pasted links, and it shows as a way out when a host refuses framing.
+type Embedded = { name: string; desc: string; url: string; original?: string };
+
 export default function GamesClient({
   externalGames = [],
   currentUserId = null,
@@ -85,7 +90,7 @@ export default function GamesClient({
   myScores?: { game_id: string; best: number; points: number }[];
 }) {
   const [active, setActive] = useState<string | null>(null);
-  const [trend, setTrend] = useState<TrendingGame | null>(null);
+  const [trend, setTrend] = useState<Embedded | null>(null);
   const [scoreSite, setScoreSite] = useState<SiteShortcut | null>(null);
   const frame = useFullscreen<HTMLDivElement>();
   const trendScreen = useFullscreen<HTMLDivElement>();
@@ -99,12 +104,26 @@ export default function GamesClient({
   function openTrend(g: TrendingGame) {
     setActive(null);
     setScoreSite(null);
-    setTrend(g);
+    setTrend({ name: g.name, desc: g.desc, url: g.url });
     trendScreen.enter();
   }
   function closeTrend() {
     trendScreen.exit();
     setTrend(null);
+  }
+
+  // A featured game is a game, not a detour: it opens in the same viewer the
+  // trending ones use, so the page underneath never changes. Only an http
+  // link cannot be framed from an https page, and that one still has to leave.
+  function openFeatured(g: ExternalGame) {
+    if (!g.play_url.startsWith("https://")) {
+      window.open(g.play_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    setActive(null);
+    setScoreSite(null);
+    setTrend({ name: g.title, desc: g.description ?? "", url: g.play_url, original: g.play_url });
+    trendScreen.enter();
   }
 
   // The score sites refuse to be framed and only fill in once their own
@@ -161,6 +180,19 @@ export default function GamesClient({
                 <p className="text-xs text-white/60 truncate">{trend.desc}</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Some hosts refuse framing and show a blank panel; this is the
+                    only honest way out of one. */}
+                {trend.original && (
+                  <a
+                    href={trend.original}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border border-white/15 text-white hover:bg-white/10"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span className="hidden sm:inline">Open original</span>
+                  </a>
+                )}
                 <button
                   onClick={trendScreen.toggle}
                   className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border border-white/15 text-white hover:bg-white/10"
@@ -265,16 +297,16 @@ export default function GamesClient({
       {externalGames.length > 0 && (
         <>
           <div className="flex items-center gap-2 pt-2">
-            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Featured outside</h2>
+            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Featured games</h2>
             <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
               style={{ backgroundColor: "rgb(var(--a-800) / 0.1)", color: "rgb(var(--a-800))" }}>
-              Curated
+              Plays here
             </span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {externalGames.map((g) => (
-              <a key={g.id} href={g.play_url} target="_blank" rel="noopener noreferrer"
-                className="rounded-2xl border overflow-hidden transition-transform hover:scale-[1.02]"
+              <button key={g.id} onClick={() => openFeatured(g)}
+                className="rounded-2xl border overflow-hidden text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
                 {g.cover_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -287,13 +319,13 @@ export default function GamesClient({
                 <div className="p-3">
                   <p className="font-bold text-sm flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
                     <span className="flex-1 truncate">{g.title}</span>
-                    <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--text-secondary)" }} />
+                    <Play className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "rgb(var(--a-800))" }} fill="currentColor" />
                   </p>
                   {g.description && (
                     <p className="text-xs mt-0.5 line-clamp-2" style={{ color: "var(--text-secondary)" }}>{g.description}</p>
                   )}
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         </>

@@ -464,7 +464,10 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
         <div className="space-y-4">
           <div className="card p-5 space-y-3">
             <h3 className="font-semibold">Add an external game</h3>
-            <p className="text-sm text-[var(--text-secondary)]">Paste any playable web game link — it appears as a card on the Games tab.</p>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Paste any playable web game link — it appears as a card on the Games tab and opens inside CONNEXA, not on another page.
+              Use an <span className="font-semibold">https://</span> link; a plain http:// game cannot be shown in-app and will still open in a new tab.
+            </p>
             <div className="grid sm:grid-cols-2 gap-3">
               <input className="input" placeholder="Game title *" value={newGame.title}
                 onChange={(e) => setNewGame((p) => ({ ...p, title: e.target.value }))} />
