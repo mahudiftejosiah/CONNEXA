@@ -1,0 +1,40 @@
+{
+  "name": "CONNEXA — Connect. Share. Belong.",
+  "short_name": "CONNEXA",
+  "description": "CONNEXA is a modern social network where you can connect with friends, share moments, and build communities.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#12372A",
+  "theme_color": "#12372A",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["social", "entertainment"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

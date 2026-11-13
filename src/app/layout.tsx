@@ -9,6 +9,22 @@ export const metadata: Metadata = {
   keywords: ["social network", "connect", "share", "community", "CONNEXA"],
   authors: [{ name: "CONNEXA" }],
   creator: "CONNEXA",
+  manifest: "/manifest.webmanifest",
+  // Chrome and Firefox take the SVG; Safari wants the PNG sizes and the iOS
+  // home-screen tile, and Windows still asks for an .ico.
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml", sizes: "any" },
+      { url: "/favicon.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon.ico", sizes: "48x48" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "CONNEXA",
+    statusBarStyle: "default",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
