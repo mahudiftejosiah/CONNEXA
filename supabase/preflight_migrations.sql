@@ -59,6 +59,19 @@ from (
     case when exists (select 1 from pg_attribute
                       where relid = 'public.profiles'::regclass
                         and attname = 'country_code') then 'yes' else 'no' end),
+  ('027 displayed followers + PRO expiry columns',
+    case when exists (select 1 from pg_attribute
+                      where relid = 'public.profiles'::regclass
+                        and attname = 'display_followers')
+         and  exists (select 1 from pg_attribute
+                      where relid = 'public.profiles'::regclass
+                        and attname = 'pro_expires_at') then 'yes' else 'no' end),
+  ('027 privilege guard trigger',
+    case when exists (select 1 from pg_trigger
+                      where tgrelid = 'public.profiles'::regclass
+                        and tgname = 'profiles_guard_privileges') then 'yes' else 'no' end),
+  ('028 hashing usage table',
+    case when to_regclass('public.hashing_usage') is not null then 'yes' else 'no' end),
   ('seed: book covers filled in',
     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
       from public.study_books where cover_url is not null)),

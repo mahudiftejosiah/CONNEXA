@@ -47,6 +47,8 @@ export interface Database {
           city?: string | null
           is_admin: boolean
           is_verified: boolean
+          pro_expires_at?: string | null
+          display_followers?: number | null
           profile_visibility: "public" | "friends" | "private"
           created_at: string
           updated_at: string
@@ -342,6 +344,50 @@ export interface Database {
         }
         Insert: { key: string; value: string }
         Update: Partial<Pick<Database["public"]["Tables"]["site_settings"]["Row"], "value">>
+      }
+      hashing_usage: {
+        Row: {
+          id: string
+          mode: string
+          algorithm: string | null
+          created_at: string
+        }
+        Insert: { mode: string; algorithm?: string | null }
+        Update: never
+      }
+      pro_features: {
+        Row: {
+          key: string
+          label: string
+          description: string
+          bucket: "identity" | "community" | "entertainment" | "creator"
+          enabled: boolean
+          sort: number
+        }
+        Insert: { key: string; label: string; description?: string; bucket: "identity" | "community" | "entertainment" | "creator"; enabled?: boolean; sort?: number }
+        Update: Partial<{ label: string; description: string; bucket: "identity" | "community" | "entertainment" | "creator"; enabled: boolean; sort: number }>
+      }
+      profile_visits: {
+        Row: {
+          id: string
+          profile_id: string
+          visitor_id: string | null
+          visited_at: string
+        }
+        Insert: { profile_id: string; visitor_id?: string | null }
+        Update: never
+      }
+      post_views: {
+        Row: {
+          id: string
+          post_id: string
+          viewer_id: string | null
+          author_id: string
+          viewed_on: string
+          viewed_at: string
+        }
+        Insert: { post_id: string; viewer_id?: string | null; author_id: string; viewed_on?: string }
+        Update: never
       }
       external_games: {
         Row: {

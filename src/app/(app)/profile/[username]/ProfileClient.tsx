@@ -23,8 +23,8 @@ import {
   sendFriendRequest, acceptFriendRequest, cancelFriendRequest,
   removeFriend, toggleFollow, toggleBlock,
 } from "@/lib/actions/friends";
-import { formatJoinDate } from "@/lib/utils";
-import { VerifiedTick } from "@/components/ui/VerifiedTick";
+import { compactCount, formatJoinDate } from "@/lib/utils";
+import { AccountBadge } from "@/components/ui/ProBadge";
 import { UpgradePanel, type UpgradeStatus } from "@/components/profile/UpgradePanel";
 import type { LiveSession, Profile, PostWithAuthor } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
@@ -288,7 +288,7 @@ export function ProfileClient({
           <div className="mt-4">
             <h1 className="text-xl font-extrabold flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
               {profile.display_name}
-              {profile.is_verified && <VerifiedTick size={18} />}
+              <AccountBadge account={profile} size={18} />
             </h1>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>@{profile.username}</p>
             {profile.bio && (
@@ -342,7 +342,7 @@ export function ProfileClient({
               ].map((s) => (
                 <div key={s.label}>
                   <span className="text-lg font-extrabold" style={{ color: "var(--text-primary)" }}>
-                    {s.value}
+                    {compactCount(s.value)}
                   </span>
                   <span className="text-xs block" style={{ color: "var(--text-secondary)" }}>
                     {s.label}

@@ -4,6 +4,8 @@ import { AdminShell } from "@/components/layout/AdminShell";
 import { AdminClient } from "./AdminClient";
 import { getGlobalTheme } from "@/lib/site";
 import { getBotPanel } from "@/lib/bot";
+import { getHashingSettings, readUsage } from "@/lib/hashing-settings";
+import { supportedAlgorithms } from "@/lib/hashing";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin Dashboard" };
@@ -41,6 +43,10 @@ export default async function AdminPage() {
 
   const globalTheme = await getGlobalTheme();
   const bot = await getBotPanel();
+  const [hashingSettings, hashingUsage] = await Promise.all([
+    getHashingSettings(supabase),
+    readUsage(supabase),
+  ]);
 
   return (
     <AdminShell profile={profile}>
@@ -62,6 +68,7 @@ export default async function AdminPage() {
         siteShortcuts={(shortcutsRes.data || []) as any}
         studyBooks={(booksRes.data || []) as any}
         bot={bot}
+        hashing={{ settings: hashingSettings, algorithms: supportedAlgorithms(), usage: hashingUsage }}
       />
     </AdminShell>
   );

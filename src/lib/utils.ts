@@ -77,3 +77,15 @@ export function isValidAudioType(type: string): boolean {
 export function bytesToMB(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
+
+// Counts on a profile get long fast, so thousands and millions read as 1k and 1m.
+export function compactCount(n: number): string {
+  if (Math.abs(n) >= 1_000_000) return shortCount(n / 1_000_000, "m");
+  if (Math.abs(n) >= 1_000) return shortCount(n / 1_000, "k");
+  return String(n);
+}
+
+function shortCount(value: number, unit: string): string {
+  const shown = Math.abs(value) >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
+  return `${shown}${unit}`;
+}

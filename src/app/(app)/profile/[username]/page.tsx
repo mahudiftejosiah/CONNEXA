@@ -134,7 +134,7 @@ export default async function ProfilePage({ params }: Props) {
         isBlocked={isBlocked}
         friendRequestStatus={friendRequestStatus}
         friendRequestId={friendRequestId}
-        followersCount={followersCount.count ?? 0}
+        followersCount={profile.display_followers ?? followersCount.count ?? 0}
         followingCount={followingCount.count ?? 0}
         friendsCount={friendsCount.count ?? 0}
         initialPosts={enrichedPosts as any}

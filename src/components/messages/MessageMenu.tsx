@@ -25,7 +25,6 @@ const ICONS: Record<MessageAction, React.ReactNode> = {
 
 interface MessageMenuProps {
   actions: MessageAction[];
-  align: "left" | "right";
   // A message that is already pinned swaps "Pin message" for "Unpin".
   pinned: boolean;
   onAction: (action: MessageAction) => void;
@@ -34,7 +33,7 @@ interface MessageMenuProps {
 
 // Every action a bubble offers, behind one button. The list is decided by the
 // caller because most of these only make sense for your own message.
-export function MessageMenu({ actions, align, pinned, onAction, label }: MessageMenuProps) {
+export function MessageMenu({ actions, pinned, onAction, label }: MessageMenuProps) {
   const [open, setOpen] = useState(false);
   const [up, setUp] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -82,9 +81,9 @@ export function MessageMenu({ actions, align, pinned, onAction, label }: Message
       {open && (
         <div
           role="menu"
-          className={`absolute z-30 w-44 py-1 rounded-xl border shadow-lg ${
-            align === "right" ? "right-0" : "left-0"
-          } ${up ? "bottom-full mb-1" : "top-full mt-1"}`}
+          className={`absolute z-30 left-0 w-44 py-1 rounded-xl border shadow-lg ${
+            up ? "bottom-full mb-1" : "top-full mt-1"
+          }`}
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
         >
           {actions.map((a) => {

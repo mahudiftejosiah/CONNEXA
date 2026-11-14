@@ -1,7 +1,28 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getProStatus } from "@/lib/pro";
 import { revalidatePath } from "next/cache";
+
+// How many friends an account has. Counted from the real friendship rows, so a
+// number can never be inflated here.
+async function friendCount(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+  const { count } = await supabase.from("friendships")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  return count ?? 0;
+}
+
+// Requests sent since local midnight, which is what "per day" means to the user.
+async function requestsToday(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+  const { count } = await supabase.from("friend_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("sender_id", userId)
+    .gte("created_at", midnight.toISOString());
+  return count ?? 0;
+}
 
 export async function sendFriendRequest(receiverId: string) {
   const supabase = await createClient();
@@ -15,6 +36,17 @@ export async function sendFriendRequest(receiverId: string) {
     .or(`blocker_id.eq.${receiverId},blocked_id.eq.${receiverId}`)
     .single();
   if (block) return { error: "Cannot send request." };
+
+  const pro = await getProStatus(supabase, user.id);
+  const friends = await friendCount(supabase, user.id);
+  if (friends >= pro.friendLimit) {
+    return { error: pro.pro
+      ? `Your PRO account already has its full ${pro.friendLimit.toLocaleString()} friends.`
+      : `You have reached the limit of ${pro.friendLimit.toLocaleString()} friends. CONNEXA PRO raises it to 10,000.` };
+  }
+  if (pro.dailyRequestLimit !== null && (await requestsToday(supabase, user.id)) >= pro.dailyRequestLimit) {
+    return { error: "You have sent 50 friend requests today. Try again tomorrow, or upgrade to PRO." };
+  }
 
   const { error } = await supabase.from("friend_requests").insert({ sender_id: user.id, receiver_id: receiverId });
   if (error) return { error: "Request already exists or could not be sent." };
@@ -38,6 +70,13 @@ export async function acceptFriendRequest(requestId: string) {
 
   const { data: req } = await supabase.from("friend_requests").select("*").eq("id", requestId).single();
   if (!req || req.receiver_id !== user.id) return { error: "Unauthorized" };
+
+  // Accepting makes two friendships, so the accepting account's own ceiling is
+  // checked here too — a request sent before the limit was reached still stops.
+  const pro = await getProStatus(supabase, user.id);
+  if ((await friendCount(supabase, user.id)) >= pro.friendLimit) {
+    return { error: `You have reached the limit of ${pro.friendLimit.toLocaleString()} friends.` };
+  }
 
   await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", requestId);
 

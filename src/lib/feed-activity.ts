@@ -3,7 +3,7 @@ import type { MiniProfile, PostWithAuthor } from "@/lib/supabase/types";
 // Works with both the server and browser Supabase clients.
 type Queryable = { from: (table: string) => any };
 
-const MINIMAL_PROFILE = "id, username, display_name, avatar_url";
+const MINIMAL_PROFILE = "id, username, display_name, avatar_url, is_verified";
 
 export async function attachFeedActivity(
   supabase: Queryable,

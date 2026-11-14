@@ -8,6 +8,7 @@ import {
   ThumbsUp, Mic,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { AccountBadge } from "@/components/ui/ProBadge";
 import { Modal, ConfirmDialog } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { CommentSection } from "@/components/posts/CommentSection";
@@ -186,8 +187,9 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
             <Avatar src={post.author.avatar_url} name={post.author.display_name} size={44} userId={post.author.id} />
           </Link>
           <div className="min-w-0">
-            <Link href={`/profile/${post.author.username}`} className="font-semibold text-[var(--text-primary)] hover:underline truncate block">
-              {post.author.display_name}
+            <Link href={`/profile/${post.author.username}`} className="font-semibold text-[var(--text-primary)] hover:underline flex items-center gap-1.5 min-w-0">
+              <span className="truncate">{post.author.display_name}</span>
+              <AccountBadge account={post.author} />
             </Link>
             <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
               <span>{formatRelativeTime(post.created_at)}</span>
@@ -265,8 +267,9 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
         <div className="mx-4 mb-3 border border-[var(--border)] rounded-xl p-3 bg-[var(--bg)]">
           <div className="flex items-center gap-2 mb-2">
             <Avatar src={post.shared_post.author.avatar_url} name={post.shared_post.author.display_name} size={28} userId={post.shared_post.author.id} />
-            <Link href={`/profile/${post.shared_post.author.username}`} className="text-sm font-semibold hover:underline">
-              {post.shared_post.author.display_name}
+            <Link href={`/profile/${post.shared_post.author.username}`} className="text-sm font-semibold hover:underline flex items-center gap-1.5 min-w-0">
+              <span className="truncate">{post.shared_post.author.display_name}</span>
+              <AccountBadge account={post.shared_post.author} />
             </Link>
           </div>
           <p className="text-sm text-[var(--text-secondary)] line-clamp-3">{post.shared_post.content}</p>
@@ -413,8 +416,9 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
               </Link>
               <div className="min-w-0">
                 <div className="bg-[var(--border)] rounded-2xl px-3 py-2 inline-block max-w-full">
-                  <Link href={`/profile/${c.author.username}`} className="text-xs font-semibold text-[var(--text-primary)] hover:underline block">
+                  <Link href={`/profile/${c.author.username}`} className="text-xs font-semibold text-[var(--text-primary)] hover:underline flex items-center gap-1.5">
                     {c.author.display_name}
+                    <AccountBadge account={c.author} />
                   </Link>
                   <p className="text-sm text-[var(--text-primary)] leading-snug whitespace-pre-wrap [overflow-wrap:anywhere]">{c.content}</p>
                 </div>

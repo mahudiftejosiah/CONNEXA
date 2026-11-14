@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
 import { ConfirmDialog } from "@/components/ui/Modal";
-import { VerifiedTick } from "@/components/ui/VerifiedTick";
+import { AccountBadge } from "@/components/ui/ProBadge";
 import { HelpThread } from "@/components/messages/HelpThread";
 import { MessageMenu, type MessageAction } from "@/components/messages/MessageMenu";
 import { ForwardDialog, type ForwardTarget } from "@/components/messages/ForwardDialog";
@@ -669,7 +669,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     <Avatar src={f.avatar_url} name={f.display_name} size={48} online={online} userId={f.id} />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm truncate text-[var(--text-primary)] flex items-center gap-1.5">
-                        {f.display_name}{f.is_verified && <VerifiedTick size={14} />}
+                        {f.display_name}<AccountBadge account={f} />
                       </p>
                       <p className="text-xs truncate" style={{ color: online ? "rgb(var(--a-600))" : "var(--text-secondary)" }}>
                         {online ? "Online now" : f.last_seen ? `Active ${formatRelativeTime(f.last_seen)}` : "Not active yet"}
@@ -694,7 +694,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                       <div className="flex justify-between items-baseline">
                         <p className="font-semibold text-sm truncate text-[var(--text-primary)] flex items-center gap-1.5">
                           {other.display_name}
-                          {(other as Profile).is_verified && <VerifiedTick size={14} />}
+                          <AccountBadge account={other as Profile} />
                         </p>
                         {conv.last_message && (
                           <span className="text-xs text-[var(--text-secondary)] flex-shrink-0 ml-2">
@@ -874,7 +874,6 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   const menu = actions.length > 0 && (
                     <MessageMenu
                       actions={actions}
-                      align={isMe ? "left" : "right"}
                       pinned={!!msg.pinned_at}
                       label={msg.content || attachmentPreview(msg.attachment_kind, msg.view_once)}
                       onAction={(a) => {
@@ -890,8 +889,8 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
 
                   return (
                     <div key={msg.id} id={`msg-${msg.id}`}
-                      className={`group flex items-start gap-1.5 ${isMe ? "justify-end" : "justify-start"} ${menu && isMe ? "flex-row-reverse" : ""}`}>
-                      {menu}
+                      className={`group flex items-start gap-1.5 ${isMe ? "justify-end" : "justify-start"}`}>
+                      {!isMe && menu}
                       <div className={`max-w-[80%] md:max-w-[75%] rounded-2xl text-sm overflow-hidden ${
                         isMe
                           ? "bg-brand-green-800 text-white rounded-br-sm"
@@ -932,6 +931,9 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                           </>
                         )}
                       </div>
+                      {/* The button always trails the bubble, so both people's
+                          menus face the same way. */}
+                      {isMe && menu}
                     </div>
                   );
                 })

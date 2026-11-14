@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Send, Trash2, ChevronDown } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { AccountBadge } from "@/components/ui/ProBadge";
 import { CommentSkeleton } from "@/components/ui/Skeleton";
 import { createComment, deleteComment } from "@/lib/actions/posts";
 import { formatRelativeTime } from "@/lib/utils";
@@ -113,10 +114,11 @@ export function CommentSection({ postId, currentProfile }: CommentSectionProps) 
                 <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "var(--bg)" }}>
                   <Link
                     href={`/profile/${c.author.username}`}
-                    className="text-sm font-semibold hover:underline"
+                    className="text-sm font-semibold hover:underline flex items-center gap-1.5 min-w-0"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    {c.author.display_name}
+                    <span className="truncate">{c.author.display_name}</span>
+                    <AccountBadge account={c.author} />
                   </Link>
                   <p className="text-sm mt-0.5 whitespace-pre-wrap [overflow-wrap:anywhere]" style={{ color: "var(--text-primary)" }}>
                     {c.content}

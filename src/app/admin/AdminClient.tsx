@@ -7,10 +7,14 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
 import { ImageField } from "@/components/ui/ImageField";
+import { Modal } from "@/components/ui/Modal";
 import { AssistantBot } from "./AssistantBot";
+import { HashingBot } from "./HashingBot";
 import type { HealthCheck } from "@/lib/botHealth";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile, ContentReport, ModerationAction, SiteContent, ExternalGame, ReelEmbed, SiteShortcut, StudyBook, BotFlagWithAuthor, BotSettings } from "@/lib/supabase/types";
+import type { HashingSettings, HashingUsage } from "@/lib/hashing-settings";
+import type { HashAlgorithm } from "@/lib/hashing";
 import toast from "react-hot-toast";
 import { formatRelativeTime } from "@/lib/utils";
 
@@ -39,6 +43,11 @@ interface AdminClientProps {
   siteShortcuts: SiteShortcut[];
   studyBooks: StudyBook[];
   bot: { settings: BotSettings; openFlags: BotFlagWithAuthor[]; resolved: BotFlagWithAuthor[]; checks: HealthCheck[] };
+  hashing: {
+    settings: HashingSettings;
+    algorithms: HashAlgorithm[];
+    usage: HashingUsage | { error: string };
+  };
 }
 
 type Tab = "overview" | "users" | "reports" | "actions" | "content" | "appearance" | "games" | "library" | "sites" | "verification" | "assistant";
@@ -70,8 +79,12 @@ const CONTENT_KEYS: { key: string; label: string }[] = [
   { key: "upgrade", label: "Upgrade / Pricing" },
 ];
 
-export function AdminClient({ users, pendingReports: initReports, recentActions, stats, currentAdminId, siteContent: initContent, externalGames: initGames, reelEmbeds: initReelEmbeds, globalTheme: initTheme, upgrades: initUpgrades, siteShortcuts: initSites, studyBooks: initBooks, bot }: AdminClientProps) {
+export function AdminClient({ users, pendingReports: initReports, recentActions, stats, currentAdminId, siteContent: initContent, externalGames: initGames, reelEmbeds: initReelEmbeds, globalTheme: initTheme, upgrades: initUpgrades, siteShortcuts: initSites, studyBooks: initBooks, bot, hashing }: AdminClientProps) {
   const [tab, setTab] = useState<Tab>("overview");
+  const [userRows, setUserRows] = useState(users);
+  const [displayUser, setDisplayUser] = useState<Profile | null>(null);
+  const [displayValue, setDisplayValue] = useState("");
+  const [savingDisplay, setSavingDisplay] = useState(false);
   const [reports, setReports] = useState(initReports);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [upgradeRows, setUpgradeRows] = useState(initUpgrades);
@@ -119,6 +132,44 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
       reason: "Admin action",
     });
     toast.success(`User @${username} flagged. Implement auth ban via Supabase dashboard.`);
+  }
+
+  // A display-only number that lives in its own column. It never touches the
+  // followers table: the real count keeps driving follows, unfollows, analytics
+  // and notifications, this only changes what a profile prints.
+  async function saveDisplayFollowers(reset: boolean) {
+    if (!displayUser) return;
+    const trimmed = displayValue.trim();
+    if (!reset && !/^\d+$/.test(trimmed)) {
+      toast.error("Use a whole number of zero or more.");
+      return;
+    }
+    const value = reset ? null : Number(trimmed);
+    setSavingDisplay(true);
+    const supabase = createClient();
+    const { data, error } = await supabase.from("profiles")
+      .update({ display_followers: value })
+      .eq("id", displayUser.id)
+      .select("id");
+    if (error || !data || data.length === 0) {
+      setSavingDisplay(false);
+      toast.error("Nothing was saved — an admin may not write to profiles until migration 027 is pasted.");
+      return;
+    }
+    await supabase.from("moderation_actions").insert({
+      admin_id: currentAdminId,
+      target_user_id: displayUser.id,
+      action: reset ? "reset_display_followers" : "set_display_followers",
+      reason: reset
+        ? "Displayed follower count cleared"
+        : `Displayed follower count set to ${value?.toLocaleString()}`,
+    });
+    setUserRows((prev) => prev.map((u) => (u.id === displayUser.id ? { ...u, display_followers: value } : u)));
+    setSavingDisplay(false);
+    setDisplayUser(null);
+    toast.success(reset
+      ? "That profile shows its real follower count again."
+      : `@${displayUser.username} now shows ${value?.toLocaleString()} followers.`);
   }
 
   async function saveSiteContent() {
@@ -397,13 +448,13 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
       {tab === "users" && (
         <div className="card overflow-hidden">
           <div className="p-4 border-b border-[var(--border)]">
-            <p className="text-sm text-[var(--text-secondary)]">Showing most recent {users.length} users</p>
+            <p className="text-sm text-[var(--text-secondary)]">Showing most recent {userRows.length} users</p>
           </div>
           {/* Rows keep their natural width and slide sideways instead of
               crushing the name and the four action buttons together. */}
           <div className="divide-y divide-[var(--border)] rail">
-            {users.map((u) => (
-              <div key={u.id} className="flex items-center gap-3 px-4 py-3 min-w-[40rem]">
+            {userRows.map((u) => (
+              <div key={u.id} className="flex items-center gap-3 px-4 py-3 min-w-[52rem]">
                 <Avatar src={u.avatar_url} name={u.display_name} size={40} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm whitespace-nowrap flex items-center gap-1.5">
@@ -414,6 +465,10 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {u.is_admin && <span className="text-xs bg-brand-gold-400/20 text-brand-green-800 dark:text-brand-gold-400 px-2 py-0.5 rounded font-medium">Admin</span>}
+                  <Button size="sm" variant="ghost" icon={<Users className="w-3.5 h-3.5" />}
+                    onClick={() => { setDisplayUser(u); setDisplayValue(u.display_followers == null ? "" : String(u.display_followers)); }}>
+                    Manage Displayed Followers
+                  </Button>
                   <Button size="sm" variant="ghost" icon={<BadgeCheck className="w-3.5 h-3.5" style={{ color: u.is_verified ? "#1d9bf0" : "var(--text-secondary)" }} />}
                     onClick={() => toggleVerified(u.id, !u.is_verified)}>
                     {u.is_verified ? "Unverify" : "Verify"}
@@ -942,7 +997,49 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
         </div>
       )}
 
-      {tab === "assistant" && <AssistantBot settings={bot.settings} openFlags={bot.openFlags} resolved={bot.resolved} checks={bot.checks} />}
+      {tab === "assistant" && (
+        <div className="space-y-4">
+          <AssistantBot settings={bot.settings} openFlags={bot.openFlags} resolved={bot.resolved} checks={bot.checks} />
+          <HashingBot settings={hashing.settings} algorithms={hashing.algorithms} usage={hashing.usage} />
+        </div>
+      )}
+
+      <Modal
+        open={!!displayUser}
+        onClose={() => setDisplayUser(null)}
+        title={`Manage Displayed Followers — ${displayUser?.display_name ?? ""}`}
+        size="sm"
+      >
+        <p className="text-sm text-[var(--text-secondary)] mb-4">
+          This only changes the number printed on the profile. Real followers,
+          follows, unfollows and notifications are untouched, and nobody is
+          created or added.
+        </p>
+        <label className="block text-sm font-semibold mb-1.5" htmlFor="display-followers">
+          Displayed follower count
+        </label>
+        <input
+          id="display-followers"
+          inputMode="numeric"
+          value={displayValue}
+          onChange={(e) => setDisplayValue(e.target.value)}
+          placeholder="Leave empty to show the real count"
+          className="input w-full"
+        />
+        <p className="text-xs text-[var(--text-secondary)] mt-2 mb-5">
+          {displayUser?.display_followers == null
+            ? "Currently automatic — the profile shows its true follower count."
+            : `Currently set to ${Number(displayUser.display_followers).toLocaleString()}.`}
+        </p>
+        <div className="flex flex-wrap gap-3 justify-end">
+          {displayUser?.display_followers != null && (
+            <Button variant="ghost" loading={savingDisplay} onClick={() => void saveDisplayFollowers(true)}>
+              Reset to real count
+            </Button>
+          )}
+          <Button loading={savingDisplay} onClick={() => void saveDisplayFollowers(false)}>Save</Button>
+        </div>
+      </Modal>
     </div>
   );
 }
