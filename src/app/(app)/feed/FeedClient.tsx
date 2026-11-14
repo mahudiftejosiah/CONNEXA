@@ -140,7 +140,7 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
       </div>
 
       {tab === "reels" ? (
-        <ReelsViewer />
+        <ReelsViewer profile={profile} />
       ) : (
         <>
       <CreatePost profile={profile} onCreated={refreshFeed} />
