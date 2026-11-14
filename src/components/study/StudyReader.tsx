@@ -72,6 +72,9 @@ export function StudyReader({ book, userId, saved }: { book: StudyBook; userId: 
   const stageRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const offered = useRef(false);
+  // Opening a book is not reading it. Until a page is turned there is nothing
+  // to remember, and writing page one would erase the place being offered.
+  const turned = useRef(false);
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   supabaseRef.current = supabaseRef.current || createClient();
   const supabase = supabaseRef.current;
@@ -196,18 +199,16 @@ export function StudyReader({ book, userId, saved }: { book: StudyBook; userId: 
   }, [book.id, supabase, userId]);
 
   useEffect(() => {
-    if (!paragraphs || !pageStarts) return;
+    if (!paragraphs || !pageStarts || !turned.current) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    // A book nobody has turned yet has nothing worth remembering.
-    if (page === 0 && (!saved || saved.position === 0)) return;
     saveTimer.current = setTimeout(() => void persist(pageFrom, percent), 900);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [page, pageFrom, percent, paragraphs, pageStarts, persist, saved]);
+  }, [page, pageFrom, percent, paragraphs, pageStarts, persist]);
 
   // Leaving in a hurry should not lose the place either.
   useEffect(() => {
     const flush = () => {
-      if (paragraphs && pageStarts) void persist(pageFrom, percent);
+      if (turned.current && paragraphs && pageStarts) void persist(pageFrom, percent);
     };
     window.addEventListener("pagehide", flush);
     return () => window.removeEventListener("pagehide", flush);
@@ -217,6 +218,7 @@ export function StudyReader({ book, userId, saved }: { book: StudyBook; userId: 
     if (!totalPages) return;
     const target = Math.max(0, Math.min(totalPages - 1, next));
     if (target === page) return;
+    turned.current = true;
     setDir(target > page ? "fwd" : "back");
     setPage(target);
     setSelection(null);
