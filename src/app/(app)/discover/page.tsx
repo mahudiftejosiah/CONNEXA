@@ -22,7 +22,7 @@ export default async function DiscoverPage() {
     .from("profiles").select("interests").eq("id", user.id).single();
   const interests = ((me?.interests || []) as string[]).map((s) => s.toLowerCase());
 
-  const [groupsRes, postsRes, peopleRes, studyRes, sitesRes, booksRes] = await Promise.all([
+  const [groupsRes, postsRes, peopleRes, studyRes, sitesRes, featuredRes, booksRes] = await Promise.all([
     supabase.from("groups")
       .select("*, owner:profiles(*)")
       .eq("visibility", "public")
@@ -44,6 +44,7 @@ export default async function DiscoverPage() {
       .order("created_at", { ascending: false })
       .limit(60),
     supabase.from("site_shortcuts").select("*").eq("category", "study").order("sort", { ascending: true }),
+    supabase.from("site_shortcuts").select("*").eq("category", "featured").eq("published", true).order("sort", { ascending: true }),
     supabase.from("study_books").select("*").order("category", { ascending: true }).limit(800),
   ]);
 
@@ -93,7 +94,8 @@ export default async function DiscoverPage() {
         currentUserId={user.id}
         news={news as any}
         studyResources={(studyRes.data || []) as any}
-        studySites={(sitesRes.data || []) as any}
+        studySites={(sitesRes.data || []).filter((s) => s.published !== false) as any}
+        featuredSites={(featuredRes.data || []) as any}
         studyBooks={(booksRes.data || []) as any}
         watchReels={shuffleTake(REEL_POOL, 12)}
       />

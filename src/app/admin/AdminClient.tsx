@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe, Bot, BookOpen, Library } from "lucide-react";
+import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe, Bot, BookOpen, Library, Eye, EyeOff, Pencil, Star } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
@@ -89,9 +89,11 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
   const [savingReel, setSavingReel] = useState(false);
 
   const [sites, setSites] = useState(initSites);
-  const [siteCat, setSiteCat] = useState<"sports" | "betting" | "study">("sports");
-  const [newSite, setNewSite] = useState({ title: "", url: "", logo_url: "" });
+  const [siteCat, setSiteCat] = useState<SiteShortcut["category"]>("featured");
+  const [newSite, setNewSite] = useState({ title: "", url: "", logo_url: "", description: "", site_category: "" });
+  const [editSite, setEditSite] = useState<SiteShortcut | null>(null);
   const [savingSite, setSavingSite] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const [books, setBooks] = useState(initBooks);
   const [newBook, setNewBook] = useState<{
@@ -211,13 +213,48 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
       name: newSite.title.trim(),
       url: newSite.url.trim(),
       logo_url: newSite.logo_url.trim() || null,
+      description: newSite.description.trim() || null,
+      site_category: newSite.site_category.trim() || null,
+      published: true,
       created_by: currentAdminId,
     }).select().single();
     setSavingSite(false);
-    if (error || !data) { toast.error("Could not add site: " + (error?.message || "(run migration 013)")); return; }
+    if (error || !data) { toast.error("Could not add site: " + (error?.message || "(run migrations 013 and 025)")); return; }
     setSites((p) => [data, ...p]);
-    setNewSite({ title: "", url: "", logo_url: "" });
-    toast.success("Site added — visible instantly.");
+    setNewSite({ title: "", url: "", logo_url: "", description: "", site_category: "" });
+    toast.success(siteCat === "featured" ? "Published to Discover → Featured." : "Site added — visible instantly.");
+  }
+
+  async function saveSiteEdit() {
+    if (!editSite) return;
+    if (!editSite.name.trim() || !/^https?:\/\//.test(editSite.url.trim())) {
+      toast.error("A name and a valid http(s) link are required.");
+      return;
+    }
+    setSavingEdit(true);
+    const supabase = createClient();
+    const { data, error } = await supabase.from("site_shortcuts").update({
+      name: editSite.name.trim(),
+      url: editSite.url.trim(),
+      logo_url: (editSite.logo_url || "").trim() || null,
+      description: editSite.description?.trim() || null,
+      site_category: editSite.site_category?.trim() || null,
+      category: editSite.category,
+    }).eq("id", editSite.id).select().single();
+    setSavingEdit(false);
+    if (error || !data) { toast.error("Could not save that site: " + (error?.message || "(run migration 025)")); return; }
+    setSites((p) => p.map((s) => (s.id === data.id ? data : s)));
+    setEditSite(null);
+    toast.success("Site updated.");
+  }
+
+  async function toggleSitePublished(s: SiteShortcut) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("site_shortcuts").update({ published: !s.published }).eq("id", s.id).select().single();
+    if (error || !data) { toast.error("Could not change that. (Run migration 025.)"); return; }
+    setSites((p) => p.map((x) => (x.id === s.id ? data : x)));
+    toast.success(data.published ? "Published again." : "Unpublished — no longer shown.");
   }
 
   async function removeSiteShortcut(id: string) {
@@ -225,6 +262,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
     const { error } = await supabase.from("site_shortcuts").delete().eq("id", id);
     if (error) { toast.error("Delete failed."); return; }
     setSites((p) => p.filter((s) => s.id !== id));
+    setEditSite((p) => (p && p.id === id ? null : p));
     toast.success("Site removed.");
   }
 
@@ -712,38 +750,89 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
       {tab === "sites" && (
         <div className="space-y-4">
           <div className="card p-5 space-y-3">
-            <h3 className="font-semibold flex items-center gap-2"><Globe className="w-4 h-4" /> Site shortcuts</h3>
+            <h3 className="font-semibold flex items-center gap-2"><Star className="w-4 h-4" /> Featured &amp; site shortcuts</h3>
             <p className="text-sm text-[var(--text-secondary)]">
-              Each shortcut becomes a recognisable icon that opens the real site in a new tab. <b>Sports</b> and <b>Betting</b> show on the Games tab; <b>Study</b> shows under Study Room → Visit sites.
+              Pick a shelf first. <b>Featured</b> sites appear on Discover → Featured with their name, logo, description and a
+              <b> Visit Website</b> button. <b>Sports</b> and <b>Betting</b> show on the Games tab; <b>Study</b> shows under Study Room → Visit sites.
+              Every link opens in a new tab with <code className="text-xs">rel=&quot;noopener noreferrer&quot;</code>.
             </p>
             <div className="flex flex-wrap gap-2">
-              {(["sports", "betting", "study"] as const).map((c) => (
+              {(["featured", "sports", "betting", "study"] as const).map((c) => (
                 <button key={c} onClick={() => setSiteCat(c)}
                   className={`px-3 py-1.5 rounded-xl text-sm font-medium capitalize transition-colors ${siteCat === c ? "bg-brand-green-800 text-white" : "bg-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}>
                   {c}
                 </button>
               ))}
             </div>
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-2 gap-3">
               <input className="input" placeholder="Site name * (e.g. SofaScore)" value={newSite.title}
                 onChange={(e) => setNewSite((p) => ({ ...p, title: e.target.value }))} />
               <input className="input" placeholder="Link (https://…) *" value={newSite.url}
                 onChange={(e) => setNewSite((p) => ({ ...p, url: e.target.value }))} />
-              <ImageField placeholder="Logo image link (optional)" value={newSite.logo_url}
-                onChange={(v) => setNewSite((p) => ({ ...p, logo_url: v }))} userId={currentAdminId} />
             </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <input className="input" placeholder="Short description (shown on Featured)" value={newSite.description}
+                onChange={(e) => setNewSite((p) => ({ ...p, description: e.target.value }))} />
+              <input className="input" placeholder="Shown as (optional label, e.g. Learning)" value={newSite.site_category}
+                onChange={(e) => setNewSite((p) => ({ ...p, site_category: e.target.value }))} />
+            </div>
+            <ImageField placeholder="Logo or thumbnail image link (optional — upload from your device)" value={newSite.logo_url}
+              onChange={(v) => setNewSite((p) => ({ ...p, logo_url: v }))} userId={currentAdminId} />
             <p className="text-xs text-[var(--text-secondary)]">
-              No logo link? The site&apos;s own favicon is used automatically, so the icon always matches the brand.
+              No logo? The site&apos;s own favicon is used automatically, so the icon always matches the brand.
             </p>
-            <Button onClick={addSiteShortcut} loading={savingSite} icon={<Plus className="w-4 h-4" />}>Add site</Button>
+            <Button onClick={addSiteShortcut} loading={savingSite} icon={<Plus className="w-4 h-4" />}>
+              Add to {siteCat}
+            </Button>
           </div>
 
+          {editSite && (
+            <div className="card p-5 space-y-3 border-2 border-brand-green-800/40">
+              <h3 className="font-semibold flex items-center gap-2"><Pencil className="w-4 h-4" /> Editing “{editSite.name}”</h3>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <input className="input" placeholder="Site name *" value={editSite.name}
+                  onChange={(e) => setEditSite({ ...editSite, name: e.target.value })} />
+                <input className="input" placeholder="Link (https://…)" value={editSite.url}
+                  onChange={(e) => setEditSite({ ...editSite, url: e.target.value })} />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <input className="input" placeholder="Short description" value={editSite.description || ""}
+                  onChange={(e) => setEditSite({ ...editSite, description: e.target.value })} />
+                <input className="input" placeholder="Shown as (label)" value={editSite.site_category || ""}
+                  onChange={(e) => setEditSite({ ...editSite, site_category: e.target.value })} />
+              </div>
+              <ImageField placeholder="Logo or thumbnail image link" value={editSite.logo_url || ""}
+                onChange={(v) => setEditSite({ ...editSite, logo_url: v })} userId={currentAdminId} />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1.5">Shelf</p>
+                <div className="flex flex-wrap gap-2">
+                  {(["featured", "sports", "betting", "study"] as const).map((c) => (
+                    <button key={c} onClick={() => setEditSite({ ...editSite, category: c })}
+                      className={`px-3 py-1.5 rounded-xl text-sm font-medium capitalize transition-colors ${editSite.category === c ? "bg-brand-green-800 text-white" : "bg-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={saveSiteEdit} loading={savingEdit} icon={<CheckCircle className="w-4 h-4" />}>Save changes</Button>
+                <Button variant="ghost" onClick={() => setEditSite(null)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+
           <div className="card p-5 space-y-3">
-            <p className="text-sm font-semibold">Preview · {siteCat} ({sites.filter((s) => s.category === siteCat).length})</p>
+            <p className="text-sm font-semibold">
+              Preview · {siteCat} ({sites.filter((s) => s.category === siteCat && s.published).length} shown)
+            </p>
             {sites.filter((s) => s.category === siteCat).length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)]">Nothing here yet. (Run migration 013 to load the starter sites.)</p>
+              <p className="text-sm text-[var(--text-secondary)]">
+                Nothing on this shelf yet. {siteCat === "featured" ? "Add one above, or run migration 025 for six starter sites." : "(Migration 013 loads the starter sites.)"}
+              </p>
+            ) : sites.filter((s) => s.category === siteCat && s.published).length === 0 ? (
+              <p className="text-sm text-[var(--text-secondary)]">Everything on this shelf is unpublished, so visitors see an empty section.</p>
             ) : (
-              <SiteIconGrid items={sites.filter((s) => s.category === siteCat)} />
+              <SiteIconGrid items={sites.filter((s) => s.category === siteCat && s.published)} />
             )}
           </div>
 
@@ -756,7 +845,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
             ) : (
               <div className="divide-y divide-[var(--border)]">
                 {sites.map((s) => (
-                  <div key={s.id} className="flex items-center gap-3 px-4 py-3">
+                  <div key={s.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                     <span className="relative w-9 h-9 rounded-xl bg-[var(--border)] flex items-center justify-center flex-shrink-0 text-sm font-extrabold text-brand-green-800 dark:text-brand-gold-400 overflow-hidden">
                       {s.name.charAt(0).toUpperCase()}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -765,19 +854,39 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
                         onError={(e) => { e.currentTarget.style.display = "none"; }} />
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">{s.name}
+                      <p className="font-semibold text-sm truncate">
+                        {s.name}
                         <span className="ml-2 text-[10px] uppercase font-mono bg-[var(--border)] px-1.5 py-0.5 rounded">{s.category}</span>
+                        {s.site_category && (
+                          <span className="ml-1.5 text-[10px] uppercase font-mono px-1.5 py-0.5 rounded"
+                            style={{ backgroundColor: "var(--brand-gold)", color: "#12372A" }}>{s.site_category}</span>
+                        )}
+                        {!s.published && (
+                          <span className="ml-1.5 text-[10px] uppercase font-mono bg-red-500/15 text-red-500 px-1.5 py-0.5 rounded">hidden</span>
+                        )}
                       </p>
                       <p className="text-xs text-[var(--text-secondary)] truncate">{s.url}</p>
+                      {s.description && <p className="text-xs text-[var(--text-secondary)] truncate italic">{s.description}</p>}
                     </div>
-                    <a href={s.url} target="_blank" rel="noopener noreferrer"
-                      className="p-2 rounded-xl text-brand-green-800 dark:text-brand-gold-400 hover:bg-[var(--border)]" aria-label={`Open ${s.name}`}>
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                    <Button size="sm" variant="ghost" icon={<Trash2 className="w-3.5 h-3.5 text-red-500" />}
-                      onClick={() => removeSiteShortcut(s.id)}>
-                      Delete
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="ghost" icon={<Pencil className="w-3.5 h-3.5" />}
+                        onClick={() => setEditSite(s)}>
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="ghost"
+                        icon={s.published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-brand-green-800 dark:text-brand-gold-400" />}
+                        onClick={() => toggleSitePublished(s)}>
+                        {s.published ? "Unpublish" : "Publish"}
+                      </Button>
+                      <a href={s.url} target="_blank" rel="noopener noreferrer"
+                        className="p-2 rounded-xl text-brand-green-800 dark:text-brand-gold-400 hover:bg-[var(--border)]" aria-label={`Open ${s.name}`}>
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                      <Button size="sm" variant="ghost" icon={<Trash2 className="w-3.5 h-3.5 text-red-500" />}
+                        onClick={() => removeSiteShortcut(s.id)}>
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

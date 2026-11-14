@@ -1,7 +1,8 @@
-import { LogOut, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Logo } from "@/components/brand/Logo";
-import { adminSignOut, enterPublicSite } from "@/lib/actions/adminView";
+import { AdminLogoutButton } from "./AdminLogoutButton";
+import { enterPublicSite } from "@/lib/actions/adminView";
 import type { Profile } from "@/lib/supabase/types";
 
 interface AdminShellProps {
@@ -52,16 +53,7 @@ export function AdminShell({ profile, children }: AdminShellProps) {
               </button>
             </form>
 
-            <form action={adminSignOut}>
-              <button
-                type="submit"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-80 whitespace-nowrap"
-                style={{ backgroundColor: "var(--brand-green)", color: "#ffffff" }}
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Log out</span>
-              </button>
-            </form>
+            <AdminLogoutButton />
           </div>
         </div>
       </header>

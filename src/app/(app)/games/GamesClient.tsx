@@ -349,12 +349,19 @@ export default function GamesClient({
                 className="relative rounded-2xl border overflow-hidden text-left transition-transform hover:scale-[1.02] active:scale-[0.98] group"
                 style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
               >
-                <div className="w-full h-28 flex items-center justify-center relative"
+                <div className="w-full h-28 flex items-center justify-center relative overflow-hidden"
                   style={{ background: `linear-gradient(135deg,${trendingCover(g.id).from},${trendingCover(g.id).to})` }}>
                   <span className="w-14 h-14 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center text-white shadow-sm">
                     {TREND_ART[g.art]}
                   </span>
                   <Box className="w-7 h-7 text-white/45 absolute bottom-2 right-2" />
+                  {/* The publisher's own artwork for this exact game, cropped to the
+                      tile rather than stretched; the gradient above is what shows if
+                      a CDN image ever fails to load. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={g.thumb} alt={g.name} loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }} />
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/45 transition-colors">
                   <span className="w-11 h-11 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

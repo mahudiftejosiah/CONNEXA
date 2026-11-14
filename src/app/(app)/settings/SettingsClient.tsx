@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTheme } from "next-themes";
 import {
   Shield, Bell, User, Trash2, LogOut, Eye, Palette,
-  FileText, Users, BookOpen, Info, ChevronRight, Heart,
+  FileText, Users, BookOpen, Info, Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -59,6 +59,7 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
   });
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   const mainNav: { key: Section; label: string; icon: React.ReactNode }[] = [
@@ -99,6 +100,7 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
   }
 
   async function handleLogout() {
+    setConfirmLogout(false);
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
@@ -134,37 +136,20 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">Settings</h1>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Sidebar nav */}
-        <nav className="md:w-60 flex-shrink-0">
-          <div className="card p-2 space-y-0.5">
-            {mainNav.map((item) => (
-              <button key={item.key} onClick={() => setSection(item.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${section === item.key ? "bg-[rgb(var(--a-800)/0.1)] text-[rgb(var(--a-800))] dark:text-[rgb(var(--b-400))]" : "text-[var(--text-secondary)] hover:bg-[var(--border)]"}`}>
-                {item.icon} {item.label}
-              </button>
-            ))}
-          </div>
-          <div className="card p-2 mt-3 space-y-0.5">
-            <p className="px-3 pt-1 pb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Info & legal</p>
-            {infoNav.map((item) => (
-              <button key={item.key} onClick={() => setSection(item.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${section === item.key ? "bg-[rgb(var(--a-800)/0.1)] text-[rgb(var(--a-800))] dark:text-[rgb(var(--b-400))]" : "text-[var(--text-secondary)] hover:bg-[var(--border)]"}`}>
-                {item.icon} <span className="flex-1 text-left">{item.label}</span>
-                <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-              </button>
-            ))}
-          </div>
-          <div className="card p-2 mt-3">
-            <button onClick={handleLogout}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-              <LogOut className="w-4 h-4" /> Log out
-            </button>
-          </div>
-        </nav>
+      <div className="space-y-2">
+        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Settings">
+          {mainNav.map((item) => (
+            <TabButton key={item.key} item={item} active={section === item.key} onClick={setSection} />
+          ))}
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Information and legal">
+          {infoNav.map((item) => (
+            <TabButton key={item.key} item={item} active={section === item.key} onClick={setSection} />
+          ))}
+        </div>
+      </div>
 
-        {/* Content */}
-        <div className="flex-1">
+      <div role="tabpanel" className="pt-1">
           {section === "account" && (
             <div className="card p-6 space-y-4">
               <h2 className="font-bold text-lg text-[var(--text-primary)]">Account</h2>
@@ -179,6 +164,12 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
               <Link href="/settings/profile" className="btn-primary inline-flex items-center gap-2">
                 <User className="w-4 h-4" /> Edit profile
               </Link>
+              <div className="pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+                <button onClick={() => setConfirmLogout(true)}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-red-500 hover:underline">
+                  <LogOut className="w-4 h-4" /> Log out
+                </button>
+              </div>
             </div>
           )}
 
@@ -291,8 +282,17 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
               </div>
             </div>
           )}
-        </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmLogout}
+        onClose={() => setConfirmLogout(false)}
+        onConfirm={handleLogout}
+        title="Log out"
+        message="Are you sure you want to log out?"
+        confirmLabel="Yes, Log Out"
+        danger
+      />
 
       <ConfirmDialog
         open={confirmDelete}
@@ -305,5 +305,24 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
         loading={deletingAccount}
       />
     </div>
+  );
+}
+
+// Every tab sits in a strip that scrolls sideways on a phone, so its panel
+// always begins directly under the strip instead of under a tall column.
+function TabButton({ item, active, onClick }: {
+  item: { key: Section; label: string; icon: React.ReactNode };
+  active: boolean;
+  onClick: (key: Section) => void;
+}) {
+  return (
+    <button type="button" role="tab" aria-selected={active} onClick={() => onClick(item.key)}
+      className={"flex-none flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border whitespace-nowrap transition-colors " +
+        (active ? "text-white" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]")}
+      style={active
+        ? { backgroundColor: "rgb(var(--a-800))", borderColor: "rgb(var(--a-800))" }
+        : { backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+      {item.icon} {item.label}
+    </button>
   );
 }

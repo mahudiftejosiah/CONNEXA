@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
   Home, Users, Bell, Bookmark, Settings, LogOut,
   Compass, MessageCircle, Film, UsersRound, Shield,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
+import { ConfirmDialog } from "@/components/ui/Modal";
 import type { Profile } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/client";
 import { backToAdminPanel } from "@/lib/actions/adminView";
@@ -56,7 +57,10 @@ export function Sidebar({ profile, isAdmin = false }: SidebarProps) {
     return item.exact ? pathname === item.href : pathname.startsWith(item.href);
   }
 
+  const [confirmLogout, setConfirmLogout] = useState(false);
+
   async function handleLogout() {
+    setConfirmLogout(false);
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
@@ -128,7 +132,7 @@ export function Sidebar({ profile, isAdmin = false }: SidebarProps) {
             </button>
           )}
           <button
-            onClick={handleLogout}
+            onClick={() => setConfirmLogout(true)}
             className="nav-link w-full text-left"
             style={{ color: "#ef4444" }}
           >
@@ -137,6 +141,16 @@ export function Sidebar({ profile, isAdmin = false }: SidebarProps) {
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmLogout}
+        onClose={() => setConfirmLogout(false)}
+        onConfirm={handleLogout}
+        title="Log out"
+        message="Are you sure you want to log out?"
+        confirmLabel="Yes, Log Out"
+        danger
+      />
     </aside>
   );
 }

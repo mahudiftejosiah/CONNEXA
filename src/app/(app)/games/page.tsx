@@ -11,7 +11,9 @@ export default async function GamesPage() {
     supabase.from("external_games").select("*").order("created_at", { ascending: false }),
     supabase.from("site_shortcuts").select("*").in("category", ["sports", "betting"]).order("sort", { ascending: true }),
   ]);
-  const sites = (sitesRes.data || []) as any[];
+  // `published !== false` so an unpublish hides a shortcut here too, while a
+  // database that has not gained the column yet keeps showing everything.
+  const sites = (sitesRes.data || []).filter((s) => s.published !== false) as any[];
 
   // Friends with presence, for the live-game challenge picker (chunked IN-list).
   const friends: any[] = [];

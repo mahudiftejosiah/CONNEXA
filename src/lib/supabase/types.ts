@@ -40,6 +40,11 @@ export interface Database {
           interests: string[] | null
           website: string | null
           location: string | null
+          region?: string | null
+          country?: string | null
+          country_code?: string | null
+          state?: string | null
+          city?: string | null
           is_admin: boolean
           is_verified: boolean
           profile_visibility: "public" | "friends" | "private"
@@ -379,16 +384,18 @@ export interface Database {
       site_shortcuts: {
         Row: {
           id: string
-          category: "study" | "sports" | "betting"
+          category: "study" | "sports" | "betting" | "featured"
           name: string
           url: string
           logo_url: string | null
           description: string | null
+          site_category: string | null
+          published: boolean
           sort: number
           created_by: string | null
           created_at: string
         }
-        Insert: Omit<Database["public"]["Tables"]["site_shortcuts"]["Row"], "id" | "created_at" | "logo_url" | "description" | "created_by" | "sort"> & { logo_url?: string | null; description?: string | null; created_by?: string | null; sort?: number }
+        Insert: Omit<Database["public"]["Tables"]["site_shortcuts"]["Row"], "id" | "created_at" | "logo_url" | "description" | "created_by" | "sort" | "site_category" | "published"> & { logo_url?: string | null; description?: string | null; created_by?: string | null; sort?: number; site_category?: string | null; published?: boolean }
         Update: Partial<Omit<Database["public"]["Tables"]["site_shortcuts"]["Row"], "id" | "created_at">>
       }
       live_sessions: {

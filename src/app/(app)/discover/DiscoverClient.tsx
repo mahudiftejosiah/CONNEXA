@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Users, Globe, TrendingUp, UserPlus, Newspaper, Radio, Gamepad2, Clapperboard, ArrowRight, GraduationCap, Play } from "lucide-react";
+import { Users, Globe, TrendingUp, UserPlus, Newspaper, Radio, Gamepad2, Clapperboard, ArrowRight, GraduationCap, Play, Star, ExternalLink } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -15,6 +15,9 @@ import type { PoolReel } from "@/lib/reel-pool";
 import toast from "react-hot-toast";
 import { pluralize } from "@/lib/utils";
 import { formatRelativeTime } from "@/lib/utils";
+
+// The address printed under a featured site, without the scheme nobody reads.
+const hostOf = (url: string) => url.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "");
 
 interface NewsEntry {
   channel: string;
@@ -42,13 +45,14 @@ interface DiscoverClientProps {
   news: NewsEntry[];
   studyResources: StudyCard[];
   studySites: SiteShortcut[];
+  featuredSites: SiteShortcut[];
   studyBooks: StudyBook[];
   watchReels: PoolReel[];
 }
 
-export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, currentUserId, news, studyResources, studySites, studyBooks, watchReels }: DiscoverClientProps) {
+export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, currentUserId, news, studyResources, studySites, featuredSites, studyBooks, watchReels }: DiscoverClientProps) {
   const [sentTo, setSentTo] = useState<Set<string>>(new Set());
-  const [tab, setTab] = useState<"for-you" | "study">("for-you");
+  const [tab, setTab] = useState<"for-you" | "featured" | "study">("for-you");
   const room = useFullscreen<HTMLDivElement>();
   const [story, setStory] = useState<NewsEntry | null>(null);
   const [storyData, setStoryData] = useState<{ title: string; image: string | null; paragraphs: string[] } | null>(null);
@@ -121,6 +125,15 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
             : { backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-secondary)" }}
         >
           For you
+        </button>
+        <button
+          onClick={() => setTab("featured")}
+          className={"inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition-colors " + (tab === "featured" ? "text-white" : "hover:opacity-80")}
+          style={tab === "featured"
+            ? { backgroundColor: "rgb(var(--a-800))", borderColor: "rgb(var(--a-800))" }
+            : { backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-secondary)" }}
+        >
+          <Star className="w-4 h-4" /> Featured
         </button>
         <button
           onClick={enterRoom}
@@ -320,6 +333,64 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
       )}
 
         </>
+      )}
+
+      {tab === "featured" && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+              <Star className="w-5 h-5" style={{ color: "rgb(var(--a-800))" }} /> Featured sites
+            </h2>
+            <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              {pluralize(featuredSites.length, "site")} picked by the team
+            </span>
+          </div>
+
+          {featuredSites.length === 0 ? (
+            <div className="card p-8 text-center space-y-2">
+              <Globe className="w-7 h-7 mx-auto" style={{ color: "var(--text-secondary)" }} />
+              <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Nothing is featured yet</p>
+              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                An admin publishes sites from Admin &rarr; Sites, and they appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {featuredSites.map((s) => (
+                <div key={s.id} className="card p-4 flex gap-3">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center flex-none border"
+                    style={{ backgroundColor: "var(--bg)", borderColor: "var(--border)" }}>
+                    {s.logo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={s.logo_url} alt="" className="w-full h-full object-contain" loading="lazy" />
+                    ) : (
+                      <Globe className="w-5 h-5" style={{ color: "var(--text-secondary)" }} />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{s.name}</p>
+                      {s.site_category && (
+                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-none"
+                          style={{ backgroundColor: "rgb(var(--a-800) / 0.12)", color: "rgb(var(--a-800))" }}>
+                          {s.site_category}
+                        </span>
+                      )}
+                    </div>
+                    {s.description && (
+                      <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>{s.description}</p>
+                    )}
+                    <p className="text-[11px] mt-1 truncate" style={{ color: "var(--text-secondary)" }}>{hostOf(s.url)}</p>
+                    <a href={s.url} target="_blank" rel="noopener noreferrer"
+                      className="btn-primary text-xs inline-flex items-center gap-1.5 mt-2.5">
+                      Visit Website <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       <div ref={room.ref} className={`room-shell${room.active ? " pseudo-full" : ""}`}>

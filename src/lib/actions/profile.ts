@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { isValidImageType, MAX_IMAGE_SIZE } from "@/lib/utils";
+import { placeLine, resolvePlace } from "@/lib/geo";
 import type { PostVisibility, ColorTheme } from "@/lib/supabase/types";
 
 export async function updateProfile(formData: FormData) {
@@ -14,7 +15,6 @@ export async function updateProfile(formData: FormData) {
   const username = (formData.get("username") as string)?.trim().toLowerCase();
   const bio = (formData.get("bio") as string)?.trim();
   const website = (formData.get("website") as string)?.trim();
-  const location = (formData.get("location") as string)?.trim();
   const interestsRaw = (formData.get("interests") as string)?.trim();
   const profileVisibility = formData.get("profile_visibility") as string;
 
@@ -28,14 +28,39 @@ export async function updateProfile(formData: FormData) {
 
   const interests = interestsRaw ? interestsRaw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 20) : [];
 
+  // Only a form that carries the picker writes the location, so a caller that
+  // knows nothing about places cannot blank one out by omission.
+  const sendsPlace = formData.has("country_code");
+  const countryCode = ((formData.get("country_code") as string) || "").trim().toUpperCase();
+  let place: ReturnType<typeof resolvePlace> = null;
+  if (sendsPlace && countryCode) {
+    place = resolvePlace({
+      country_code: countryCode,
+      state_code: ((formData.get("state_code") as string) || "").trim(),
+      city: ((formData.get("city") as string) || "").trim(),
+    });
+    if (!place) return { error: "That place is not in the world list CONNEXA uses. Choose a country from the dropdown." };
+  }
+
   await supabase.from("profiles").update({
     display_name: displayName,
     username,
     bio: bio || null,
     website: website || null,
-    location: location || null,
     interests,
     profile_visibility: (profileVisibility || "public") as "public" | "friends" | "private",
+    ...(sendsPlace
+      ? place
+        ? {
+            region: place.region,
+            country: place.country,
+            country_code: place.country_code,
+            state: place.state,
+            city: place.city,
+            location: placeLine(place) || null,
+          }
+        : { region: null, country: null, country_code: null, state: null, city: null, location: null }
+      : {}),
   }).eq("id", user.id);
 
   revalidatePath(`/profile/${username}`);

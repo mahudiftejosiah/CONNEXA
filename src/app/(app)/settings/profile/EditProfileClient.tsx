@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Camera, Save } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
+import { LocationPicker, type PlaceSelection } from "@/components/ui/LocationPicker";
 import { updateProfile, uploadAvatar, uploadCover } from "@/lib/actions/profile";
 import type { Profile, UserPreferences } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
@@ -31,9 +32,19 @@ export function EditProfileClient({ profile, preferences }: EditProfileClientPro
     username: profile.username,
     bio: profile.bio || "",
     website: profile.website || "",
-    location: profile.location || "",
     interests: (profile.interests || []).join(", "),
     profile_visibility: profile.profile_visibility,
+  });
+
+  // Location is no longer a sentence someone types: it is a chain of choices
+  // that the server checks against the same world list the pickers show.
+  const [place, setPlace] = useState<PlaceSelection>({
+    region: profile.region || null,
+    country: profile.country || null,
+    country_code: profile.country_code || null,
+    state: profile.state || null,
+    state_code: null,
+    city: profile.city || null,
   });
 
   const set = (k: keyof typeof form) =>
@@ -72,11 +83,15 @@ export function EditProfileClient({ profile, preferences }: EditProfileClientPro
     setErrors({});
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.set(k, v));
+    fd.set("country_code", place.country_code || "");
+    fd.set("state_code", place.state_code || "");
+    fd.set("city", place.city || "");
     const res = await updateProfile(fd);
     setSaving(false);
     if (res.error) {
       if (res.error.includes("Username")) setErrors({ username: res.error });
       else if (res.error.includes("Display")) setErrors({ display_name: res.error });
+      else if (res.error.includes("place")) setErrors({ location: res.error });
       else toast.error(res.error);
       return;
     }
@@ -154,9 +169,31 @@ export function EditProfileClient({ profile, preferences }: EditProfileClientPro
           maxLength={500}
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input label="Website" type="url" value={form.website} onChange={set("website")} placeholder="https://yoursite.com" />
-          <Input label="Location" type="text" value={form.location} onChange={set("location")} placeholder="City, Country" maxLength={80} />
+        <Input label="Website" type="url" value={form.website} onChange={set("website")} placeholder="https://yoursite.com" />
+
+        <div className="space-y-3">
+          <div>
+            <p className="label mb-0">Location</p>
+            <p className="text-xs -mt-0.5" style={{ color: "var(--text-secondary)" }}>
+              Pick a region and a country. The state and city appear once a country is chosen, and neither is required.
+            </p>
+          </div>
+          <LocationPicker
+            saved={{
+              region: profile.region,
+              country: profile.country,
+              country_code: profile.country_code,
+              state: profile.state,
+              city: profile.city,
+            }}
+            onChange={setPlace}
+          />
+          {errors.location && <p className="text-xs text-red-500">{errors.location}</p>}
+          {profile.location && !place.country && (
+            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              Your profile still shows “{profile.location}”. Choosing a country above replaces it.
+            </p>
+          )}
         </div>
 
         <Input

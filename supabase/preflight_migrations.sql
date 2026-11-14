@@ -48,6 +48,17 @@ from (
          then 'yes' else 'no' end),
   ('024 highlight table',
     case when to_regclass('public.study_book_highlights') is not null then 'yes' else 'no' end),
+  ('025 featured shelf + published column',
+    case when exists (select 1 from pg_attribute
+                      where relid = 'public.site_shortcuts'::regclass
+                        and attname = 'published') then 'yes' else 'no' end),
+  ('025 starter featured sites',
+    (select (case when count(*) > 0 then 'yes' else 'no (' || count(*)::text || ')' end)::text
+      from public.site_shortcuts where category = 'featured')),
+  ('026 worldwide location columns',
+    case when exists (select 1 from pg_attribute
+                      where relid = 'public.profiles'::regclass
+                        and attname = 'country_code') then 'yes' else 'no' end),
   ('seed: book covers filled in',
     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
       from public.study_books where cover_url is not null)),
