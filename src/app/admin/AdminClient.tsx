@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe, Bot } from "lucide-react";
+import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe, Bot, BookOpen, Library } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
@@ -10,7 +10,7 @@ import { ImageField } from "@/components/ui/ImageField";
 import { AssistantBot } from "./AssistantBot";
 import type { HealthCheck } from "@/lib/botHealth";
 import { createClient } from "@/lib/supabase/client";
-import type { Profile, ContentReport, ModerationAction, SiteContent, ExternalGame, ReelEmbed, SiteShortcut, BotFlagWithAuthor, BotSettings } from "@/lib/supabase/types";
+import type { Profile, ContentReport, ModerationAction, SiteContent, ExternalGame, ReelEmbed, SiteShortcut, StudyBook, BotFlagWithAuthor, BotSettings } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 import { formatRelativeTime } from "@/lib/utils";
 
@@ -37,10 +37,21 @@ interface AdminClientProps {
   globalTheme: string;
   upgrades: UpgradeRow[];
   siteShortcuts: SiteShortcut[];
+  studyBooks: StudyBook[];
   bot: { settings: BotSettings; openFlags: BotFlagWithAuthor[]; resolved: BotFlagWithAuthor[]; checks: HealthCheck[] };
 }
 
-type Tab = "overview" | "users" | "reports" | "actions" | "content" | "appearance" | "games" | "sites" | "verification" | "assistant";
+type Tab = "overview" | "users" | "reports" | "actions" | "content" | "appearance" | "games" | "library" | "sites" | "verification" | "assistant";
+
+// These four shelves are the whole of study_books.category — the enum the
+// database enforces, spelled out here so a new book can only land on a shelf
+// that actually exists on the wall.
+const BOOK_SHELVES: { key: StudyBook["category"]; label: string }[] = [
+  { key: "educational", label: "Educational" },
+  { key: "story", label: "Story books" },
+  { key: "inspirational", label: "Inspirational" },
+  { key: "holy", label: "Holy books" },
+];
 
 const THEME_CHOICES = [
   { key: "connexa", label: "Connexa (green/gold)", a: "#12372A", b: "#D6B875" },
@@ -59,7 +70,7 @@ const CONTENT_KEYS: { key: string; label: string }[] = [
   { key: "upgrade", label: "Upgrade / Pricing" },
 ];
 
-export function AdminClient({ users, pendingReports: initReports, recentActions, stats, currentAdminId, siteContent: initContent, externalGames: initGames, reelEmbeds: initReelEmbeds, globalTheme: initTheme, upgrades: initUpgrades, siteShortcuts: initSites, bot }: AdminClientProps) {
+export function AdminClient({ users, pendingReports: initReports, recentActions, stats, currentAdminId, siteContent: initContent, externalGames: initGames, reelEmbeds: initReelEmbeds, globalTheme: initTheme, upgrades: initUpgrades, siteShortcuts: initSites, studyBooks: initBooks, bot }: AdminClientProps) {
   const [tab, setTab] = useState<Tab>("overview");
   const [reports, setReports] = useState(initReports);
   const [actioningId, setActioningId] = useState<string | null>(null);
@@ -81,6 +92,12 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
   const [siteCat, setSiteCat] = useState<"sports" | "betting" | "study">("sports");
   const [newSite, setNewSite] = useState({ title: "", url: "", logo_url: "" });
   const [savingSite, setSavingSite] = useState(false);
+
+  const [books, setBooks] = useState(initBooks);
+  const [newBook, setNewBook] = useState<{
+    title: string; author: string; pdf_url: string; cover_url: string; description: string; category: StudyBook["category"];
+  }>({ title: "", author: "", pdf_url: "", cover_url: "", description: "", category: "educational" });
+  const [savingBook, setSavingBook] = useState(false);
 
   async function handleReport(reportId: string, status: "resolved" | "dismissed") {
     setActioningId(reportId);
@@ -211,6 +228,37 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
     toast.success("Site removed.");
   }
 
+  // The shelf is chosen here and the Study Room wall reads it straight back, so
+  // a new book is standing in the right case the moment it is saved.
+  async function addStudyBook() {
+    const url = newBook.pdf_url.trim();
+    if (!newBook.title.trim()) { toast.error("A title is required."); return; }
+    if (!/^https?:\/\//.test(url)) { toast.error("A valid http(s) link to the book is required."); return; }
+    setSavingBook(true);
+    const supabase = createClient();
+    const { data, error } = await supabase.from("study_books").insert({
+      category: newBook.category,
+      title: newBook.title.trim(),
+      author: newBook.author.trim() || null,
+      pdf_url: url,
+      cover_url: newBook.cover_url.trim() || null,
+      description: newBook.description.trim() || null,
+    }).select().single();
+    setSavingBook(false);
+    if (error || !data) { toast.error("Could not add book: " + (error?.message || "")); return; }
+    setBooks((p) => [data, ...p]);
+    setNewBook((p) => ({ ...p, title: "", author: "", pdf_url: "", cover_url: "", description: "" }));
+    toast.success(`Shelved under ${BOOK_SHELVES.find((s) => s.key === data.category)?.label}.`);
+  }
+
+  async function removeStudyBook(id: string) {
+    const supabase = createClient();
+    const { error } = await supabase.from("study_books").delete().eq("id", id);
+    if (error) { toast.error("Delete failed."); return; }
+    setBooks((p) => p.filter((b) => b.id !== id));
+    toast.success("Book taken off the shelf.");
+  }
+
   async function reviewUpgrade(id: string, status: "approved" | "rejected") {
     setActingUpgrade(id);
     const supabase = createClient();
@@ -240,6 +288,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
     { key: "content",    label: "Content",   icon: <FileText className="w-4 h-4" /> },
     { key: "appearance", label: "Theme",     icon: <Palette className="w-4 h-4" /> },
     { key: "games",      label: "Games",     icon: <Gamepad2 className="w-4 h-4" /> },
+    { key: "library",    label: "Library",   icon: <BookOpen className="w-4 h-4" /> },
     { key: "sites",      label: "Sites",     icon: <Globe className="w-4 h-4" /> },
     { key: "verification", label: "Verified", icon: <BadgeCheck className="w-4 h-4" />, badge: upgradeRows.filter((u) => u.status === "pending").length },
     { key: "assistant", label: "Assistant", icon: <Bot className="w-4 h-4" />, badge: bot.openFlags.length },
@@ -565,6 +614,97 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {tab === "library" && (
+        <div className="space-y-4">
+          <div className="card p-5 space-y-3">
+            <h3 className="font-semibold flex items-center gap-2"><Library className="w-4 h-4" /> Add a book to the Study Room</h3>
+            <p className="text-sm text-[var(--text-secondary)]">
+              The shelf chosen here is where the book stands: the library wall groups itself by shelf, so a new title is
+              organised the moment it is saved and never has to be placed a second time.
+              A <b>Project Gutenberg</b> link (<span className="font-mono">gutenberg.org/ebooks/1342</span>) opens in the
+              CONNEXA reader with pages, highlights and a remembered place. Any other link is a file that lives elsewhere,
+              so it opens in a new tab.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <input className="input" placeholder="Book title *" value={newBook.title}
+                onChange={(e) => setNewBook((p) => ({ ...p, title: e.target.value }))} />
+              <input className="input" placeholder="Author (optional)" value={newBook.author}
+                onChange={(e) => setNewBook((p) => ({ ...p, author: e.target.value }))} />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <select className="input" value={newBook.category} aria-label="Shelf"
+                onChange={(e) => setNewBook((p) => ({ ...p, category: e.target.value as StudyBook["category"] }))}>
+                {BOOK_SHELVES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+              </select>
+              <input className="input" placeholder="Book link (https://…) *" value={newBook.pdf_url}
+                onChange={(e) => setNewBook((p) => ({ ...p, pdf_url: e.target.value }))} />
+            </div>
+            <ImageField placeholder="Cover image link (optional)" value={newBook.cover_url}
+              onChange={(v) => setNewBook((p) => ({ ...p, cover_url: v }))} userId={currentAdminId} />
+            <input className="input" placeholder="One line about the book (optional)" value={newBook.description}
+              onChange={(e) => setNewBook((p) => ({ ...p, description: e.target.value }))} />
+            <Button onClick={addStudyBook} loading={savingBook} icon={<Plus className="w-4 h-4" />}>Shelve this book</Button>
+          </div>
+
+          <div className="card overflow-hidden">
+            <div className="p-4 border-b border-[var(--border)]">
+              <p className="text-sm font-semibold">The wall ({books.length} titles)</p>
+            </div>
+            {BOOK_SHELVES.map((shelf) => {
+              const onShelf = books.filter((b) => b.category === shelf.key);
+              return (
+                <div key={shelf.key} className="p-4 border-b border-[var(--border)] last:border-b-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-primary)]">{shelf.label}</p>
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      {onShelf.length} {onShelf.length === 1 ? "title" : "titles"}
+                    </span>
+                  </div>
+                  {onShelf.length === 0 ? (
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      Nothing on this shelf yet — save a book with this shelf chosen and it stands right here.
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {onShelf.map((b) => (
+                        <div key={b.id} className="flex items-center gap-3">
+                          {b.cover_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={b.cover_url} alt={b.title} className="w-9 h-12 rounded-md object-cover object-top flex-shrink-0 bg-[var(--border)]" />
+                          ) : (
+                            <div className="w-9 h-12 rounded-md bg-[var(--border)] flex items-center justify-center flex-shrink-0">
+                              <BookOpen className="w-4 h-4 text-[var(--text-secondary)]" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate">{b.title}</p>
+                            <p className="text-xs text-[var(--text-secondary)] truncate">
+                              {b.author ? `${b.author} · ` : ""}{b.pdf_url}
+                            </p>
+                          </div>
+                          <Link href={`/study/${b.id}`}
+                            className="p-2 rounded-xl text-brand-green-800 dark:text-brand-gold-400 hover:bg-[var(--border)]" aria-label={`Open ${b.title} in the reader`}>
+                            <BookOpen className="w-4 h-4" />
+                          </Link>
+                          <a href={b.pdf_url} target="_blank" rel="noopener noreferrer"
+                            className="p-2 rounded-xl text-brand-green-800 dark:text-brand-gold-400 hover:bg-[var(--border)]" aria-label="Open the source">
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                          <Button size="sm" variant="ghost" icon={<Trash2 className="w-3.5 h-3.5 text-red-500" />}
+                            onClick={() => removeStudyBook(b.id)}>
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

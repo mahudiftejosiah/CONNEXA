@@ -583,6 +583,164 @@
   opacity: 0.6;
 }
 
+/* The reader turns pages instead of running one long column down the screen.
+   A page is a sheet of the book: it holds one screenful and scrolls internally
+   only when a single passage is longer than the sheet. */
+.study-stage { perspective: 1600px; }
+.study-page {
+  min-height: 46vh;
+  max-height: 70vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@keyframes studyTurnFwd {
+  from { transform: rotateY(-52deg) translateZ(-70px); opacity: 0.2; }
+  to   { transform: rotateY(0) translateZ(0); opacity: 1; }
+}
+@keyframes studyTurnBack {
+  from { transform: rotateY(52deg) translateZ(-70px); opacity: 0.2; }
+  to   { transform: rotateY(0) translateZ(0); opacity: 1; }
+}
+.study-page--turned {
+  transform-origin: left center;
+  backface-visibility: hidden;
+  animation: studyTurnFwd 0.34s ease-out both;
+}
+.study-page--turned[data-dir="back"] {
+  transform-origin: right center;
+  animation-name: studyTurnBack;
+}
+
+/* A marked passage. It has to read as ink on paper, not as a system warning. */
+.study-hl {
+  background: linear-gradient(180deg, rgb(var(--b-400) / 0.42) 12%, rgb(var(--b-500) / 0.6) 100%);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0.06em 0.1em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  cursor: pointer;
+}
+
+/* What you can do with the words you have just selected. */
+.study-selectbar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--b-400) / 0.45);
+  background: rgb(14 10 6 / 0.94);
+  box-shadow: 0 14px 30px rgb(0 0 0 / 0.35);
+  animation: splashIn 0.18s ease-out both;
+}
+.study-selectbar__quote {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-style: italic;
+  font-size: 12px;
+  color: #f6ecd8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.study-selectbar__btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border: 0;
+  border-radius: 9999px;
+  background: rgb(var(--b-400));
+  color: #201204;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.study-selectbar__btn--ghost {
+  background: rgb(246 236 216 / 0.14);
+  color: #f6ecd8;
+}
+.study-selectbar__btn:hover { filter: brightness(1.08); }
+
+/* Turning the book over, and hopping to any page in it. */
+.study-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.study-nav__btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease-out, transform 0.18s ease-out;
+}
+.study-nav__btn:hover:not(:disabled) {
+  background: var(--border);
+  transform: scale(1.03);
+}
+.study-nav__btn:disabled { opacity: 0.4; cursor: default; }
+.study-nav__center {
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.study-nav__count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.study-nav__count strong { color: var(--text-primary); font-weight: 800; }
+.study-nav__jump { display: flex; align-items: center; gap: 0.35rem; }
+.study-nav__input {
+  width: 5.5rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.study-nav__go {
+  padding: 0.4rem 0.7rem;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(var(--a-700));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.study-nav__go:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 520px) {
+  .study-nav__btn span { display: none; }
+  .study-page { max-height: 62vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .study-page--turned { animation: none; }
+  .study-selectbar { animation: none; }
+}
+
 /* ===== Study Room: the walkable library wall =====
    The room is a photograph of a real library now, and it moves only when the
    reader moves it. Two custom properties arrive from the component: --shift is
@@ -950,6 +1108,61 @@
   .library__card { animation-name: none; }
 }
 
+/* ===== Study Room: the search desk and the shelf plate ===== */
+.library__search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.08);
+}
+.library__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+.library__search input::placeholder { color: rgb(120 120 120 / 0.85); }
+/* Safari leaves a big grey cancel button on type="search"; ours replaces it. */
+.library__search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.library__search-clear {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.library__search-clear:hover { background: var(--border); color: var(--text-primary); }
+
+/* Search results sit where the wall was, so the room does not scroll away. */
+.library__results {
+  padding: 0.9rem;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+/* A shelf longer than the wall says so, instead of hiding the rest. */
+.library__overflow {
+  flex: none;
+  margin-top: 0.4rem;
+  text-align: center;
+  font-size: 11px;
+  color: rgb(246 236 216 / 0.62);
+}
+
 /* ===== Header: presence dot and small-screen fit =====
    The profile lives in the bar at the bottom, so nothing here is spent on an
    avatar any more. That room is given back as a wider gap between the icons,
@@ -1023,3 +1236,35 @@
    folded-away card would still push the 100dvh wall off the bottom. */
 .room-only .room-side { display: none; }
 .room-only > :not([hidden]) ~ :not([hidden]) { margin-top: 0; }
+
+/* The search desk keeps its own height at the top of the screen, so the wall
+   gives that much back — a full-screen room still ends at the bottom edge. */
+.room-only .library--full {
+  height: calc(100vh - 52px);
+  height: calc(100dvh - 52px);
+}
+
+/* ===== Branded route splash =====
+   The delay is the whole trick: a route already in the router cache resolves
+   inside these first milliseconds, so the panel never becomes visible at all.
+   Only a real fetch waits long enough to fade the mark in. */
+.route-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  pointer-events: none;
+  animation: splashIn 0.22s ease 0.14s both;
+}
+
+@keyframes splashIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-splash { animation-delay: 0s; }
+}

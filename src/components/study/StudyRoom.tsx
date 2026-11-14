@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, BookOpen, ExternalLink, Globe, GraduationCap, Library, LogOut,
-  Maximize2, Minimize2, Plus, Trash2,
+  Maximize2, Minimize2, Plus, Search, Trash2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
@@ -39,8 +39,12 @@ const SHELVES: { key: StudyBook["category"]; label: string; hue: number }[] = [
   { key: "holy", label: "Holy books", hue: 268 },
 ];
 
-const ROWS_PER_CASE = 4;
 const SPINES_PER_ROW = 10;
+const ROWS_PER_CASE = 4;
+const BOOKS_PER_CASE = ROWS_PER_CASE * SPINES_PER_ROW;
+// A category with more titles than the wall can hold keeps its overflow on the
+// shelf's own plate rather than losing it, so the count always tells the truth.
+const CASES_PER_SHELF = 3;
 
 // A stable little number from the title, used to vary spine width, colour and
 // height so the wall never looks like the same book standing forty times.
@@ -52,6 +56,54 @@ function seedOf(text: string) {
 
 const inputCls = "w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/10";
 const inputStyle = { backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-primary)" } as const;
+
+// One card, used by the shelf drawer and by search results, so a book never
+// looks different depending on how you reached it.
+function BookCard({ book, mark, shelfLabel }: { book: StudyBook; mark?: Marker; shelfLabel?: string }) {
+  return (
+    <div className="rounded-2xl border overflow-hidden transition-transform hover:scale-[1.02] relative"
+      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+      <Link href={`/study/${book.id}`} className="block">
+        {book.cover_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={book.cover_url}
+            alt={`Cover of ${book.title}`}
+            className="w-full h-32 object-cover object-top"
+            style={{ backgroundColor: "var(--border)" }}
+            loading="lazy"
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+          />
+        ) : (
+          <div className="h-32 flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg,rgb(var(--a-800)),rgb(var(--b-500)))" }}>
+            <Library className="w-8 h-8 text-white/80" />
+          </div>
+        )}
+        <div className="p-3">
+          <p className="text-sm font-bold leading-tight line-clamp-2" style={{ color: "var(--text-primary)" }}>{book.title}</p>
+          {book.author && <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-secondary)" }}>{book.author}</p>}
+          {shelfLabel && (
+            <p className="text-[11px] mt-1 font-semibold uppercase tracking-wide" style={{ color: "rgb(var(--b-600))" }}>{shelfLabel}</p>
+          )}
+          {mark && mark.percent > 0 ? (
+            <p className="text-[11px] mt-1.5 font-semibold" style={{ color: "rgb(var(--b-600))" }}>
+              {mark.percent >= 99 ? "Finished" : `Resume at ${mark.percent}%`}
+            </p>
+          ) : (
+            <p className="text-[11px] mt-1.5 font-semibold uppercase tracking-wide" style={{ color: "rgb(var(--a-800))" }}>
+              Read in CONNEXA
+            </p>
+          )}
+        </div>
+      </Link>
+      <a href={book.pdf_url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${book.title} on Project Gutenberg`}
+        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center hover:bg-black/70">
+        <ExternalLink className="w-3.5 h-3.5" />
+      </a>
+    </div>
+  );
+}
 
 export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, onToggleFullscreen, onLeave }: {
   initial: StudyCard[];
@@ -70,6 +122,9 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
   const [form, setForm] = useState({ title: "", url: "", cover_url: "", description: "" });
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [query, setQuery] = useState("");
+  // Declared here because the wall's measurement effect below already needs it.
+  const needle = query.trim().toLowerCase();
 
   const [offset, setOffset] = useState(0);
   const [maxOffset, setMaxOffset] = useState(0);
@@ -92,7 +147,9 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
     observer.observe(stage);
     observer.observe(track);
     return () => observer.disconnect();
-  }, [books]);
+    // The wall is unmounted while a search is open, so the travel limit has to
+    // be re-measured when it comes back.
+  }, [books, needle]);
 
   useEffect(() => {
     createClient()
@@ -118,6 +175,21 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
     }
     return groups;
   }, [books]);
+
+  // Title, author and the shelf it stands on are all searchable, and the shelf
+  // matches by its printed label as well as by its stored key.
+  const matches = useMemo(() => {
+    if (!needle) return [];
+    return books.filter((b) => {
+      const label = SHELVES.find((s) => s.key === b.category)?.label || "";
+      return (
+        b.title.toLowerCase().includes(needle) ||
+        (b.author || "").toLowerCase().includes(needle) ||
+        b.category.toLowerCase().includes(needle) ||
+        label.toLowerCase().includes(needle)
+      );
+    });
+  }, [books, needle]);
 
   const recent = useMemo(
     () => Object.values(marks).filter((m) => m.percent > 0 && m.percent < 99)
@@ -214,6 +286,57 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
 
   return (
     <section className={isFullscreen ? "space-y-4 room-only" : "space-y-4"}>
+      {/* Reading desk: find a title without walking past every case. It sits
+          outside .room-side so the bar survives full screen. */}
+      <div className="library__search">
+        <Search className="w-4 h-4 flex-none" style={{ color: "var(--text-secondary)" }} />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search books by title, author or category…"
+          aria-label="Search the library"
+        />
+        {needle && (
+          <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="library__search-clear">
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {needle && (
+        <div className="library__results space-y-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+              {matches.length === 0 ? "No book matches that" : `${matches.length.toLocaleString()} ${matches.length === 1 ? "book" : "books"} found`}
+            </p>
+            <span className="text-xs truncate" style={{ color: "var(--text-secondary)" }}>“{query.trim()}”</span>
+            <button type="button" onClick={() => setQuery("")} className="ml-auto text-xs font-semibold" style={{ color: "rgb(var(--a-800))" }}>
+              Back to the wall
+            </button>
+          </div>
+
+          {matches.length === 0 ? (
+            <p className="text-sm py-6 text-center" style={{ color: "var(--text-secondary)" }}>
+              Nothing on any shelf answers to that. Try part of a title, an author&rsquo;s surname, or a shelf name such as &ldquo;story&rdquo;.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {matches.slice(0, 60).map((b) => (
+                  <BookCard key={b.id} book={b} mark={marks[b.id]} shelfLabel={SHELVES.find((s) => s.key === b.category)?.label} />
+                ))}
+              </div>
+              {matches.length > 60 && (
+                <p className="text-xs text-center" style={{ color: "var(--text-secondary)" }}>
+                  Showing the first 60 of {matches.length.toLocaleString()} — narrow the search to see the rest.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       {/* .room-side is what full screen folds away — see globals.css */}
       <div className="room-side">
       <div className="flex items-center gap-2">
@@ -267,7 +390,9 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
       )}
       </div>
 
-      {/* The library itself: one long wall of cases that the reader walks past. */}
+      {/* The library itself: one long wall of cases that the reader walks past.
+          A search replaces it, because half a wall is harder to read than a list. */}
+      {!needle && (
       <div
         ref={stageRef}
         className={"library" + (gliding ? " library--gliding" : "") + (isFullscreen ? " library--full" : "")}
@@ -283,11 +408,20 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
         <div ref={trackRef} className="library__track">
           {SHELVES.map((shelf) => {
             const stock = byShelf.get(shelf.key) || [];
-            const onWall = stock.slice(0, ROWS_PER_CASE * SPINES_PER_ROW);
-            const rows: StudyBook[][] = [];
-            for (let i = 0; i < onWall.length; i += SPINES_PER_ROW) rows.push(onWall.slice(i, i + SPINES_PER_ROW));
-            return (
-              <section key={shelf.key} className="library__case" aria-label={`${shelf.label} case`}>
+            const onWall = stock.slice(0, BOOKS_PER_CASE * CASES_PER_SHELF);
+            const shelved = onWall.length;
+            const hidden = stock.length - shelved;
+            // A category bigger than one case gets another case on the same
+            // wall, so no title is quietly left out of the room.
+            const cases: StudyBook[][] = [];
+            for (let i = 0; i < shelved; i += BOOKS_PER_CASE) cases.push(onWall.slice(i, i + BOOKS_PER_CASE));
+            if (cases.length === 0) cases.push([]);
+            return cases.map((onCase, c) => {
+              const rows: StudyBook[][] = [];
+              for (let i = 0; i < onCase.length; i += SPINES_PER_ROW) rows.push(onCase.slice(i, i + SPINES_PER_ROW));
+              const last = c === cases.length - 1;
+              return (
+              <section key={`${shelf.key}-${c}`} className="library__case" aria-label={`${shelf.label} case ${c + 1}`}>
                 <div className="library__crown" />
                 <div className="library__tiers">
                   {rows.map((row, r) => (
@@ -326,15 +460,24 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
                     </div>
                   ))}
                   {rows.length === 0 && (
-                    <p className="library__empty">This case is waiting for books.</p>
+                    <p className="library__empty">
+                      {stock.length === 0
+                        ? `The ${shelf.label.toLowerCase()} shelf is empty — add a book and it lands right here.`
+                        : "This case is waiting for books."}
+                    </p>
+                  )}
+                  {last && hidden > 0 && (
+                    <p className="library__overflow">{hidden} more on this shelf — tap the plate to see them all.</p>
                   )}
                 </div>
                 <button type="button" className="library__plate" onClick={() => setOpenShelf(shelf.key)}>
                   {shelf.label}
+                  {cases.length > 1 && <span className="opacity-60">{c + 1}/{cases.length}</span>}
                   <span className="opacity-70">{stock.length}</span>
                 </button>
               </section>
-            );
+              );
+            });
           })}
         </div>
 
@@ -411,6 +554,7 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
           <button type="button" onClick={() => setOffset((o) => clamp(o + 240))} disabled={offset >= maxOffset} aria-label="Walk to the right">›</button>
         </div>
       </div>
+      )}
 
       <div className="room-side flex flex-wrap items-center gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
         <span>Slide along the shelves — stop on a book and its details rise.</span>
@@ -435,49 +579,14 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {drawerBooks.map((b) => {
-              const mark = marks[b.id];
-              return (
-                <div key={b.id} className="rounded-2xl border overflow-hidden transition-transform hover:scale-[1.02] relative"
-                  style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
-                  <Link href={`/study/${b.id}`} className="block">
-                    {b.cover_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={b.cover_url}
-                        alt={`Cover of ${b.title}`}
-                        className="w-full h-32 object-cover object-top"
-                        style={{ backgroundColor: "var(--border)" }}
-                        loading="lazy"
-                        onError={(e) => { e.currentTarget.style.display = "none"; }}
-                      />
-                    ) : (
-                      <div className="h-32 flex items-center justify-center"
-                        style={{ background: "linear-gradient(135deg,rgb(var(--a-800)),rgb(var(--b-500)))" }}>
-                        <Library className="w-8 h-8 text-white/80" />
-                      </div>
-                    )}
-                    <div className="p-3">
-                      <p className="text-sm font-bold leading-tight line-clamp-2" style={{ color: "var(--text-primary)" }}>{b.title}</p>
-                      {b.author && <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-secondary)" }}>{b.author}</p>}
-                      {mark && mark.percent > 0 ? (
-                        <p className="text-[11px] mt-1.5 font-semibold" style={{ color: "rgb(var(--b-600))" }}>
-                          {mark.percent >= 99 ? "Finished" : `Resume at ${mark.percent}%`}
-                        </p>
-                      ) : (
-                        <p className="text-[11px] mt-1.5 font-semibold uppercase tracking-wide" style={{ color: "rgb(var(--a-800))" }}>
-                          Read in CONNEXA
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                  <a href={b.pdf_url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${b.title} on Project Gutenberg`}
-                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center hover:bg-black/70">
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              );
-            })}
+            {drawerBooks.map((b) => (
+              <BookCard
+                key={b.id}
+                book={b}
+                mark={marks[b.id]}
+                shelfLabel={openShelf === "all" ? SHELVES.find((s) => s.key === b.category)?.label : undefined}
+              />
+            ))}
           </div>
         </div>
       )}

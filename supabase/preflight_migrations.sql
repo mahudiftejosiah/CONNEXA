@@ -46,6 +46,8 @@ from (
   ('023 unsend function',
     case when to_regprocedure('public.delete_message_for_everyone(uuid)') is not null
          then 'yes' else 'no' end),
+  ('024 highlight table',
+    case when to_regclass('public.study_book_highlights') is not null then 'yes' else 'no' end),
   ('seed: book covers filled in',
     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
       from public.study_books where cover_url is not null)),

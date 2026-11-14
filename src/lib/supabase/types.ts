@@ -434,6 +434,19 @@ export interface Database {
         Insert: { user_id: string; book_id: string; position?: number; percent?: number; finished_at?: string | null }
         Update: Partial<{ position: number; percent: number; finished_at: string | null; updated_at: string }>
       }
+      study_book_highlights: {
+        Row: {
+          id: string
+          user_id: string
+          book_id: string
+          paragraph: number
+          start_char: number
+          end_char: number
+          created_at: string
+        }
+        Insert: { user_id: string; book_id: string; paragraph: number; start_char: number; end_char: number }
+        Update: Partial<{ paragraph: number; start_char: number; end_char: number }>
+      }
       game_scores: {
         Row: {
           id: string
@@ -574,6 +587,8 @@ export type LiveSession = Database["public"]["Tables"]["live_sessions"]["Row"]
 export type StudyBook = Database["public"]["Tables"]["study_books"]["Row"]
 export type StudyProgress = Database["public"]["Tables"]["study_progress"]["Row"]
 export type StudyProgressInsert = Database["public"]["Tables"]["study_progress"]["Insert"]
+export type StudyHighlight = Database["public"]["Tables"]["study_book_highlights"]["Row"]
+export type StudyHighlightInsert = Database["public"]["Tables"]["study_book_highlights"]["Insert"]
 export type GameScore = Database["public"]["Tables"]["game_scores"]["Row"]
 export type GameRequest = Database["public"]["Tables"]["game_requests"]["Row"]
 export type AccountUpgrade = Database["public"]["Tables"]["account_upgrades"]["Row"]
