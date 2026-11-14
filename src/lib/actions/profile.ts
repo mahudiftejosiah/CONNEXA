@@ -42,6 +42,12 @@ export async function updateProfile(formData: FormData) {
     if (!place) return { error: "That place is not in the world list CONNEXA uses. Choose a country from the dropdown." };
   }
 
+  // Migration 026 adds the place columns. Asking for them before that update
+  // has been run would fail the whole statement and cost the person their
+  // other profile edits, so the columns are checked for first.
+  const placeColumns = !sendsPlace
+    || !(await supabase.from("profiles").select("country_code").eq("id", user.id).limit(1)).error;
+
   await supabase.from("profiles").update({
     display_name: displayName,
     username,
@@ -49,7 +55,7 @@ export async function updateProfile(formData: FormData) {
     website: website || null,
     interests,
     profile_visibility: (profileVisibility || "public") as "public" | "friends" | "private",
-    ...(sendsPlace
+    ...(sendsPlace && placeColumns
       ? place
         ? {
             region: place.region,
@@ -65,6 +71,9 @@ export async function updateProfile(formData: FormData) {
 
   revalidatePath(`/profile/${username}`);
   revalidatePath("/settings");
+  if (sendsPlace && !placeColumns) {
+    return { error: "Your profile saved. The location still needs a one-time database update (migration 026) before CONNEXA can store it." };
+  }
   return { success: true, username };
 }
 

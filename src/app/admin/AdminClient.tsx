@@ -208,21 +208,25 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
     }
     setSavingSite(true);
     const supabase = createClient();
+    // Migration 025 adds the published switch and the shown-as label. Until it
+    // has been run, naming either would reject the whole insert — including a
+    // plain sports or study shortcut that never needed them.
+    const { error: columnsMissing } = await supabase.from("site_shortcuts").select("published").limit(1);
     const { data, error } = await supabase.from("site_shortcuts").insert({
       category: siteCat,
       name: newSite.title.trim(),
       url: newSite.url.trim(),
       logo_url: newSite.logo_url.trim() || null,
       description: newSite.description.trim() || null,
-      site_category: newSite.site_category.trim() || null,
-      published: true,
+      ...(columnsMissing ? {} : { site_category: newSite.site_category.trim() || null, published: true }),
       created_by: currentAdminId,
     }).select().single();
     setSavingSite(false);
     if (error || !data) { toast.error("Could not add site: " + (error?.message || "(run migrations 013 and 025)")); return; }
     setSites((p) => [data, ...p]);
     setNewSite({ title: "", url: "", logo_url: "", description: "", site_category: "" });
-    toast.success(siteCat === "featured" ? "Published to Discover → Featured." : "Site added — visible instantly.");
+    if (columnsMissing) toast("Added, but the database cannot store its label or published switch yet — paste migration 025.");
+    else toast.success(siteCat === "featured" ? "Published to Discover → Featured." : "Site added — visible instantly.");
   }
 
   async function saveSiteEdit() {
@@ -251,7 +255,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
   async function toggleSitePublished(s: SiteShortcut) {
     const supabase = createClient();
     const { data, error } = await supabase
-      .from("site_shortcuts").update({ published: !s.published }).eq("id", s.id).select().single();
+      .from("site_shortcuts").update({ published: s.published === false }).eq("id", s.id).select().single();
     if (error || !data) { toast.error("Could not change that. (Run migration 025.)"); return; }
     setSites((p) => p.map((x) => (x.id === s.id ? data : x)));
     toast.success(data.published ? "Published again." : "Unpublished — no longer shown.");
@@ -823,16 +827,16 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
 
           <div className="card p-5 space-y-3">
             <p className="text-sm font-semibold">
-              Preview · {siteCat} ({sites.filter((s) => s.category === siteCat && s.published).length} shown)
+              Preview · {siteCat} ({sites.filter((s) => s.category === siteCat && s.published !== false).length} shown)
             </p>
             {sites.filter((s) => s.category === siteCat).length === 0 ? (
               <p className="text-sm text-[var(--text-secondary)]">
                 Nothing on this shelf yet. {siteCat === "featured" ? "Add one above, or run migration 025 for six starter sites." : "(Migration 013 loads the starter sites.)"}
               </p>
-            ) : sites.filter((s) => s.category === siteCat && s.published).length === 0 ? (
+            ) : sites.filter((s) => s.category === siteCat && s.published !== false).length === 0 ? (
               <p className="text-sm text-[var(--text-secondary)]">Everything on this shelf is unpublished, so visitors see an empty section.</p>
             ) : (
-              <SiteIconGrid items={sites.filter((s) => s.category === siteCat && s.published)} />
+              <SiteIconGrid items={sites.filter((s) => s.category === siteCat && s.published !== false)} />
             )}
           </div>
 
@@ -861,7 +865,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
                           <span className="ml-1.5 text-[10px] uppercase font-mono px-1.5 py-0.5 rounded"
                             style={{ backgroundColor: "var(--brand-gold)", color: "#12372A" }}>{s.site_category}</span>
                         )}
-                        {!s.published && (
+                        {s.published === false && (
                           <span className="ml-1.5 text-[10px] uppercase font-mono bg-red-500/15 text-red-500 px-1.5 py-0.5 rounded">hidden</span>
                         )}
                       </p>
@@ -874,9 +878,9 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
                         Edit
                       </Button>
                       <Button size="sm" variant="ghost"
-                        icon={s.published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-brand-green-800 dark:text-brand-gold-400" />}
+                        icon={s.published === false ? <Eye className="w-3.5 h-3.5 text-brand-green-800 dark:text-brand-gold-400" /> : <EyeOff className="w-3.5 h-3.5" />}
                         onClick={() => toggleSitePublished(s)}>
-                        {s.published ? "Unpublish" : "Publish"}
+                        {s.published === false ? "Publish" : "Unpublish"}
                       </Button>
                       <a href={s.url} target="_blank" rel="noopener noreferrer"
                         className="p-2 rounded-xl text-brand-green-800 dark:text-brand-gold-400 hover:bg-[var(--border)]" aria-label={`Open ${s.name}`}>
