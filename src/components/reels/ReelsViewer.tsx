@@ -349,7 +349,7 @@ export function ReelsViewer({ profile, fullscreen = false, onClose }: ReelsViewe
           >
             {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
           </button>
-          {!fullscreen && (
+          {!full && (
             <button
               onClick={() => setExpanded(true)}
               className="w-10 h-10 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center"

@@ -509,7 +509,7 @@ export function StudyReader({ book, userId, saved }: { book: StudyBook; userId: 
             : saveState === "saved"
               ? `Page ${page + 1} saved · ${percent}% read`
               : marksOff
-                ? "Your page is saved. Highlights need migration 024 before they can be kept."
+                ? "Pages are remembered as you turn them. Highlights need migration 024 before they can be kept."
                 : "Your page is saved as you turn it. Select any words to highlight them."}
       </p>
     </div>
