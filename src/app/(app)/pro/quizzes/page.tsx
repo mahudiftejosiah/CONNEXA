@@ -29,7 +29,6 @@ export default async function QuizzesPage() {
       <ProFrame title="Live Quiz Battles" pro={status.pro} expiresAt={status.expiresAt}
         subtitle="Timed rounds built by the CONNEXA team. Your score is worked out in the database, so the answer key never reaches the browser.">
         {!enabled && <ProDataNote tone="warn">An administrator has switched Live Quiz Battles off.</ProDataNote>}
-        {"error" in listed && <ProDataNote>Quiz battles open when migration 031 is pasted in Supabase.</ProDataNote>}
         <QuizBattles
           initialQuizzes={quizzes}
           canPlay={status.pro && enabled}
