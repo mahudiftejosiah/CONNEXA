@@ -13,7 +13,7 @@ import type { LiveSession, Profile, PostVisibility } from "@/lib/supabase/types"
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-export function LiveClient({ profile }: { profile: Profile }) {
+export function LiveClient({ profile, canBroadcast = true }: { profile: Profile; canBroadcast?: boolean }) {
   const router = useRouter();
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
@@ -118,6 +118,7 @@ export function LiveClient({ profile }: { profile: Profile }) {
   async function startBroadcast() {
     const stream = streamRef.current;
     if (!stream) { toast.error("Turn the camera on first."); return; }
+    if (!canBroadcast) { toast.error("Live streaming is a CONNEXA PRO feature."); return; }
     screen.enter();
 
     const { data, error } = await supabase.from("live_sessions")
@@ -244,7 +245,7 @@ export function LiveClient({ profile }: { profile: Profile }) {
             )}
             {screen.active && (
               <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2">
-                {!live && cameraOn && (
+                {!live && cameraOn && canBroadcast && (
                   <Button variant="danger" onClick={startBroadcast} icon={<Radio className="w-4 h-4" />}>Start live</Button>
                 )}
                 {live && (
@@ -271,7 +272,13 @@ export function LiveClient({ profile }: { profile: Profile }) {
             <Button onClick={() => void startCamera()} icon={<Video className="w-4 h-4" />}>Turn on camera</Button>
           ) : !live ? (
             <>
-              <Button variant="danger" onClick={() => void startBroadcast()} icon={<Radio className="w-4 h-4" />}>Start live session</Button>
+              {canBroadcast ? (
+                <Button variant="danger" onClick={() => void startBroadcast()} icon={<Radio className="w-4 h-4" />}>Start live session</Button>
+              ) : (
+                <Link href="/pro#upgrade" className="btn-primary" style={{ background: "var(--brand-gold)", color: "var(--brand-green)" }}>
+                  Upgrade to PRO to go live
+                </Link>
+              )}
               <Button variant="ghost" onClick={flipCamera} icon={<SwitchCamera className="w-4 h-4" />}>Flip</Button>
               <Button variant="ghost" onClick={stopCamera} icon={<VideoOff className="w-4 h-4" />}>Turn off</Button>
             </>

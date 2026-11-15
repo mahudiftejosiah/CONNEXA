@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   MessageCircle, Share2, Bookmark, BookmarkCheck,
@@ -45,7 +45,40 @@ const visibilityIcon = {
   only_me: <Lock className="w-3 h-3" />,
 };
 
+// One beacon per card per page visit; the database handles the per-day rule.
+const viewed = new Set<string>();
+
 export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit, onComment, onShare, onRefresh }: PostCardProps) {
+  const cardRef = useRef<HTMLElement | null>(null);
+
+  // A view is a card that was actually on screen, once per person per day. The
+  // unique (post, viewer, day) row drops every repeat, so a scrolling feed does
+  // not invent traffic. Before migration 029 the insert simply fails quietly.
+  useEffect(() => {
+    if (!currentUserId || currentUserId === post.author_id) return;
+    const node = cardRef.current;
+    if (!node || viewed.has(post.id)) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting && e.intersectionRatio >= 0.5)) return;
+      viewed.add(post.id);
+      observer.disconnect();
+      const supabase = createClient();
+      void supabase.from("post_views").upsert(
+        {
+          post_id: post.id,
+          viewer_id: currentUserId,
+          author_id: post.author_id,
+          viewed_on: new Date().toISOString().slice(0, 10),
+        },
+        { onConflict: "post_id,viewer_id,viewed_on", ignoreDuplicates: true }
+      );
+    }, { threshold: [0.5] });
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [post.id, post.author_id, currentUserId]);
+
   const [userReaction, setUserReaction] = useState<string | null>(post.user_reaction ?? null);
   const [breakdown, setBreakdown] = useState<Record<string, number>>(
     () => post.reaction_breakdown ?? { like: Math.max(post.reaction_count - (post.user_reaction ? 1 : 0), 0) }
@@ -179,7 +212,7 @@ export function PostCard({ post, currentUserId, commentsExpanded = false, onEdit
   }
 
   return (
-    <article className="card overflow-hidden animate-fade-in">
+    <article ref={cardRef} className="card overflow-hidden animate-fade-in">
       {/* Header */}
       <div className="p-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">

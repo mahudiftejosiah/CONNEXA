@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe, Bot, BookOpen, Library, Eye, EyeOff, Pencil, Star } from "lucide-react";
+import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe, Bot, BookOpen, Library, Eye, EyeOff, Pencil, Star, Crown } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
@@ -10,6 +10,7 @@ import { ImageField } from "@/components/ui/ImageField";
 import { Modal } from "@/components/ui/Modal";
 import { AssistantBot } from "./AssistantBot";
 import { HashingBot } from "./HashingBot";
+import { ProHub } from "./pro/ProHub";
 import type { HealthCheck } from "@/lib/botHealth";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile, ContentReport, ModerationAction, SiteContent, ExternalGame, ReelEmbed, SiteShortcut, StudyBook, BotFlagWithAuthor, BotSettings } from "@/lib/supabase/types";
@@ -50,7 +51,7 @@ interface AdminClientProps {
   };
 }
 
-type Tab = "overview" | "users" | "reports" | "actions" | "content" | "appearance" | "games" | "library" | "sites" | "verification" | "assistant";
+type Tab = "overview" | "users" | "reports" | "actions" | "content" | "appearance" | "games" | "library" | "sites" | "verification" | "pro" | "assistant";
 
 // These four shelves are the whole of study_books.category — the enum the
 // database enforces, spelled out here so a new book can only land on a shelf
@@ -384,6 +385,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
     { key: "library",    label: "Library",   icon: <BookOpen className="w-4 h-4" /> },
     { key: "sites",      label: "Sites",     icon: <Globe className="w-4 h-4" /> },
     { key: "verification", label: "Verified", icon: <BadgeCheck className="w-4 h-4" />, badge: upgradeRows.filter((u) => u.status === "pending").length },
+    { key: "pro", label: "PRO", icon: <Crown className="w-4 h-4" /> },
     { key: "assistant", label: "Assistant", icon: <Bot className="w-4 h-4" />, badge: bot.openFlags.length },
   ];
 
@@ -996,6 +998,8 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
           </div>
         </div>
       )}
+
+      {tab === "pro" && <ProHub adminId={currentAdminId} />}
 
       {tab === "assistant" && (
         <div className="space-y-4">

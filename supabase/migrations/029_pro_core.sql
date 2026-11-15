@@ -105,6 +105,33 @@ DROP POLICY IF EXISTS "post_views_insert" ON public.post_views;
 CREATE POLICY "post_views_insert" ON public.post_views FOR INSERT
   TO authenticated WITH CHECK (viewer_id = auth.uid());
 
+-- ---------- Who counts as PRO, decided in the database ----------
+-- The tick alone is not enough: it has to be inside its paid window, and the
+-- feature has to be switched on. SECURITY DEFINER so reading profiles does not
+-- recurse into the policy that is asking the question.
+CREATE OR REPLACE FUNCTION public.is_pro(p_user UUID, p_feature TEXT DEFAULT NULL)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT COALESCE(pr.is_verified, FALSE)
+     AND (pr.pro_expires_at IS NULL OR pr.pro_expires_at > NOW())
+     AND (
+       p_feature IS NULL
+       OR NOT EXISTS (SELECT 1 FROM pro_features f WHERE f.key = p_feature AND f.enabled = FALSE)
+     )
+  FROM profiles pr
+  WHERE pr.id = p_user;
+$$;
+
+-- Live streaming is a PRO feature, so opening a broadcast is refused here and
+-- not merely hidden in the interface. Watching is untouched.
+DROP POLICY IF EXISTS "live_insert" ON public.live_sessions;
+CREATE POLICY "live_insert" ON public.live_sessions FOR INSERT TO authenticated
+  WITH CHECK (user_id = auth.uid() AND public.is_pro(auth.uid(), 'live_streaming'));
+
 COMMIT;
 
 NOTIFY pgrst, 'reload schema';

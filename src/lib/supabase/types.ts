@@ -283,7 +283,8 @@ export interface Database {
           id: string
           reporter_id: string
           entity_id: string
-          entity_type: "post" | "comment" | "profile" | "group"
+          // Migration 030 widened the database CHECK to the PRO entities.
+          entity_type: "post" | "comment" | "profile" | "group" | "confession" | "poll" | "question" | "music" | "event" | "listing"
           reason: string
           details: string | null
           status: ReportStatus
@@ -387,6 +388,279 @@ export interface Database {
           viewed_at: string
         }
         Insert: { post_id: string; viewer_id?: string | null; author_id: string; viewed_on?: string }
+        Update: never
+      }
+      daily_questions: {
+        Row: {
+          id: string
+          author_id: string
+          question: string
+          category: string | null
+          asked_on: string
+          published: boolean
+          created_at: string
+        }
+        Insert: { author_id: string; question: string; category?: string | null; asked_on?: string; published?: boolean }
+        Update: Partial<{ question: string; category: string | null; asked_on: string; published: boolean }>
+      }
+      daily_question_replies: {
+        Row: {
+          id: string
+          question_id: string
+          user_id: string
+          answer: string
+          created_at: string
+        }
+        Insert: { question_id: string; user_id: string; answer: string }
+        Update: { answer?: string }
+      }
+      confessions: {
+        Row: {
+          id: string
+          body: string
+          tag: string | null
+          status: "pending" | "approved" | "rejected"
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_at: string
+        }
+        Insert: { body: string; tag?: string | null; status?: "pending" | "approved" | "rejected" }
+        Update: Partial<{ status: "pending" | "approved" | "rejected"; reviewed_by: string | null; reviewed_at: string | null }>
+      }
+      confession_authors: {
+        Row: {
+          confession_id: string
+          author_id: string
+          created_at: string
+        }
+        Insert: { confession_id: string; author_id: string }
+        Update: never
+      }
+      polls: {
+        Row: {
+          id: string
+          owner_id: string
+          question: string
+          closes_at: string | null
+          published: boolean
+          created_at: string
+        }
+        Insert: { owner_id: string; question: string; closes_at?: string | null; published?: boolean }
+        Update: Partial<{ question: string; closes_at: string | null; published: boolean }>
+      }
+      poll_options: {
+        Row: {
+          id: string
+          poll_id: string
+          label: string
+          position: number
+        }
+        Insert: { poll_id: string; label: string; position?: number }
+        Update: { label?: string; position?: number }
+      }
+      poll_votes: {
+        Row: {
+          id: string
+          poll_id: string
+          option_id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: { poll_id: string; option_id: string; user_id: string }
+        Update: never
+      }
+      blocked_hashtags: {
+        Row: {
+          tag: string
+          blocked_by: string | null
+          reason: string | null
+          created_at: string
+        }
+        Insert: { tag: string; blocked_by?: string | null; reason?: string | null }
+        Update: { reason?: string | null }
+      }
+      music_tracks: {
+        Row: {
+          id: string
+          title: string
+          artist: string
+          genre: string | null
+          description: string | null
+          source_url: string | null
+          audio_path: string | null
+          cover_path: string | null
+          published: boolean
+          added_by: string | null
+          created_at: string
+        }
+        Insert: {
+          title: string; artist: string; genre?: string | null; description?: string | null;
+          source_url?: string | null; audio_path?: string | null; cover_path?: string | null;
+          published?: boolean; added_by?: string | null
+        }
+        Update: Partial<{
+          title: string; artist: string; genre: string | null; description: string | null;
+          source_url: string | null; audio_path: string | null; cover_path: string | null; published: boolean
+        }>
+      }
+      playlists: {
+        Row: {
+          id: string
+          owner_id: string
+          name: string
+          description: string | null
+          published: boolean
+          created_at: string
+        }
+        Insert: { owner_id: string; name: string; description?: string | null; published?: boolean }
+        Update: Partial<{ name: string; description: string | null; published: boolean }>
+      }
+      playlist_tracks: {
+        Row: {
+          id: string
+          playlist_id: string
+          track_id: string
+          position: number
+        }
+        Insert: { playlist_id: string; track_id: string; position?: number }
+        Update: { position?: number }
+      }
+      quizzes: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          category: string | null
+          difficulty: "easy" | "medium" | "hard" | "mixed"
+          time_limit_seconds: number
+          published: boolean
+          created_at: string
+        }
+        Insert: {
+          title: string; description?: string | null; category?: string | null;
+          difficulty?: "easy" | "medium" | "hard" | "mixed"; time_limit_seconds?: number; published?: boolean
+        }
+        Update: Partial<{
+          title: string; description: string | null; category: string | null;
+          difficulty: "easy" | "medium" | "hard" | "mixed"; time_limit_seconds: number; published: boolean
+        }>
+      }
+      quiz_questions: {
+        Row: {
+          id: string
+          quiz_id: string
+          prompt: string
+          options: string[]
+          correct_index: number
+          position: number
+        }
+        Insert: { quiz_id: string; prompt: string; options: string[]; correct_index: number; position?: number }
+        Update: Partial<{ prompt: string; options: string[]; correct_index: number; position: number }>
+      }
+      quiz_attempts: {
+        Row: {
+          id: string
+          quiz_id: string
+          user_id: string
+          score: number
+          total: number
+          seconds_used: number
+          created_at: string
+        }
+        Insert: { quiz_id: string; user_id: string; score: number; total: number; seconds_used: number }
+        Update: never
+      }
+      events: {
+        Row: {
+          id: string
+          owner_id: string
+          title: string
+          description: string | null
+          starts_at: string
+          location: string | null
+          category: string | null
+          cover_path: string | null
+          published: boolean
+          created_at: string
+        }
+        Insert: {
+          owner_id: string; title: string; description?: string | null; starts_at: string;
+          location?: string | null; category?: string | null; cover_path?: string | null; published?: boolean
+        }
+        Update: Partial<{
+          title: string; description: string | null; starts_at: string; location: string | null;
+          category: string | null; cover_path: string | null; published: boolean
+        }>
+      }
+      event_attendees: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          response: "going" | "maybe" | "declined"
+          created_at: string
+        }
+        Insert: { event_id: string; user_id: string; response?: "going" | "maybe" | "declined" }
+        Update: { response?: "going" | "maybe" | "declined" }
+      }
+      listings: {
+        Row: {
+          id: string
+          owner_id: string
+          kind: "product" | "service"
+          title: string
+          description: string | null
+          price: number | null
+          currency: string
+          category: string | null
+          image_paths: string[]
+          status: "pending" | "approved" | "rejected" | "removed"
+          reviewed_by: string | null
+          reviewed_at: string | null
+          contact: string | null
+          created_at: string
+        }
+        Insert: {
+          owner_id: string; kind: "product" | "service"; title: string; description?: string | null;
+          price?: number | null; currency?: string; category?: string | null;
+          image_paths?: string[]; contact?: string | null
+        }
+        Update: Partial<{
+          kind: "product" | "service"; title: string; description: string | null; price: number | null;
+          currency: string; category: string | null; image_paths: string[]; contact: string | null;
+          status: "pending" | "approved" | "rejected" | "removed"; reviewed_by: string | null; reviewed_at: string | null
+        }>
+      }
+      badges: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          icon_path: string | null
+          condition_key: "posts" | "comments" | "reactions_received" | "friends" | "followers" | "stories" | "events" | "quizzes_taken"
+          threshold: number
+          active: boolean
+          created_at: string
+        }
+        Insert: {
+          name: string; description?: string; icon_path?: string | null;
+          condition_key: "posts" | "comments" | "reactions_received" | "friends" | "followers" | "stories" | "events" | "quizzes_taken";
+          threshold: number; active?: boolean
+        }
+        Update: Partial<{
+          name: string; description: string; icon_path: string | null;
+          condition_key: "posts" | "comments" | "reactions_received" | "friends" | "followers" | "stories" | "events" | "quizzes_taken";
+          threshold: number; active: boolean
+        }>
+      }
+      user_badges: {
+        Row: {
+          id: string
+          user_id: string
+          badge_id: string
+          awarded_at: string
+        }
+        Insert: { user_id: string; badge_id: string }
         Update: never
       }
       external_games: {
@@ -601,6 +875,26 @@ export interface Database {
         Args: { p_message_id: string }
         Returns: boolean
       }
+      list_open_quizzes: {
+        Args: Record<string, never>
+        Returns: { id: string; title: string; description: string | null; category: string | null; difficulty: string; time_limit_seconds: number; questions: number }[]
+      }
+      open_quiz: {
+        Args: { p_quiz: string }
+        Returns: { id: string; prompt: string; options: string[]; position: number }[]
+      }
+      grade_quiz_attempt: {
+        Args: { p_quiz: string; p_answers: unknown[]; p_seconds?: number }
+        Returns: { score: number; total: number; results: unknown }[]
+      }
+      user_activity_counts: {
+        Args: { p_user: string }
+        Returns: Record<string, number>
+      }
+      refresh_user_badges: {
+        Args: { p_user?: string }
+        Returns: { awarded: string }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -653,7 +947,10 @@ export type BotSettings = { enabled: boolean; autoHide: boolean; keywords: strin
 export type ColorTheme = "follow_site" | "connexa" | "crimson" | "ocean" | "violet" | "amber"
 
 // Extended types with joins
+// A name, an avatar and a link. The PRO columns are optional because they only
+// arrive when the query asked for them; a badge simply does not render without.
 export type MiniProfile = Pick<Profile, "id" | "username" | "display_name" | "avatar_url">
+  & Partial<Pick<Profile, "is_verified" | "pro_expires_at">>
 
 export type PostWithAuthor = Post & {
   author: Profile

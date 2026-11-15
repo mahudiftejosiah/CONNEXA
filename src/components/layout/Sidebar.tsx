@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 import {
   Home, Users, Bell, Bookmark, Settings, LogOut,
   Compass, MessageCircle, Film, UsersRound, Shield,
-  UserCircle, HelpCircle, Clapperboard, Gamepad2,
+  UserCircle, HelpCircle, Clapperboard, Gamepad2, Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
@@ -44,6 +44,7 @@ export function Sidebar({ profile, isAdmin = false }: SidebarProps) {
     { href: "/games",         label: "Games",         icon: <Gamepad2 className="w-5 h-5" /> },
     { href: "/groups",        label: "Groups",        icon: <UsersRound className="w-5 h-5" /> },
     { href: "/discover",      label: "Discover",      icon: <Compass className="w-5 h-5" /> },
+    { href: "/pro",           label: "PRO",           icon: <Crown className="w-5 h-5" /> },
     { href: "/saved",         label: "Saved",         icon: <Bookmark className="w-5 h-5" /> },
   ];
 

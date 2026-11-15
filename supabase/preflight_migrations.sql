@@ -72,6 +72,30 @@ from (
                         and tgname = 'profiles_guard_privileges') then 'yes' else 'no' end),
   ('028 hashing usage table',
     case when to_regclass('public.hashing_usage') is not null then 'yes' else 'no' end),
+  ('029 PRO switches + is_pro()',
+    case when to_regclass('public.pro_features') is not null
+          and to_regprocedure('public.is_pro(uuid,text)') is not null then 'yes' else 'no' end),
+  ('029 visit tracking tables',
+    case when to_regclass('public.profile_visits') is not null
+          and to_regclass('public.post_views') is not null then 'yes' else 'no' end),
+  ('030 questions, confessions, polls, blocked tags',
+    case when to_regclass('public.daily_questions') is not null
+          and to_regclass('public.confessions') is not null
+          and to_regclass('public.polls') is not null
+          and to_regclass('public.blocked_hashtags') is not null then 'yes' else 'no' end),
+  ('031 quizzes, music, events, badges, marketplace',
+    case when to_regclass('public.quizzes') is not null
+          and to_regclass('public.quiz_answers') is not null
+          and to_regclass('public.music_tracks') is not null
+          and to_regclass('public.events') is not null
+          and to_regclass('public.badges') is not null
+          and to_regclass('public.listings') is not null then 'yes' else 'no' end),
+  ('031 pro-media bucket + starter badges',
+    case when exists (select 1 from storage.buckets where id = 'pro-media')
+          and (select count(*) from public.badges) >= 8 then 'yes' else 'no' end),
+  ('032 streaming permissions + admin rights',
+    case when to_regclass('public.stream_permissions') is not null
+          and to_regprocedure('public.stream_allowed(uuid)') is not null then 'yes' else 'no' end),
   ('seed: book covers filled in',
     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
       from public.study_books where cover_url is not null)),

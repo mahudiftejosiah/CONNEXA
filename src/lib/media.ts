@@ -65,3 +65,13 @@ export async function signStoryMedia<T>(supabase: MediaClient, stories: T[]): Pr
   }
   return stories;
 }
+
+/**
+ * Public URL for a file in the single PRO bucket. Rows keep the storage path so
+ * an administrator can replace or delete the object without touching the table.
+ */
+export function proMediaUrl(supabase: MediaClient, path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(path)) return path;
+  return supabase.storage.from("pro-media").getPublicUrl(path).data.publicUrl;
+}

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signPostMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
 import { isOpen } from "@/lib/live";
+import { recordProfileVisit } from "@/lib/pro-analytics";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProfileClient } from "./ProfileClient";
 import type { Metadata } from "next";
@@ -28,6 +29,10 @@ export default async function ProfilePage({ params }: Props) {
     : { data: null };
 
   const isOwn = user?.id === profile.id;
+
+  // One row per look at somebody else's page. A failure here (the table only
+  // arrives with migration 029) must never break the profile itself.
+  if (user && !isOwn) await recordProfileVisit(supabase, profile.id, user.id);
 
   // A broadcaster whose tab died leaves the row saying "live", so isOpen()
   // drops any session that has stopped uploading.

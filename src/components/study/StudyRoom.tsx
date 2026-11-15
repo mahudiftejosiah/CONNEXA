@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, BookOpen, ExternalLink, Globe, GraduationCap, Library, LogOut,
-  Maximize2, Minimize2, Plus, Search, Trash2, X,
+  Maximize2, Minimize2, Plus, Search, Trash2, Trophy, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
@@ -342,9 +342,16 @@ export function StudyRoom({ initial, currentUserId, sites, books, isFullscreen, 
       <div className="flex items-center gap-2">
         <GraduationCap className="w-6 h-6" style={{ color: "rgb(var(--a-800))" }} />
         <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Study Room</h2>
+        <Link
+          href="/pro/quizzes"
+          className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-colors"
+          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-secondary)" }}
+        >
+          <Trophy className="w-4 h-4" /> Quiz battles
+        </Link>
         <button
           onClick={() => setShowSites((v) => !v)}
-          className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-colors"
+          className="ml-2 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-colors"
           style={showSites
             ? { backgroundColor: "rgb(var(--a-800))", borderColor: "rgb(var(--a-800))", color: "#fff" }
             : { backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-secondary)" }}
