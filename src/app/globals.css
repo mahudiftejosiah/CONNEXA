@@ -1253,8 +1253,8 @@
    The delay is the whole trick: a route already in the router cache resolves
    inside these first milliseconds, so the panel never becomes visible at all.
    Only a real fetch waits long enough to fade the mark in.
-   The veil is translucent and blurs whatever is behind it rather than painting
-   a solid colour over the screen, so a slow navigation reads as frosted glass. */
+   The veil softens the page rather than hiding it: at this radius the layout,
+   colours and pictures stay recognisable while the words stop being legible. */
 .route-splash {
   position: fixed;
   inset: 0;
@@ -1262,9 +1262,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--bg) 30%, transparent);
-  backdrop-filter: blur(18px) saturate(115%);
-  -webkit-backdrop-filter: blur(18px) saturate(115%);
+  background: color-mix(in srgb, var(--bg) 18%, transparent);
+  backdrop-filter: blur(5px) saturate(108%);
+  -webkit-backdrop-filter: blur(5px) saturate(108%);
   pointer-events: none;
   animation: splashIn 0.22s ease 0.14s both;
 }
