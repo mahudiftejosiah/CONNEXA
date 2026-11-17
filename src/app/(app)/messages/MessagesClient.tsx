@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { AccountBadge } from "@/components/ui/ProBadge";
+import { ActiveUsersButton } from "@/components/layout/ActiveUsersButton";
 import { HelpThread } from "@/components/messages/HelpThread";
 import { MessageMenu, type MessageAction } from "@/components/messages/MessageMenu";
 import { ForwardDialog, type ForwardTarget } from "@/components/messages/ForwardDialog";
@@ -618,7 +619,10 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
       {/* Conversation list */}
       <div className={`w-full md:w-80 border-r border-[var(--border)] flex flex-col ${active || helpOpen ? "hidden md:flex" : "flex"}`}>
         <div className="p-4 border-b border-[var(--border)]">
-          <h2 className="font-bold text-lg text-[var(--text-primary)]">Messages</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-bold text-lg text-[var(--text-primary)]">Messages</h2>
+            <span className="ml-auto"><ActiveUsersButton /></span>
+          </div>
           <div className="mt-2 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
             <input type="search" placeholder="Search conversations…" value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9 text-sm" />

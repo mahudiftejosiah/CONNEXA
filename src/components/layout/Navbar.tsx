@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, MessageCircle, Search, Menu, X, Settings, ShieldCheck } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Logo } from "@/components/brand/Logo";
-import { ActiveUsersButton } from "./ActiveUsersButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { backToAdminPanel } from "@/lib/actions/adminView";
@@ -126,8 +125,6 @@ export function Navbar({ profile }: NavbarProps) {
               >
                 <Settings className="w-5 h-5" />
               </Link>
-
-              <ActiveUsersButton />
             </>
           ) : (
             <>

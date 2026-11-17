@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   MapPin, Link as LinkIcon, Calendar, UserPlus, UserMinus,
   UserCheck, MessageCircle, Bell, BellOff, Shield, Edit, Users,
-  Camera, Radio, Image as ImageIcon,
+  Camera, Radio, Image as ImageIcon, Crown,
 } from "lucide-react";
 import Image from "next/image";
 import { Avatar } from "@/components/ui/Avatar";
@@ -26,6 +26,7 @@ import {
 import { compactCount, formatJoinDate } from "@/lib/utils";
 import { AccountBadge } from "@/components/ui/ProBadge";
 import { UpgradePanel, type UpgradeStatus } from "@/components/profile/UpgradePanel";
+import { hasActivePro } from "@/lib/pro";
 import type { LiveSession, Profile, PostWithAuthor } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 
@@ -65,6 +66,7 @@ export function ProfileClient({
   const [confirmUnfriend, setConfirmUnfriend] = useState(false);
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [activeTab, setActiveTab] = useState<"posts" | "about" | "upgrade">("posts");
+  const proActive = hasActivePro(profile);
   const [live, setLive] = useState<LiveSession | null>(initialLive);
   const [highlight, setHighlight] = useState<string | null>(initialHighlight ?? null);
   const [highlightBroken, setHighlightBroken] = useState<string | null>(null);
@@ -400,7 +402,7 @@ export function ProfileClient({
           {([
             { id: "posts", label: "Posts" },
             { id: "about", label: "About" },
-            ...(isOwn ? [{ id: "upgrade", label: "Upgrade account" }] : []),
+            ...(isOwn ? [{ id: "upgrade", label: "Verified" }] : []),
           ] as { id: "posts" | "about" | "upgrade"; label: string }[]).map((tab) => (
             <button
               key={tab.id}
@@ -480,15 +482,46 @@ export function ProfileClient({
         </div>
       )}
 
-      {/* Upgrade account tab (own profile only) */}
+      {/* Verified tab (own profile only). PRO is the paid verification, so the
+          upgrade and the membership it unlocks belong in one place. */}
       {activeTab === "upgrade" && isOwn && (
-        <UpgradePanel
-          userId={profile.id}
-          verified={profile.is_verified}
-          initialStatus={upgradeStatus}
-          initialReference={upgradeReference}
-          configText={upgradeConfigText}
-        />
+        <div className="space-y-4">
+          <UpgradePanel
+            userId={profile.id}
+            verified={profile.is_verified}
+            initialStatus={upgradeStatus}
+            initialReference={upgradeReference}
+            configText={upgradeConfigText}
+          />
+
+          <div className="card p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <Crown className="w-5 h-5" style={{ color: "var(--brand-gold)" }} />
+              <h2 className="font-bold text-lg" style={{ color: "var(--text-primary)" }}>CONNEXA PRO</h2>
+              <span className="ml-auto text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                style={proActive
+                  ? { backgroundColor: "var(--brand-gold)", color: "var(--brand-green)" }
+                  : { backgroundColor: "var(--border)", color: "var(--text-secondary)" }}>
+                {proActive ? "Active" : "Not active"}
+              </span>
+            </div>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+              {proActive
+                ? "Analytics, community features, entertainment and your creator shelf are unlocked on this account."
+                : "PRO comes with the verified tick above. Once an administrator confirms your payment, everything below unlocks on this account."}
+            </p>
+            {proActive && profile.pro_expires_at && (
+              <p className="text-sm" style={{ color: "var(--text-primary)" }}>
+                <span className="font-medium">Membership ends: </span>
+                {new Date(profile.pro_expires_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+              </p>
+            )}
+            <Link href="/pro" className="btn-primary text-sm self-start inline-flex items-center gap-2">
+              <Crown className="w-4 h-4" />
+              {proActive ? "Open my PRO features" : "See what PRO includes"}
+            </Link>
+          </div>
+        </div>
       )}
 
       <ConfirmDialog
