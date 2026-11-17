@@ -15,7 +15,9 @@ type AlgorithmOption = HashAlgorithm;
 interface Props {
   settings: HashingSettings;
   algorithms: AlgorithmOption[];
-  usage: HashingUsage | { error: string };
+  usage?: HashingUsage | { error: string };
+  // Members get the tool; only the admin page gets the switches and the counts.
+  manage?: boolean;
 }
 
 type Generated = { hash: string; label: string; algorithm: string };
@@ -25,10 +27,10 @@ type Reverted = { original: string; label: string }[];
 // A hash is a fingerprint, not a locked box: this tool is honest about that.
 // Mode B never claims to undo a digest — it identifies the format and proves a
 // text you already hold is the one that made it.
-export function HashingBot({ settings: init, algorithms: initAlgorithms, usage: initUsage }: Props) {
+export function HashingBot({ settings: init, algorithms: initAlgorithms, usage: initUsage, manage = true }: Props) {
   const [settings, setSettings] = useState(init);
   const [algorithms, setAlgorithms] = useState(initAlgorithms);
-  const [usage, setUsage] = useState(initUsage);
+  const [usage, setUsage] = useState<HashingUsage | { error: string }>(initUsage ?? { total: 0, byMode: {}, byAlgorithm: {} });
 
   const [mode, setMode] = useState<"generate" | "inspect">("generate");
   const [busy, setBusy] = useState<string | null>(null);
@@ -111,6 +113,7 @@ export function HashingBot({ settings: init, algorithms: initAlgorithms, usage: 
   }
 
   async function refreshUsage() {
+    if (!manage) return;
     const res = await getUsage();
     if ("error" in res) return;
     if ("usage" in res) setUsage(res.usage);
@@ -319,6 +322,7 @@ export function HashingBot({ settings: init, algorithms: initAlgorithms, usage: 
         </div>
       )}
 
+      {manage && (
       <div className="card p-5 space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="font-semibold text-[var(--text-primary)] flex-1">Hashing Bot Management</h3>
@@ -415,6 +419,7 @@ export function HashingBot({ settings: init, algorithms: initAlgorithms, usage: 
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

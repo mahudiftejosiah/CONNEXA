@@ -50,7 +50,7 @@ export default async function MarketplacePage() {
         subtitle="Products and services from people on CONNEXA. Nothing is shown until an administrator has read it and approved it.">
         {!enabled && <ProDataNote tone="warn">An administrator has switched the Marketplace off.</ProDataNote>}
         {error && <ProDataNote>The Marketplace opens when migration 031 is pasted in Supabase.</ProDataNote>}
-        <MarketBoard listings={listings} currentUserId={user.id} canList={status.pro && enabled} />
+        <MarketBoard listings={listings} currentUserId={user.id} canList={status.pro && enabled} pro={status.pro} />
       </ProFrame>
     </AppLayout>
   );

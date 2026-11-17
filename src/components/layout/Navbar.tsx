@@ -72,7 +72,7 @@ export function Navbar({ profile }: NavbarProps) {
                   onClick={() => startReturning(() => void backToAdminPanel())}
                   disabled={returning}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide transition-opacity hover:opacity-80 disabled:opacity-50"
-                  style={{ backgroundColor: "var(--brand-gold)", color: "#12372A" }}
+                  style={{ backgroundColor: "var(--brand-gold)", color: "var(--brand-green)" }}
                 >
                   <ShieldCheck className="w-4 h-4" />
                   <span className="hidden sm:inline">Admin panel</span>

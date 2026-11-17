@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarDays, MessageCircle, Package, Heart, Trophy, Award, TrendingUp } from "lucide-react";
+import { CalendarDays, MessageCircle, Package, Heart, Trophy, Award } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProFrame } from "@/components/pro/ProFrame";
+import { LockedFeaturePreview } from "@/components/pro/LockedFeaturePreview";
 import { growthLabel } from "@/lib/pro-analytics";
 import { proAnalytics } from "@/lib/pro-analytics";
 import { getProStatus } from "@/lib/pro";
@@ -21,17 +22,45 @@ export default async function CreatorPage() {
   const status = await getProStatus(supabase, user.id);
 
   if (!status.pro) {
+    const previewTiles = [
+      { label: "Post views (30d)" },
+      { label: "Profile visits (30d)" },
+      { label: "Reactions (30d)" },
+      { label: "Comments (30d)" },
+    ];
+    const previewShortcuts = [
+      { label: "Events hosted", icon: <CalendarDays className="w-4 h-4" /> },
+      { label: "Listings live", icon: <Package className="w-4 h-4" /> },
+      { label: "Quiz answers right", icon: <Trophy className="w-4 h-4" /> },
+      { label: "Badges earned", icon: <Award className="w-4 h-4" /> },
+    ];
     return (
       <AppLayout>
         <ProFrame title="Creator Dashboard" pro={false} expiresAt={status.expiresAt}
           subtitle="One screen for everything you publish as a creator on CONNEXA.">
-          <div className="card p-6 space-y-3 text-center">
-            <TrendingUp className="w-8 h-8 mx-auto" style={{ color: "var(--brand-gold)" }} />
-            <p className="font-bold" style={{ color: "var(--text-primary)" }}>The creator dashboard is part of PRO</p>
-            <Link href="/pro#upgrade" className="btn-primary text-sm inline-flex mx-auto"
-              style={{ background: "var(--brand-gold)", color: "var(--brand-green)" }}>
-              Upgrade to PRO
-            </Link>
+          <div className="space-y-4">
+            <LockedFeaturePreview blurb="The creator dashboard gathers your reach and everything you publish into one screen. Here is what it brings together:" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {previewTiles.map((t) => (
+                <div key={t.label} className="card p-4 space-y-1">
+                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-secondary)" }}>{t.label}</p>
+                  <p className="text-2xl font-extrabold" style={{ color: "var(--text-primary)" }}>—</p>
+                </div>
+              ))}
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {previewShortcuts.map((s) => (
+                <div key={s.label} className="card p-4 flex items-center gap-3">
+                  <span className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--border)" }}>
+                    {s.icon}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs" style={{ color: "var(--text-secondary)" }}>{s.label}</span>
+                    <span className="block font-extrabold truncate" style={{ color: "var(--text-primary)" }}>—</span>
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </ProFrame>
       </AppLayout>
@@ -105,7 +134,7 @@ export default async function CreatorPage() {
             <ul className="space-y-2">
               {a.topPosts.slice(0, 5).map((p, i) => (
                 <li key={p.id} className="flex items-center gap-3 text-sm">
-                  <span className="w-5 font-extrabold" style={{ color: "var(--brand-gold)" }}>{i + 1}</span>
+                  <span className="w-5 font-extrabold" style={{ color: "var(--brand-gold-text)" }}>{i + 1}</span>
                   <span className="flex-1 truncate" style={{ color: "var(--text-primary)" }}>{p.excerpt}</span>
                   <span className="text-xs inline-flex items-center gap-1" style={{ color: "var(--text-secondary)" }}>
                     <MessageCircle className="w-3.5 h-3.5" />{compactCount(p.comments)}

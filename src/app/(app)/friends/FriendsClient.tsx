@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { UserMinus, UserCheck, UserX, Users, Clock, Send } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { AccountBadge } from "@/components/ui/ProBadge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
@@ -113,6 +114,7 @@ export function FriendsClient({ friends: initFriends, sentRequests: initSent, re
                 <div className="flex-1 min-w-0">
                   <Link href={`/profile/${req.sender.username}`} className="font-semibold text-[var(--text-primary)] hover:underline block truncate">
                     {req.sender.display_name}
+                    <AccountBadge account={req.sender} />
                   </Link>
                   <p className="text-xs text-[var(--text-secondary)]">@{req.sender.username}</p>
                 </div>
@@ -144,6 +146,7 @@ export function FriendsClient({ friends: initFriends, sentRequests: initSent, re
                 <div className="flex-1 min-w-0">
                   <Link href={`/profile/${f.friend.username}`} className="font-semibold text-[var(--text-primary)] hover:underline block truncate">
                     {f.friend.display_name}
+                    <AccountBadge account={f.friend} />
                   </Link>
                   <p className="text-xs text-[var(--text-secondary)] truncate">@{f.friend.username}</p>
                 </div>
@@ -172,7 +175,7 @@ export function FriendsClient({ friends: initFriends, sentRequests: initSent, re
                   <Avatar src={req.receiver.avatar_url} name={req.receiver.display_name} size={48} userId={req.receiver.id} />
                 </Link>
                 <div className="flex-1 min-w-0">
-                  <Link href={`/profile/${req.receiver.username}`} className="font-semibold hover:underline block truncate">{req.receiver.display_name}</Link>
+                  <Link href={`/profile/${req.receiver.username}`} className="font-semibold hover:underline block truncate">{req.receiver.display_name}<AccountBadge account={req.receiver} /></Link>
                   <p className="text-xs text-[var(--text-secondary)] flex items-center gap-1"><Clock className="w-3 h-3" /> Pending</p>
                 </div>
                 <Button size="sm" variant="ghost" loading={loadingId === req.id} onClick={() => handleCancel(req)}>

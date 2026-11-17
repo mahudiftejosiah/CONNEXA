@@ -30,7 +30,7 @@ export function AdminShell({ profile, children }: AdminShellProps) {
             </span>
             <span
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide"
-              style={{ backgroundColor: "var(--brand-gold)", color: "#12372A" }}
+              style={{ backgroundColor: "var(--brand-gold)", color: "var(--brand-green)" }}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               Admin

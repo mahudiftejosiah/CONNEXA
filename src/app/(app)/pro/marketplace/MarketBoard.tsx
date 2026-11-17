@@ -6,6 +6,8 @@ import Link from "next/link";
 import { BadgeCheck, Package, Plus, Store, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { createListing, uploadProMedia, withdrawListing } from "@/lib/actions/pro";
+import { LockedFeaturePreview } from "@/components/pro/LockedFeaturePreview";
+import { ReportButton } from "@/components/pro/ReportButton";
 
 export type MarketListing = {
   id: string;
@@ -30,10 +32,12 @@ export function MarketBoard({
   listings,
   currentUserId,
   canList,
+  pro,
 }: {
   listings: MarketListing[];
   currentUserId: string;
   canList: boolean;
+  pro: boolean;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -51,7 +55,9 @@ export function MarketBoard({
 
   const visible = listings.filter((l) => l.status === "approved");
   const mine = listings.filter((l) => l.owner_id === currentUserId && l.status !== "approved");
-  const shown = visible.filter((l) => filter === "all" || l.kind === filter);
+  const filtered = visible.filter((l) => filter === "all" || l.kind === filter);
+  // A non-PRO visitor sees a real, shorter slice of the approved shelf.
+  const shown = pro ? filtered : filtered.slice(0, 6);
 
   async function pickImages(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -100,6 +106,10 @@ export function MarketBoard({
 
   return (
     <div className="space-y-4">
+      {!pro && (
+        <LockedFeaturePreview blurb="A few approved listings are shown here; browsing the full marketplace and listing your own are PRO features." />
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
         {(["all", "product", "service"] as const).map((f) => (
           <button key={f} type="button" onClick={() => setFilter(f)}
@@ -210,6 +220,7 @@ export function MarketBoard({
                   {l.owner && <> · <Link href={`/profile/${l.owner.username}`} className="font-semibold hover:underline" style={{ color: "rgb(var(--a-800))" }}>{l.owner.display_name}</Link></>}
                 </p>
                 {l.contact && <p className="text-xs font-semibold break-all" style={{ color: "var(--text-primary)" }}>{l.contact}</p>}
+                <ReportButton entityType="listing" entityId={l.id} />
               </div>
             </article>
           ))}

@@ -4,6 +4,7 @@ import { signPostMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
 import { isOpen } from "@/lib/live";
 import { recordProfileVisit } from "@/lib/pro-analytics";
+import { recordProfileVisit as recordConsentedVisit } from "@/lib/actions/pro";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProfileClient } from "./ProfileClient";
 import type { Metadata } from "next";
@@ -30,21 +31,40 @@ export default async function ProfilePage({ params }: Props) {
 
   const isOwn = user?.id === profile.id;
 
-  // One row per look at somebody else's page. A failure here (the table only
-  // arrives with migration 029) must never break the profile itself.
-  if (user && !isOwn) await recordProfileVisit(supabase, profile.id, user.id);
+  // One row per visitor per day, and never from somebody who switched their own
+  // visit activity off in Settings. The RPC (migration 033) enforces both rules
+  // in the database; only if it does not exist yet does the older plain insert
+  // run, so analytics is never simply dark. A failure here must never break the
+  // profile itself.
+  if (user && !isOwn && !currentProfile?.hide_visit_activity) {
+    const counted = await recordConsentedVisit(profile.id);
+    if ("error" in counted) await recordProfileVisit(supabase, profile.id, user.id);
+  }
 
   // A broadcaster whose tab died leaves the row saying "live", so isOpen()
-  // drops any session that has stopped uploading.
-  const { data: liveRow } = await supabase
-    .from("live_sessions")
-    .select("*")
-    .eq("user_id", profile.id)
-    .eq("status", "live")
-    .order("started_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const liveSession = isOpen(liveRow) ? liveRow : null;
+  // drops any session that has stopped uploading. The highlight is the clip a
+  // finished broadcast left behind for the cover to roll.
+  const [liveRes, highlightRes] = await Promise.all([
+    supabase
+      .from("live_sessions")
+      .select("*")
+      .eq("user_id", profile.id)
+      .eq("status", "live")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("live_sessions")
+      .select("highlight_path")
+      .eq("user_id", profile.id)
+      .eq("status", "ended")
+      .not("highlight_path", "is", null)
+      .order("ended_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  const liveSession = isOpen(liveRes.data) ? liveRes.data : null;
+  const highlightPath = highlightRes.data?.highlight_path ?? null;
 
   let isFriend = false;
   let isFollowing = false;
@@ -144,6 +164,7 @@ export default async function ProfilePage({ params }: Props) {
         friendsCount={friendsCount.count ?? 0}
         initialPosts={enrichedPosts as any}
         initialLive={liveSession}
+        initialHighlight={highlightPath}
         upgradeConfigText={upgradeConfigText}
         upgradeStatus={upgradeStatus}
         upgradeReference={upgradeReference}

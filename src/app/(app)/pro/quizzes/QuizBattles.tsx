@@ -2,9 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, Trophy, X } from "lucide-react";
+import { Clock, Swords, Trophy, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { fetchQuiz, finishQuiz, listPlayableQuizzes, type PlayableQuestion } from "@/lib/actions/pro";
+import {
+  fetchQuiz, finishQuiz, listMyDuels, listPlayableQuizzes, recordDuelScore,
+  type DuelView, type PlayableQuestion,
+} from "@/lib/actions/pro";
+import { ChallengePicker, DuelInbox, duelVerdict } from "./DuelBoard";
 
 type QuizRow = {
   id: string;
@@ -24,10 +28,14 @@ export function QuizBattles({
   initialQuizzes,
   canPlay,
   note,
+  initialDuels,
+  duelNote,
 }: {
   initialQuizzes: QuizRow[];
   canPlay: boolean;
   note: string | null;
+  initialDuels: DuelView[];
+  duelNote: string | null;
 }) {
   const router = useRouter();
   const [quizzes, setQuizzes] = useState(initialQuizzes);
@@ -40,26 +48,58 @@ export function QuizBattles({
   const [result, setResult] = useState<Result | null>(null);
   const startedAt = useRef(0);
 
+  const [duels, setDuels] = useState(initialDuels);
+  const [duelNotice, setDuelNotice] = useState(duelNote);
+  const [duelsLoading, setDuelsLoading] = useState(false);
+  const [activeDuel, setActiveDuel] = useState<DuelView | null>(null);
+  const [duelScores, setDuelScores] = useState<{ requesterScore: number | null; opponentScore: number | null } | null>(null);
+  const [duelError, setDuelError] = useState<string | null>(null);
+  const [challengeFor, setChallengeFor] = useState<QuizRow | null>(null);
+
+  const refreshDuels = useCallback(async () => {
+    setDuelsLoading(true);
+    try {
+      const res = await listMyDuels();
+      if ("error" in res) setDuelNotice(res.error);
+      else { setDuelNotice(null); setDuels(res.duels); }
+    } catch (e) {
+      setDuelNotice(e instanceof Error ? e.message : "Friend challenges could not be read.");
+    } finally {
+      setDuelsLoading(false);
+    }
+  }, []);
+
   const close = useCallback(() => {
     setActiveId(null);
     setQuestions([]);
     setAnswers([]);
     setResult(null);
+    setActiveDuel(null);
+    setDuelScores(null);
+    setDuelError(null);
   }, []);
 
-  async function open(quiz: QuizRow) {
+  async function open(quizId: string, duel: DuelView | null) {
     setLoading(true);
-    const res = await fetchQuiz(quiz.id);
+    const res = await fetchQuiz(quizId);
     setLoading(false);
     if ("error" in res) { toast.error(res.error); return; }
     if (res.questions.length === 0) { toast.error("This quiz has no questions yet."); return; }
-    setActiveId(quiz.id);
+    setActiveId(quizId);
+    setActiveDuel(duel);
+    setDuelScores(null);
+    setDuelError(null);
     setQuestions(res.questions);
     setAnswers([]);
     setIndex(0);
     setLeft(res.timeLimit);
     setResult(null);
     startedAt.current = Date.now();
+  }
+
+  function playDuel(duel: DuelView) {
+    if (duel.played) { toast.error("You have already played this challenge."); return; }
+    void open(duel.quizId, duel);
   }
 
   const submit = useCallback(async (given: number[]) => {
@@ -70,17 +110,25 @@ export function QuizBattles({
       seconds
     );
     if ("error" in res) { toast.error(res.error); return; }
+    const score = Number(res.score);
     setResult({
-      score: Number(res.score),
+      score,
       total: Number(res.total),
       rows: Array.isArray(res.results) ? (res.results as Result["rows"]) : [],
     });
+    // Only the graded score the server just returned may be written to a duel.
+    if (activeDuel) {
+      const scored = await recordDuelScore(activeDuel.id, score);
+      if ("error" in scored) setDuelError(scored.error);
+      else setDuelScores({ requesterScore: scored.requesterScore, opponentScore: scored.opponentScore });
+      void refreshDuels();
+    }
     const listed = await listPlayableQuizzes();
     if ("quizzes" in listed) {
       setQuizzes(listed.quizzes);
       router.refresh();
     }
-  }, [activeId, questions, router]);
+  }, [activeId, activeDuel, questions, refreshDuels, router]);
 
   useEffect(() => {
     if (!activeId || result || questions.length === 0) return;
@@ -99,6 +147,18 @@ export function QuizBattles({
         <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
           Scored in the database, and already on your record.
         </p>
+        {activeDuel && (
+          <div className="rounded-xl border px-4 py-3 text-left space-y-1" style={{ borderColor: "var(--border)" }}>
+            <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{activeDuel.quizTitle}</p>
+            {duelError ? (
+              <p className="text-sm" style={{ color: "#ef4444" }}>{duelError}</p>
+            ) : (
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                {duelVerdict(activeDuel, duelScores, result.score)}
+              </p>
+            )}
+          </div>
+        )}
         <button type="button" className="btn-primary text-sm mx-auto" onClick={close}>Back to the list</button>
       </div>
     );
@@ -121,6 +181,11 @@ export function QuizBattles({
           </button>
         </div>
 
+        {activeDuel && (
+          <p className="text-xs font-semibold" style={{ color: "var(--brand-gold-text)" }}>
+            Duel round · vs {activeDuel.side === "requester" ? activeDuel.opponentName : activeDuel.requesterName}
+          </p>
+        )}
         <p className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>{q.prompt}</p>
         <ul className="space-y-2">
           {q.options.map((opt, i) => (
@@ -165,11 +230,20 @@ export function QuizBattles({
     <div className="space-y-3">
       {!canPlay && (
         <div className="card p-4 text-sm" style={{ color: "var(--text-secondary)" }}>
-          Playing a battle is part of PRO. <a href="/pro#upgrade" style={{ color: "var(--brand-gold)", fontWeight: 700 }}>Upgrade to PRO</a>.
+          Playing a battle is part of PRO. <a href="/pro#upgrade" style={{ color: "var(--brand-gold-text)", fontWeight: 700 }}>Upgrade to PRO</a>.
         </div>
       )}
       {note && <ProNote>{note}</ProNote>}
       {loading && <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Loading…</p>}
+
+      <DuelInbox
+        duels={duels}
+        note={duelNotice}
+        loading={duelsLoading}
+        canPlay={canPlay}
+        onPlay={playDuel}
+        onChanged={() => void refreshDuels()}
+      />
 
       {quizzes.length === 0 && !loading && (
         <div className="card p-8 text-center space-y-2">
@@ -190,15 +264,37 @@ export function QuizBattles({
               {q.category ? ` · ${q.category}` : ""}
             </p>
             {q.description && <p className="text-xs line-clamp-2" style={{ color: "var(--text-secondary)" }}>{q.description}</p>}
-            <p className="text-xs font-semibold mt-1" style={{ color: q.best === null ? "var(--text-secondary)" : "var(--brand-gold)" }}>
+            <p className="text-xs font-semibold mt-1" style={{ color: q.best === null ? "var(--text-secondary)" : "var(--brand-gold-text)" }}>
               {q.attempts === 0 ? "Not played yet" : `${q.attempts} ${q.attempts === 1 ? "attempt" : "attempts"} · best ${q.best}/${q.questions}`}
             </p>
           </div>
-          <button type="button" className="btn-primary text-sm" disabled={!canPlay || loading || q.questions === 0} onClick={() => void open(q)}>
-            Play
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" className="btn-primary text-sm" disabled={!canPlay || loading || q.questions === 0} onClick={() => void open(q.id, null)}>
+              Play
+            </button>
+            {canPlay && (
+              <button
+                type="button"
+                className="btn-ghost text-sm border"
+                style={{ borderColor: "var(--border)" }}
+                disabled={loading || q.questions === 0}
+                onClick={() => setChallengeFor(q)}
+              >
+                <Swords className="w-4 h-4" /> Challenge a friend
+              </button>
+            )}
+          </div>
         </article>
       ))}
+
+      {challengeFor && (
+        <ChallengePicker
+          quizId={challengeFor.id}
+          quizTitle={challengeFor.title}
+          onClose={() => setChallengeFor(null)}
+          onSent={() => void refreshDuels()}
+        />
+      )}
     </div>
   );
 }

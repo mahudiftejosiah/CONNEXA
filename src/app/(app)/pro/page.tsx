@@ -113,7 +113,7 @@ export default async function ProPage() {
                         Switched off by an administrator
                       </span>
                     ) : (
-                      <a href="#upgrade" className="text-sm font-semibold self-start" style={{ color: "var(--brand-gold)" }}>
+                      <a href="#upgrade" className="text-sm font-semibold self-start" style={{ color: "var(--brand-gold-text)" }}>
                         Upgrade to PRO
                       </a>
                     )}

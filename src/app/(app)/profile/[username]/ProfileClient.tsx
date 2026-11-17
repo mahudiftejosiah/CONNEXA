@@ -43,6 +43,7 @@ interface ProfileClientProps {
   friendsCount: number;
   initialPosts: PostWithAuthor[];
   initialLive: LiveSession | null;
+  initialHighlight?: string | null;
   upgradeConfigText: string;
   upgradeStatus: UpgradeStatus;
   upgradeReference: string | null;
@@ -52,7 +53,7 @@ export function ProfileClient({
   profile, currentProfile, isOwn,
   isFriend: initFriend, isFollowing: initFollowing, isBlocked: initBlocked,
   friendRequestStatus: initReqStatus, friendRequestId: initReqId,
-  followersCount, followingCount, friendsCount, initialPosts, initialLive,
+  followersCount, followingCount, friendsCount, initialPosts, initialLive, initialHighlight,
   upgradeConfigText, upgradeStatus, upgradeReference,
 }: ProfileClientProps) {
   const [isFriend, setIsFriend] = useState(initFriend);
@@ -65,6 +66,8 @@ export function ProfileClient({
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [activeTab, setActiveTab] = useState<"posts" | "about" | "upgrade">("posts");
   const [live, setLive] = useState<LiveSession | null>(initialLive);
+  const [highlight, setHighlight] = useState<string | null>(initialHighlight ?? null);
+  const [highlightBroken, setHighlightBroken] = useState<string | null>(null);
   const [watching, setWatching] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
   const router = useRouter();
@@ -85,7 +88,21 @@ export function ProfileClient({
         .order("started_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (!cancelled) setLive(isOpen(data) ? data : null);
+      const open = isOpen(data) ? data : null;
+      if (!cancelled) setLive(open);
+      if (open) return;
+      // Nothing is live: the cover falls back to the clip the last broadcast
+      // kept, which is also how a session that ends while we watch is picked up.
+      const { data: kept } = await supabase
+        .from("live_sessions")
+        .select("highlight_path")
+        .eq("user_id", profile.id)
+        .eq("status", "ended")
+        .not("highlight_path", "is", null)
+        .order("ended_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!cancelled) setHighlight(kept?.highlight_path ?? null);
     }
     void read();
     // Realtime makes the cover flip the second the broadcast starts or stops;
@@ -198,6 +215,31 @@ export function ProfileClient({
                 Tap to watch
               </span>
             </button>
+          )}
+          {/* A finished broadcast leaves one clip rolling here until the next
+              one starts. The photo underneath stays as the fallback. */}
+          {!live && highlight && highlightBroken !== highlight && (
+            <>
+              <video
+                key={highlight}
+                src={clipUrl(supabase, highlight)}
+                autoPlay
+                muted
+                loop
+                playsInline
+                onError={() => setHighlightBroken(highlight)}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <span className="absolute top-3 left-3 flex items-center gap-1.5 text-white text-[11px] font-bold px-2.5 py-1 rounded-full"
+                style={{ background: "rgba(0,0,0,0.55)" }}>
+                <Radio className="w-3 h-3" /> Recent broadcast
+              </span>
+              <Link href="/live"
+                className="absolute bottom-3 left-3 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors hover:bg-black/70"
+                style={{ background: "rgba(0,0,0,0.5)" }}>
+                Go to Live
+              </Link>
+            </>
           )}
           {isOwn && !live && (
             <div className="absolute bottom-3 right-3 flex gap-2">
@@ -474,6 +516,7 @@ export function ProfileClient({
         <LiveViewer
           session={live}
           authorName={profile.display_name}
+          viewerId={currentProfile?.id ?? null}
           onClose={() => setWatching(false)}
         />
       )}

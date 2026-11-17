@@ -96,6 +96,44 @@ from (
   ('032 streaming permissions + admin rights',
     case when to_regclass('public.stream_permissions') is not null
           and to_regprocedure('public.stream_allowed(uuid)') is not null then 'yes' else 'no' end),
+  ('033 live viewer chat',
+    case when to_regclass('public.live_messages') is not null then 'yes' else 'no' end),
+  ('033 scheduled streams + kept highlight',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.live_sessions')
+                        and attname = 'scheduled_at')
+          and exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.live_sessions')
+                        and attname = 'highlight_path') then 'yes' else 'no' end),
+  ('033 quiz duels + honest scoring',
+    case when to_regclass('public.quiz_duels') is not null
+          and to_regprocedure('public.record_duel_score(uuid,integer)') is not null then 'yes' else 'no' end),
+  ('033 event invitations',
+    case when to_regclass('public.event_invites') is not null then 'yes' else 'no' end),
+  ('033 event end time + banner',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.events') and attname = 'ends_at')
+          and exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.events') and attname = 'banner_path')
+         then 'yes' else 'no' end),
+  ('033 poll categories + question descriptions',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.polls') and attname = 'category')
+          and exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.daily_questions') and attname = 'description')
+         then 'yes' else 'no' end),
+  ('033 track availability',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.music_tracks') and attname = 'availability')
+         then 'yes' else 'no' end),
+  ('033 broadcasts can be reported',
+    case when exists (select 1 from pg_constraint
+                      where conrelid = to_regclass('public.content_reports')
+                        and pg_get_constraintdef(oid) like '%stream%') then 'yes' else 'no' end),
+  ('033 visit opt-out + daily counter',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.profiles') and attname = 'hide_visit_activity')
+          and to_regprocedure('public.record_profile_visit(uuid)') is not null then 'yes' else 'no' end),
   ('seed: book covers filled in',
     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
       from public.study_books where cover_url is not null)),

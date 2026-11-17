@@ -1,11 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { History, Lock } from "lucide-react";
+import { History } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signPostMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProFrame } from "@/components/pro/ProFrame";
+import { LockedFeaturePreview } from "@/components/pro/LockedFeaturePreview";
 import { PostCard } from "@/components/posts/PostCard";
 import { getProStatus } from "@/lib/pro";
 import type { Metadata } from "next";
@@ -57,20 +57,36 @@ export default async function MemoriesPage() {
   }
 
   if (!status.pro) {
+    // Which calendar windows already hold something for this author — a real
+    // count per bucket, with no post content read.
+    const buckets: { label: string; count: number }[] = [];
+    for (const w of WINDOWS) {
+      const { from, to } = dayWindow(w.months, w.days);
+      const { count } = await supabase.from("posts")
+        .select("id", { count: "exact", head: true })
+        .eq("author_id", user.id)
+        .is("group_id", null)
+        .gte("created_at", from)
+        .lt("created_at", to);
+      buckets.push({ label: w.label, count: count ?? 0 });
+    }
     return (
       <AppLayout>
         <ProFrame title="Memories" pro={false} expiresAt={status.expiresAt}
           subtitle="The posts you wrote on this day, weeks and years ago.">
-          <div className="card p-6 space-y-3 text-center">
-            <Lock className="w-8 h-8 mx-auto" style={{ color: "var(--brand-gold)" }} />
-            <p className="font-bold" style={{ color: "var(--text-primary)" }}>Memories is a PRO feature</p>
-            <p className="text-sm max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
-              It only ever reads your own posts, matched to the calendar day. No other person&apos;s content appears here.
-            </p>
-            <Link href="/pro#upgrade" className="btn-primary text-sm inline-flex mx-auto"
-              style={{ background: "var(--brand-gold)", color: "var(--brand-green)" }}>
-              Upgrade to PRO
-            </Link>
+          <div className="space-y-4">
+            <LockedFeaturePreview blurb="Memories only ever reads your own posts, matched to the calendar day. These are the windows it checks and how many of your posts each one holds:" />
+            <div className="card divide-y" style={{ borderColor: "var(--border)" }}>
+              {buckets.map((b) => (
+                <div key={b.label} className="flex items-center gap-3 px-4 py-3">
+                  <History className="w-4 h-4 flex-shrink-0" style={{ color: "var(--text-secondary)" }} />
+                  <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{b.label}</span>
+                  <span className="ml-auto text-sm" style={{ color: "var(--text-secondary)" }}>
+                    {b.count > 0 ? `${b.count} ${b.count === 1 ? "post" : "posts"} to read with PRO` : "Nothing from this window"}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </ProFrame>
       </AppLayout>
@@ -93,7 +109,7 @@ export default async function MemoriesPage() {
           groups.map((g) => (
             <section key={g.label} className="space-y-3">
               <h2 className="text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5"
-                style={{ color: "var(--brand-gold)" }}>
+                style={{ color: "var(--brand-gold-text)" }}>
                 <History className="w-3.5 h-3.5" />{g.label}
               </h2>
               {g.posts.map((p) => (

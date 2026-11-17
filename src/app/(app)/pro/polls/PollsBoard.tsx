@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Plus, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { closePoll, createPoll, votePoll } from "@/lib/actions/pro";
 import { formatRelativeTime } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { ReportButton } from "@/components/pro/ReportButton";
 
 type Poll = {
   id: string;
@@ -34,6 +36,9 @@ export function PollsBoard({
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", ""]);
   const [hours, setHours] = useState(0);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => setReady(true), []);
 
   function addPoll() {
     start(async () => {
@@ -99,11 +104,23 @@ export function PollsBoard({
         </div>
       )}
 
-      {polls.length === 0 && !composing && (
+      {!ready && !composing && (
+        <div className="space-y-4">
+          {[0, 1].map((i) => (
+            <div key={i} className="card p-4 space-y-3">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-9 w-full rounded-xl" />
+              <Skeleton className="h-9 w-full rounded-xl" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {ready && polls.length === 0 && !composing && (
         <div className="card p-8 text-center" style={{ color: "var(--text-secondary)" }}>No polls are open.</div>
       )}
 
-      {polls.map((poll) => {
+      {ready && polls.map((poll) => {
         const total = poll.votes.length;
         const myVote = poll.votes.find((v) => v.user_id === currentUserId);
         const closed = !!poll.closes_at && new Date(poll.closes_at).getTime() < Date.now();
@@ -154,9 +171,10 @@ export function PollsBoard({
             </p>
             {!canVote && !myVote && (
               <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                Voting is part of PRO. <a href="/pro" style={{ color: "var(--brand-gold)", fontWeight: 700 }}>Upgrade to PRO</a>.
+                Voting is part of PRO. <a href="/pro" style={{ color: "var(--brand-gold-text)", fontWeight: 700 }}>Upgrade to PRO</a>.
               </p>
             )}
+            <ReportButton entityType="poll" entityId={poll.id} />
           </article>
         );
       })}

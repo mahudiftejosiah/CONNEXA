@@ -24,15 +24,15 @@ export type Table<T> = {
   drop: (idColumn: string, id: unknown) => Promise<boolean>;
 };
 
-export function useRows<T>(table: string, opts: { order?: string; ascending?: boolean; or?: string; limit?: number } = {}): Table<T> {
-  const { order, ascending = false, or, limit } = opts;
+export function useRows<T>(table: string, opts: { order?: string; ascending?: boolean; or?: string; limit?: number; select?: string } = {}): Table<T> {
+  const { order, ascending = false, or, limit, select = "*" } = opts;
   const [rows, setRows] = useState<T[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    let query = db().from(table).select("*");
+    let query = db().from(table).select(select);
     if (or) query = query.or(or);
     if (order) query = query.order(order, { ascending });
     if (limit) query = query.limit(limit);
@@ -47,7 +47,7 @@ export function useRows<T>(table: string, opts: { order?: string; ascending?: bo
     }
     setError(null);
     setRows((data ?? []) as T[]);
-  }, [table, order, ascending, or, limit]);
+  }, [table, order, ascending, or, limit, select]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -73,6 +73,23 @@ export function useRows<T>(table: string, opts: { order?: string; ascending?: bo
   }
 
   return { rows, error, loading, reload: load, set: setRows, add, patch, drop };
+}
+
+// An audit row for every administrative decision. Panels that change something
+// visible to a member call this; the log is what makes the console reviewable.
+export async function audit(
+  adminId: string,
+  opts: { targetUserId?: string | null; entityId?: string | null; entityType?: string; action: string; reason?: string }
+) {
+  const { error } = await db().from("moderation_actions").insert({
+    admin_id: adminId,
+    target_user_id: opts.targetUserId ?? null,
+    entity_id: opts.entityId ?? null,
+    entity_type: opts.entityType ?? null,
+    action: opts.action,
+    reason: opts.reason ?? null,
+  });
+  if (error) toast("Saved, but the audit log refused the entry: " + error.message);
 }
 
 // Panels name people by id in the tables; this turns those ids into the
@@ -163,4 +180,46 @@ export function whenValue(iso: string | null | undefined): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// The panels keep their statistics honest by counting every row they hold, so
+// paging moves the display, not the query: an administrator sees twenty lines at
+// a time and the numbers above still describe the whole table.
+export function usePager<T>(rows: T[], size = 20) {
+  const [page, setPage] = useState(1);
+  const pages = Math.max(1, Math.ceil(rows.length / size));
+  const current = Math.min(page, pages);
+  return {
+    shown: rows.slice((current - 1) * size, current * size),
+    page: current,
+    pages,
+    total: rows.length,
+    goTo: (n: number) => setPage(Math.min(Math.max(1, n), pages)),
+  };
+}
+
+export function Pager({ page, pages, total, goTo, singular }: { page: number; pages: number; total: number; goTo: (n: number) => void; singular: string }) {
+  if (total === 0) return null;
+  return (
+    <div className="flex items-center justify-between gap-3 pt-1">
+      <p className="text-xs text-[var(--text-secondary)]">
+        {total} {singular === "entry" ? "entries" : singular + (total === 1 ? "" : "s")}
+        {pages > 1 ? ` · page ${page} of ${pages}` : ""}
+      </p>
+      {pages > 1 && (
+        <div className="flex items-center gap-1.5">
+          <button type="button" onClick={() => goTo(page - 1)} disabled={page <= 1}
+            className="px-2.5 py-1 rounded-lg text-xs font-semibold border disabled:opacity-40"
+            style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}>
+            Previous
+          </button>
+          <button type="button" onClick={() => goTo(page + 1)} disabled={page >= pages}
+            className="px-2.5 py-1 rounded-lg text-xs font-semibold border disabled:opacity-40"
+            style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}>
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }

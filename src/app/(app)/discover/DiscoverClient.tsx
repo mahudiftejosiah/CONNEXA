@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Users, Globe, TrendingUp, UserPlus, Newspaper, Radio, Gamepad2, Clapperboard, ArrowRight, GraduationCap, Play, Star, ExternalLink } from "lucide-react";
+import { Users, Globe, TrendingUp, UserPlus, Newspaper, Radio, Gamepad2, Clapperboard, ArrowRight, GraduationCap, Play, Star, ExternalLink, Fingerprint } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -48,9 +48,10 @@ interface DiscoverClientProps {
   featuredSites: SiteShortcut[];
   studyBooks: StudyBook[];
   watchReels: PoolReel[];
+  hashingOpen?: boolean;
 }
 
-export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, currentUserId, news, studyResources, studySites, featuredSites, studyBooks, watchReels }: DiscoverClientProps) {
+export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, currentUserId, news, studyResources, studySites, featuredSites, studyBooks, watchReels, hashingOpen = false }: DiscoverClientProps) {
   const [sentTo, setSentTo] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<"for-you" | "featured" | "study">("for-you");
   const room = useFullscreen<HTMLDivElement>();
@@ -112,6 +113,11 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
           <Link href="/groups" className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
             <Users className="w-4 h-4" /> Join a community
           </Link>
+          {hashingOpen && (
+            <Link href="/hashing" className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
+              <Fingerprint className="w-4 h-4" /> Hashing bot
+            </Link>
+          )}
         </div>
       </div>
 

@@ -4,8 +4,7 @@ import { proMediaUrl } from "@/lib/media";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProFrame } from "@/components/pro/ProFrame";
 import { ProDataNote } from "@/components/pro/ProDataNote";
-import { BadgeShelf } from "./BadgeShelf";
-import { getProStatus } from "@/lib/pro";
+import { BadgeShelf } from "./BadgeShelf";import { getProStatus } from "@/lib/pro";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +55,7 @@ export default async function BadgesPage() {
         {counts.error && (
           <ProDataNote tone="warn">Badges start working when migration 031 is pasted in Supabase.</ProDataNote>
         )}
-        <BadgeShelf badges={rows} labels={COUNT_LABEL} canCheck={!counts.error} />
+        <BadgeShelf badges={rows} labels={COUNT_LABEL} canCheck={!counts.error} pro={status.pro} />
       </ProFrame>
     </AppLayout>
   );

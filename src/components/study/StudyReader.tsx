@@ -67,6 +67,8 @@ export function StudyReader({ book, userId, saved }: { book: StudyBook; userId: 
   const [selection, setSelection] = useState<SelRange[] | null>(null);
   const [offer, setOffer] = useState<{ page: number; percent: number } | null>(null);
   const [jump, setJump] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const [slow, setSlow] = useState(false);
 
   const articleRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -84,10 +86,18 @@ export function StudyReader({ book, userId, saved }: { book: StudyBook; userId: 
 
   // The text comes from the app's own route, which pulls it off Project
   // Gutenberg once and keeps the copy warm for everyone reading that title.
+  // A retry asks the route to forget a remembered failure and try again.
   useEffect(() => {
     if (external) return;
     let alive = true;
-    fetch(`/api/study-text?book=${book.id}`)
+    const controller = new AbortController();
+    const watchdog = setTimeout(() => controller.abort(), 50000);
+    const nudge = setTimeout(() => { if (alive) setSlow(true); }, 15000);
+    setError(null);
+    setSlow(false);
+    setParagraphs(null);
+    offered.current = false;
+    fetch(`/api/study-text?book=${book.id}${attempt > 0 ? "&retry=1" : ""}`, { signal: controller.signal })
       .then(async (res) => {
         const body = await res.json();
         if (!alive) return;
@@ -95,9 +105,16 @@ export function StudyReader({ book, userId, saved }: { book: StudyBook; userId: 
         if (body.external) { setError(null); setParagraphs(null); return; }
         setParagraphs(body.paragraphs as string[]);
       })
-      .catch(() => { if (alive) setError("The book could not be opened. Check your connection."); });
-    return () => { alive = false; };
-  }, [book.id, external]);
+      .catch(() => {
+        if (alive) setError("Project Gutenberg did not answer in time. Your place is kept — try again in a moment.");
+      })
+      .finally(() => {
+        clearTimeout(watchdog);
+        clearTimeout(nudge);
+        if (alive) setSlow(false);
+      });
+    return () => { alive = false; clearTimeout(watchdog); clearTimeout(nudge); controller.abort(); };
+  }, [book.id, external, attempt]);
 
   // Page breaks land between paragraphs, so a paragraph never splits in half.
   const pageStarts = useMemo(() => {
@@ -391,9 +408,17 @@ export function StudyReader({ book, userId, saved }: { book: StudyBook; userId: 
       {error && !external && (
         <div className="card p-5 text-center space-y-3">
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{error}</p>
-          <a href={book.pdf_url} target="_blank" rel="noopener noreferrer" className="btn-ghost text-sm inline-flex items-center gap-1.5">
-            Read it on Project Gutenberg <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button onClick={() => setAttempt((n) => n + 1)} className="btn-primary text-sm inline-flex items-center gap-1.5">
+              <RotateCcw className="w-3.5 h-3.5" /> Try again
+            </button>
+            <a href={book.pdf_url} target="_blank" rel="noopener noreferrer" className="btn-ghost text-sm inline-flex items-center gap-1.5">
+              Read it on Project Gutenberg <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            Nothing you have read is lost: your page and your highlights are stored here, not on Gutenberg.
+          </p>
         </div>
       )}
 
@@ -402,6 +427,11 @@ export function StudyReader({ book, userId, saved }: { book: StudyBook; userId: 
           <div className="w-8 h-8 mx-auto mb-3 rounded-full border-2 border-t-transparent animate-spin"
             style={{ borderColor: "rgb(var(--a-600))", borderTopColor: "transparent" }} />
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Fetching the book from Project Gutenberg…</p>
+          {slow && (
+            <p className="text-xs mt-2" style={{ color: "var(--text-secondary)" }}>
+              Gutenberg is being slow. This stops on its own after a short wait and offers a retry.
+            </p>
+          )}
         </div>
       )}
 

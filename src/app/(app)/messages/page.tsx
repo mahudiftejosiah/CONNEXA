@@ -159,7 +159,8 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   const friends: any[] = [];
   for (let i = 0; i < friendIds.length; i += 100) {
     const { data } = await supabase.from("profiles")
-      .select("id, username, display_name, avatar_url, last_seen, is_verified")
+      // Without pro_expires_at an expired PRO reads as never-lapsing and keeps the badge.
+      .select("id, username, display_name, avatar_url, last_seen, is_verified, pro_expires_at")
       .in("id", friendIds.slice(i, i + 100));
     friends.push(...(data || []));
   }

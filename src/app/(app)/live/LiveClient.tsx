@@ -1,19 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Video, VideoOff, Radio, Square, Send, RotateCcw, ArrowLeft, SwitchCamera } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Video, VideoOff, Radio, Square, Send, RotateCcw, ArrowLeft, SwitchCamera, Calendar, Play, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
+import { LiveChat } from "@/components/live/LiveChat";
 import { createClient } from "@/lib/supabase/client";
 import { CLIP_SLICE_MS, LIVE_BUCKET, clipPath } from "@/lib/live";
 import { createPost } from "@/lib/actions/posts";
+import { scheduleStream, cancelScheduledStream, endLiveSession } from "@/lib/actions/pro";
 import { useFullscreen } from "@/lib/useFullscreen";
 import type { LiveSession, Profile, PostVisibility } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-export function LiveClient({ profile, canBroadcast = true }: { profile: Profile; canBroadcast?: boolean }) {
+type Scheduled = { id: string; user_id: string; title: string; scheduled_at: string };
+
+export function LiveClient({ profile, canBroadcast = true, broadcastReason = null }: {
+  profile: Profile;
+  canBroadcast?: boolean;
+  broadcastReason?: string | null;
+}) {
   const router = useRouter();
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
@@ -41,7 +49,45 @@ export function LiveClient({ profile, canBroadcast = true }: { profile: Profile;
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [posting, setPosting] = useState(false);
+  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [mine, setMine] = useState<Scheduled[]>([]);
+  const [upcoming, setUpcoming] = useState<(Scheduled & { host: string })[]>([]);
+  const [scheduleNotice, setScheduleNotice] = useState<string | null>(null);
+  const [schedTitle, setSchedTitle] = useState("");
+  const [schedWhen, setSchedWhen] = useState("");
+  const [scheduling, setScheduling] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const screen = useFullscreen<HTMLDivElement>();
+
+  const loadSchedules = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("live_sessions")
+      .select("id, user_id, title, scheduled_at")
+      .eq("status", "scheduled")
+      .gte("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: true })
+      .limit(30);
+    if (error) {
+      setScheduleNotice(error.code === "42703" || error.message.includes("scheduled_at")
+        ? "Scheduling needs migration 033."
+        : `Upcoming broadcasts could not be read: ${error.message}`);
+      return;
+    }
+    setScheduleNotice(null);
+    const rows = (data ?? []).filter((r) => !!r.scheduled_at) as Scheduled[];
+    setMine(rows.filter((r) => r.user_id === profile.id));
+    const rest = rows.filter((r) => r.user_id !== profile.id);
+    if (!rest.length) { setUpcoming([]); return; }
+    const ids = Array.from(new Set(rest.map((r) => r.user_id)));
+    const { data: people } = await supabase.from("profiles").select("id, username, display_name").in("id", ids);
+    const hostOf = (id: string) => {
+      const person = (people ?? []).find((p) => p.id === id);
+      return person ? (person.display_name || person.username) : "Someone";
+    };
+    setUpcoming(rest.map((r) => ({ ...r, host: hostOf(r.user_id) })));
+  }, [supabase, profile.id]);
+
+  useEffect(() => { void loadSchedules(); }, [loadSchedules]);
 
   useEffect(() => {
     return () => {
@@ -115,22 +161,35 @@ export function LiveClient({ profile, canBroadcast = true }: { profile: Profile;
 
   // Full screen is asked for in the click itself, before any await, or the
   // browser treats the later request as an unsolicited one and says no.
-  async function startBroadcast() {
+  async function startBroadcast(scheduled?: Scheduled) {
     const stream = streamRef.current;
     if (!stream) { toast.error("Turn the camera on first."); return; }
-    if (!canBroadcast) { toast.error("Live streaming is a CONNEXA PRO feature."); return; }
+    if (!canBroadcast) { toast.error(broadcastReason ?? "Live streaming is a CONNEXA PRO feature."); return; }
     screen.enter();
 
-    const { data, error } = await supabase.from("live_sessions")
-      .insert({ user_id: profile.id, title: title.trim(), status: "live" })
-      .select("*")
-      .single();
+    // A scheduled broadcast turns into the live row itself rather than a second
+    // one, so the session viewers were told about is the session they watch.
+    const res = scheduled
+      ? await supabase.from("live_sessions")
+          .update({ status: "live", started_at: new Date().toISOString(), title: scheduled.title })
+          .eq("id", scheduled.id).eq("status", "scheduled")
+          .select("*").single()
+      : await supabase.from("live_sessions")
+          .insert({ user_id: profile.id, title: title.trim(), status: "live" })
+          .select("*").single();
+    const { data, error } = res;
     if (error || !data) {
       toast.error("The session could not start. Check your connection and try again.");
       screen.exit();
       return;
     }
     sessionRef.current = data;
+    setChatSessionId(data.id);
+    if (scheduled) {
+      const startedId = scheduled.id;
+      setTitle(scheduled.title);
+      setMine((prev) => prev.filter((r) => r.id !== startedId));
+    }
 
     const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
       ? "video/webm;codecs=vp9,opus" : "video/webm";
@@ -168,17 +227,44 @@ export function LiveClient({ profile, canBroadcast = true }: { profile: Profile;
     if (exitScreen) screen.exit();
     if (!s) return;
     sessionRef.current = null;
-    // Let the last few slices finish uploading, then close the session and
-    // clear the clips: the recap stays on the broadcaster's own screen.
+    setChatSessionId(null);
+    // Let the last slices finish uploading: the newest one that landed is the
+    // highlight the profile cover keeps, and the server clears every other clip.
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    await supabase.from("live_sessions")
-      .update({ status: "ended", ended_at: new Date().toISOString() })
-      .eq("id", s.id);
-    if (pathsRef.current.length > 0) {
-      await supabase.storage.from(LIVE_BUCKET).remove(pathsRef.current);
-      pathsRef.current = [];
-    }
+    const highlight = pathsRef.current.length > 0 ? pathsRef.current[pathsRef.current.length - 1] : null;
+    pathsRef.current = [];
+    const closed = await endLiveSession(s.id, highlight);
+    if ("error" in closed) { toast.error(closed.error); return; }
     toast("Your live session has ended.", { icon: "🔴" });
+  }
+
+  async function submitSchedule() {
+    if (schedTitle.trim().length < 3) { toast.error("Give the broadcast a name."); return; }
+    if (!schedWhen) { toast.error("Choose when it starts."); return; }
+    setScheduling(true);
+    const res = await scheduleStream(schedTitle, new Date(schedWhen).toISOString());
+    setScheduling(false);
+    if ("error" in res) { toast.error(res.error); return; }
+    setSchedTitle("");
+    setSchedWhen("");
+    toast.success(res.message);
+    void loadSchedules();
+  }
+
+  async function cancelSchedule(id: string) {
+    setBusyId(id);
+    const res = await cancelScheduledStream(id);
+    setBusyId(null);
+    if ("error" in res) { toast.error(res.error); return; }
+    setMine((prev) => prev.filter((r) => r.id !== id));
+    toast.success("Schedule cancelled.");
+  }
+
+  async function startScheduled(row: Scheduled) {
+    setBusyId(row.id);
+    if (!cameraOn) await startCamera();
+    setBusyId(null);
+    void startBroadcast(row);
   }
 
   function discardClip() {
@@ -225,39 +311,49 @@ export function LiveClient({ profile, canBroadcast = true }: { profile: Profile;
       {/* Stage */}
       <div className="card overflow-hidden">
         <div ref={screen.ref} className={`live-shell${screen.active ? " pseudo-full" : ""}`}>
-          <div className={`relative bg-black ${screen.active ? "h-full" : "aspect-video"}`}>
-            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-            {!cameraOn && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/70">
-                <VideoOff className="w-12 h-12" />
-                <p className="text-sm">{cameraError || "Camera is off — turn it on to start your session."}</p>
-              </div>
-            )}
-            {live && (
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> REC {fmt}
-              </div>
-            )}
-            {live && (
-              <p className="absolute top-3 right-3 text-white/70 text-[11px] font-semibold">
-                {clipsUp} clip{clipsUp === 1 ? "" : "s"} sent to viewers
-              </p>
-            )}
-            {screen.active && (
-              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2">
-                {!live && cameraOn && canBroadcast && (
-                  <Button variant="danger" onClick={startBroadcast} icon={<Radio className="w-4 h-4" />}>Start live</Button>
-                )}
-                {live && (
-                  <Button variant="danger" onClick={() => void stopBroadcast(true)} icon={<Square className="w-4 h-4 fill-current" />}>Stop session</Button>
-                )}
-                {cameraOn && !live && (
-                  <button onClick={flipCamera} aria-label="Flip camera"
-                    className="p-3 rounded-full bg-white/15 text-white hover:bg-white/25">
-                    <SwitchCamera className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
+          <div className={`bg-black flex flex-col sm:flex-row ${screen.active ? "h-full" : live ? "h-[70vh]" : "aspect-video"}`}>
+            <div className="relative flex-1 min-h-0">
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+              {!cameraOn && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/70">
+                  <VideoOff className="w-12 h-12" />
+                  <p className="text-sm">{cameraError || "Camera is off — turn it on to start your session."}</p>
+                </div>
+              )}
+              {live && (
+                <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> REC {fmt}
+                </div>
+              )}
+              {live && (
+                <p className="absolute top-3 right-3 text-white/70 text-[11px] font-semibold">
+                  {clipsUp} clip{clipsUp === 1 ? "" : "s"} sent to viewers
+                </p>
+              )}
+              {screen.active && (
+                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                  {!live && cameraOn && canBroadcast && (
+                    <Button variant="danger" onClick={() => void startBroadcast()} icon={<Radio className="w-4 h-4" />}>Start live</Button>
+                  )}
+                  {live && (
+                    <Button variant="danger" onClick={() => void stopBroadcast(true)} icon={<Square className="w-4 h-4 fill-current" />}>Stop session</Button>
+                  )}
+                  {cameraOn && !live && (
+                    <button onClick={flipCamera} aria-label="Flip camera"
+                      className="p-3 rounded-full bg-white/15 text-white hover:bg-white/25">
+                      <SwitchCamera className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            {live && chatSessionId && (
+              <LiveChat
+                sessionId={chatSessionId}
+                active={live}
+                currentUserId={profile.id}
+                className="h-44 sm:h-auto sm:w-72 flex-shrink-0 border-t sm:border-t-0 sm:border-l border-white/10"
+              />
             )}
           </div>
         </div>
@@ -286,7 +382,61 @@ export function LiveClient({ profile, canBroadcast = true }: { profile: Profile;
             <Button variant="danger" onClick={() => void stopBroadcast(true)} icon={<Square className="w-4 h-4 fill-current" />}>Stop session</Button>
           )}
         </div>
+        {!canBroadcast && broadcastReason && (
+          <p className="px-4 pb-4 text-xs font-semibold" style={{ color: "var(--brand-gold-text)" }}>{broadcastReason}</p>
+        )}
       </div>
+
+      {canBroadcast && (
+        <div className="card p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" style={{ color: "var(--brand-gold)" }} />
+            <h2 className="font-bold text-[var(--text-primary)]">Schedule a broadcast</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <input className="input" placeholder="What is the broadcast about?" maxLength={120}
+              value={schedTitle} onChange={(e) => setSchedTitle(e.target.value)} />
+            <input type="datetime-local" className="input" aria-label="When the broadcast starts"
+              value={schedWhen} onChange={(e) => setSchedWhen(e.target.value)} />
+          </div>
+          <Button onClick={() => void submitSchedule()} loading={scheduling} icon={<Calendar className="w-4 h-4" />}>
+            Schedule it
+          </Button>
+        </div>
+      )}
+
+      {(mine.length > 0 || upcoming.length > 0 || scheduleNotice) && (
+        <div className="card p-4 space-y-3">
+          <h2 className="font-bold text-[var(--text-primary)]">Upcoming broadcasts</h2>
+          {scheduleNotice && (
+            <p className="text-xs pl-2 border-l-2" style={{ borderColor: "var(--brand-gold)", color: "var(--text-secondary)" }}>
+              {scheduleNotice}
+            </p>
+          )}
+          {mine.map((s) => (
+            <div key={s.id} className="flex flex-wrap items-center gap-3 p-2.5 rounded-lg" style={{ backgroundColor: "var(--bg)" }}>
+              <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: "var(--brand-gold)" }} />
+              <div className="flex-1 min-w-[10rem]">
+                <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{s.title || "Untitled broadcast"}</p>
+                <p className="text-xs text-[var(--text-secondary)]">{new Date(s.scheduled_at).toLocaleString()} · yours</p>
+              </div>
+              <Button size="sm" variant="danger" loading={busyId === s.id} icon={<Play className="w-3.5 h-3.5" />}
+                onClick={() => void startScheduled(s)}>Start now</Button>
+              <Button size="sm" variant="ghost" loading={busyId === s.id} icon={<Trash2 className="w-3.5 h-3.5 text-red-500" />}
+                onClick={() => void cancelSchedule(s.id)}>Cancel</Button>
+            </div>
+          ))}
+          {upcoming.map((s) => (
+            <div key={s.id} className="flex flex-wrap items-center gap-3 p-2.5 rounded-lg" style={{ backgroundColor: "var(--bg)" }}>
+              <Radio className="w-4 h-4 flex-shrink-0 text-[var(--text-secondary)]" />
+              <div className="flex-1 min-w-[10rem]">
+                <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{s.title || "Untitled broadcast"}</p>
+                <p className="text-xs text-[var(--text-secondary)]">{s.host} · {new Date(s.scheduled_at).toLocaleString()}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Clip review */}
       {clipUrl && clipFile && (
@@ -303,9 +453,10 @@ export function LiveClient({ profile, canBroadcast = true }: { profile: Profile;
       )}
 
       <p className="text-xs text-[var(--text-secondary)] text-center leading-relaxed">
-        While you are live your profile cover shows the broadcast to everyone. CONNEXA keeps the recording in
-        your browser, so you can post it to your feed when you stop — no third‑party streaming service involved.
-        Your camera never turns on until you press “Turn on camera”.
+        While you are live your profile cover shows the broadcast to everyone, and viewers can reach you in the
+        chat beside the picture. When you stop, the last few seconds stay on your cover as a recent broadcast.
+        CONNEXA keeps the full recording in your browser, so you can post it to your feed — no third‑party
+        streaming service involved. Your camera never turns on until you press “Turn on camera”.
       </p>
     </div>
   );

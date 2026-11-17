@@ -1,26 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { Award, CalendarDays, Crown, HardDrive, MessagesSquare, Music, Store, Trophy, Video } from "lucide-react";
+import { Award, CalendarDays, Crown, HardDrive, History, MessagesSquare, Music, ShieldAlert, Store, Trophy, Video } from "lucide-react";
 import { ProMembers } from "./ProMembers";
 import { ProMusic } from "./ProMusic";
 import { ProQuizzes } from "./ProQuizzes";
 import { ProCommunity } from "./ProCommunity";
+import { ProReports } from "./ProReports";
 import { ProEvents, ProLive } from "./ProEventsLive";
 import { ProBadges, ProMarketplace } from "./ProCreator";
 import { ProUploads } from "./ProUploads";
+import { ProMemories } from "./ProMemories";
 
-type Section = "members" | "music" | "quizzes" | "community" | "live" | "events" | "badges" | "market" | "uploads";
+type Section = "members" | "community" | "reports" | "quizzes" | "music" | "live" | "events" | "badges" | "market" | "memories" | "uploads";
 
 const SECTIONS: { key: Section; label: string; icon: React.ReactNode }[] = [
   { key: "members",   label: "Membership",     icon: <Crown className="w-4 h-4" /> },
   { key: "community", label: "Community",      icon: <MessagesSquare className="w-4 h-4" /> },
+  { key: "reports",   label: "Reports",        icon: <ShieldAlert className="w-4 h-4" /> },
   { key: "quizzes",   label: "Quiz battles",   icon: <Trophy className="w-4 h-4" /> },
   { key: "music",     label: "Music Corner",   icon: <Music className="w-4 h-4" /> },
   { key: "live",      label: "Live streaming", icon: <Video className="w-4 h-4" /> },
   { key: "events",    label: "Events hub",     icon: <CalendarDays className="w-4 h-4" /> },
   { key: "badges",    label: "Badges",         icon: <Award className="w-4 h-4" /> },
   { key: "market",    label: "Marketplace",    icon: <Store className="w-4 h-4" /> },
+  { key: "memories",  label: "Memories",       icon: <History className="w-4 h-4" /> },
   { key: "uploads",   label: "Uploads",        icon: <HardDrive className="w-4 h-4" /> },
 ];
 
@@ -56,13 +60,15 @@ export function ProHub({ adminId }: { adminId: string }) {
 
       {section === "members" && <ProMembers adminId={adminId} />}
       {section === "community" && <ProCommunity adminId={adminId} />}
-      {section === "quizzes" && <ProQuizzes />}
+      {section === "reports" && <ProReports adminId={adminId} />}
+      {section === "quizzes" && <ProQuizzes adminId={adminId} />}
       {section === "music" && <ProMusic adminId={adminId} />}
       {section === "live" && <ProLive adminId={adminId} />}
       {section === "events" && <ProEvents adminId={adminId} />}
       {section === "badges" && <ProBadges adminId={adminId} />}
       {section === "market" && <ProMarketplace adminId={adminId} />}
-      {section === "uploads" && <ProUploads />}
+      {section === "memories" && <ProMemories adminId={adminId} />}
+      {section === "uploads" && <ProUploads adminId={adminId} />}
     </div>
   );
 }

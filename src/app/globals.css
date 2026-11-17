@@ -28,6 +28,10 @@
 
     --brand-green: rgb(var(--a-800));
     --brand-gold: rgb(var(--b-400));
+    /* Gold reads as champagne only on dark green; on a white card it drops to
+       ~1.8:1. This darker amber step of the same triplet clears AA on white and
+       swaps back to the plain gold in the dark theme, where it is legible. */
+    --brand-gold-text: rgb(var(--b-700));
     --bg: #f4f6f5;
     --bg-card: #ffffff;
     --text-primary: #111827;
@@ -41,6 +45,7 @@
     --text-primary: #f9fafb;
     --text-secondary: #9ca3af;
     --border: #1f3d2e;
+    --brand-gold-text: var(--brand-gold);
   }
 
   * {

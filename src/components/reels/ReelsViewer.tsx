@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Pause, X, Maximize2, Clapperboard } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { AccountBadge } from "@/components/ui/ProBadge";
 import { CommentSection } from "@/components/posts/CommentSection";
 import { toggleReaction, sharePost } from "@/lib/actions/posts";
 import { formatRelativeTime, cn } from "@/lib/utils";
@@ -21,7 +22,7 @@ type Reel =
       reaction_count: number;
       video_url: string;
       user_liked?: boolean;
-      author: { id: string; username: string; display_name: string; avatar_url: string | null };
+      author: { id: string; username: string; display_name: string; avatar_url: string | null; is_verified?: boolean; pro_expires_at?: string | null };
     };
 
 interface ReelsViewerProps {
@@ -305,6 +306,7 @@ export function ReelsViewer({ profile, fullscreen = false, onClose }: ReelsViewe
                     <div>
                       <Link href={`/profile/${reel.author.username}`} className="font-semibold text-sm text-white hover:underline block leading-tight pointer-events-auto">
                         {reel.author.display_name}
+                        <AccountBadge account={reel.author} />
                       </Link>
                       <p className="text-xs text-white/70">@{reel.author.username} · {formatRelativeTime(reel.created_at)}</p>
                     </div>

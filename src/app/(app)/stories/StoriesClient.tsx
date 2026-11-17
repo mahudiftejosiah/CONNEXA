@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, Eye, Trash2, Upload } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { AccountBadge } from "@/components/ui/ProBadge";
 import { StoriesTray } from "@/components/stories/StoriesTray";
 import { CreateStory } from "@/components/stories/CreateStory";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -108,7 +109,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId }: 
                 <Avatar src={viewingStory.author.avatar_url} name={viewingStory.author.display_name} size={36} userId={viewingStory.author.id} />
               </Link>
               <div>
-                <p className="text-white font-semibold text-sm">{viewingStory.author.display_name}</p>
+                <p className="text-white font-semibold text-sm">{viewingStory.author.display_name}<AccountBadge account={viewingStory.author} /></p>
                 <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>{formatRelativeTime(viewingStory.created_at)}</p>
               </div>
               <div className="ml-auto flex items-center gap-2">

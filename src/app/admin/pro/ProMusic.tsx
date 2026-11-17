@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Music, Play, Plus, Trash2, Upload, Save } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { uploadProMedia } from "@/lib/actions/pro";
-import { db, useRows, Field, Panel, Notice, Stat, Switch } from "./useRows";
+import { db, useRows, usePager, useNames, Field, Panel, Notice, Stat, Switch, Pager, audit } from "./useRows";
 import toast from "react-hot-toast";
 
 type Track = {
@@ -16,6 +16,7 @@ type Track = {
   source_url: string | null;
   audio_path: string | null;
   cover_path: string | null;
+  availability?: "available" | "unavailable" | "removed";
   published: boolean;
   created_at: string;
 };
@@ -77,23 +78,45 @@ export function ProMusic({ adminId }: { adminId: string }) {
   const tracks = useRows<Track>("music_tracks", { order: "created_at" });
   const playlists = useRows<Playlist>("playlists", { order: "created_at" });
   const links = useRows<PlaylistTrack>("playlist_tracks");
+  const names = useNames();
   const [genreFilter, setGenreFilter] = useState("");
+  const [availFilter, setAvailFilter] = useState("");
+  const [search, setSearch] = useState("");
   const [playing, setPlaying] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [draft, setDraft] = useState<Track | null>(null);
   const [newPlaylist, setNewPlaylist] = useState("");
   const [picking, setPicking] = useState<string | null>(null);
+  const [plDraft, setPlDraft] = useState<Playlist | null>(null);
+  // 033 adds the column; until it is pasted the shelf simply has no availability.
+  const [availColumn, setAvailColumn] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void db().from("music_tracks").select("availability").limit(1).then(({ error }) => {
+      if (alive) setAvailColumn(!error);
+    });
+    return () => { alive = false; };
+  }, []);
 
   const genres = Array.from(new Set(tracks.rows.map((t) => t.genre).filter((g): g is string => !!g))).sort();
-  const shown = tracks.rows.filter((t) => !genreFilter || t.genre === genreFilter);
+  const needle = search.trim().toLowerCase();
+  const shown = tracks.rows.filter((t) =>
+    (!genreFilter || t.genre === genreFilter)
+    && (!availFilter || (t.availability ?? "available") === availFilter)
+    && (!needle || t.title.toLowerCase().includes(needle) || t.artist.toLowerCase().includes(needle)));
   const withFile = tracks.rows.filter((t) => t.audio_path).length;
+  const unavailable = tracks.rows.filter((t) => (t.availability ?? "available") !== "available").length;
+  const paged = usePager(shown, 20);
+  const plPaged = usePager(playlists.rows, 10);
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Stat label="Tracks on file" value={tracks.rows.length} />
         <Stat label="Published" value={tracks.rows.filter((t) => t.published).length} />
         <Stat label="With an audio file" value={withFile} />
+        <Stat label="Unavailable or removed" value={unavailable} />
         <Stat label="Playlists" value={playlists.rows.length} />
       </div>
 
@@ -101,11 +124,21 @@ export function ProMusic({ adminId }: { adminId: string }) {
 
       <Panel title="Music Corner tracks" hint="A track with no file plays from its source link; a track with a file plays in the app. Unpublishing hides it from members instantly.">
         <Notice text={tracks.error} />
+        {!availColumn && <Notice text="Marking a track unavailable or removed needs migration 033." />}
         <div className="flex flex-wrap items-center gap-2">
+          <input className="input text-sm flex-1 min-w-[10rem]" placeholder="Search title or artist" value={search} onChange={(e) => setSearch(e.target.value)} />
           <select className="input text-sm w-auto" value={genreFilter} onChange={(e) => setGenreFilter(e.target.value)}>
             <option value="">All genres</option>
             {genres.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
+          {availColumn && (
+            <select className="input text-sm w-auto" value={availFilter} onChange={(e) => setAvailFilter(e.target.value)}>
+              <option value="">Any availability</option>
+              <option value="available">Available</option>
+              <option value="unavailable">Unavailable</option>
+              <option value="removed">Removed</option>
+            </select>
+          )}
           <span className="text-xs text-[var(--text-secondary)]">{shown.length} shown</span>
         </div>
 
@@ -115,7 +148,7 @@ export function ProMusic({ adminId }: { adminId: string }) {
           <p className="text-sm text-[var(--text-secondary)]">No tracks here yet — add one above, or paste migration 031.</p>
         ) : (
           <div className="space-y-2">
-            {shown.map((t) => (
+            {paged.shown.map((t) => (
               <div key={t.id} className="flex flex-wrap items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: "var(--bg-main)" }}>
                 <span className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--border)" }}>
                   <Music className="w-4 h-4 text-[var(--text-secondary)]" />
@@ -125,6 +158,7 @@ export function ProMusic({ adminId }: { adminId: string }) {
                   <p className="text-xs text-[var(--text-secondary)] truncate">
                     {t.artist}{t.genre ? ` · ${t.genre}` : ""}
                     {!t.audio_path && " · no file uploaded"}
+                    {(t.availability ?? "available") !== "available" && ` · ${t.availability}`}
                   </p>
                 </div>
                 {t.audio_path && (
@@ -133,21 +167,46 @@ export function ProMusic({ adminId }: { adminId: string }) {
                     {playing === t.id ? "Stop" : "Preview"}
                   </Button>
                 )}
+                {availColumn && (
+                  <select className="input text-xs w-auto" value={t.availability ?? "available"} aria-label={`Availability of ${t.title}`}
+                    onChange={async (e) => {
+                      const next = e.target.value;
+                      const { error } = await db().from("music_tracks").update({ availability: next }).eq("id", t.id);
+                      if (error) { toast.error("Could not change that: " + error.message); return; }
+                      tracks.set((p) => p.map((x) => (x.id === t.id ? { ...x, availability: next as Track["availability"] } : x)));
+                      await audit(adminId, { entityId: t.id, entityType: "music", action: `set_track_${next}`, reason: t.title });
+                      toast.success(`Marked ${next}.`);
+                    }}>
+                    <option value="available">Available</option>
+                    <option value="unavailable">Unavailable</option>
+                    <option value="removed">Removed</option>
+                  </select>
+                )}
                 <Switch on={t.published} label={t.title} onChange={async (v) => {
                   setBusy(t.id);
                   const { error } = await db().from("music_tracks").update({ published: v }).eq("id", t.id);
                   setBusy(null);
                   if (error) { toast.error("Could not change that."); return; }
                   tracks.set((p) => p.map((x) => (x.id === t.id ? { ...x, published: v } : x)));
+                  await audit(adminId, { entityId: t.id, entityType: "music", action: v ? "publish_track" : "unpublish_track", reason: t.title });
                   toast.success(v ? "Published." : "Hidden from members.");
                 }} />
                 <Button size="sm" variant="ghost" onClick={() => setDraft({ ...t })}>Edit</Button>
                 <Button size="sm" variant="ghost" loading={busy === t.id} icon={<Trash2 className="w-3.5 h-3.5 text-red-500" />}
-                  onClick={async () => { setBusy(t.id); const ok = await tracks.drop("id", t.id); setBusy(null); if (ok) toast.success("Track deleted."); }}>
+                  onClick={async () => {
+                    setBusy(t.id);
+                    const ok = await tracks.drop("id", t.id);
+                    setBusy(null);
+                    if (ok) {
+                      await audit(adminId, { entityId: t.id, entityType: "music", action: "delete_track", reason: t.title });
+                      toast.success("Track deleted.");
+                    }
+                  }}>
                   Delete
                 </Button>
               </div>
             ))}
+            <Pager page={paged.page} pages={paged.pages} total={paged.total} goTo={paged.goTo} singular="track" />
           </div>
         )}
         {playing && mediaUrl(tracks.rows.find((t) => t.id === playing)?.audio_path ?? null) && (
@@ -183,6 +242,7 @@ export function ProMusic({ adminId }: { adminId: string }) {
               setBusy(null);
               if (error || !data) { toast.error("Nothing was saved: " + (error?.message ?? "")); return; }
               tracks.set((p) => p.map((x) => (x.id === draft.id ? (data as Track) : x)));
+              await audit(adminId, { entityId: draft.id, entityType: "music", action: "edit_track", reason: draft.title });
               setDraft(null);
               toast.success("Track updated.");
             }}>Save track</Button>
@@ -201,6 +261,7 @@ export function ProMusic({ adminId }: { adminId: string }) {
             const { data, error } = await db().from("playlists").insert({ name, owner_id: adminId }).select().single();
             if (error || !data) { toast.error("Could not create: " + (error?.message ?? "paste migration 031")); return; }
             playlists.set((p) => [data as Playlist, ...p]);
+            await audit(adminId, { entityId: (data as Playlist).id, entityType: "playlist", action: "create_playlist", reason: name });
             setNewPlaylist("");
             toast.success("Playlist created — add tracks to it below.");
           }}>Create playlist</Button>
@@ -210,7 +271,7 @@ export function ProMusic({ adminId }: { adminId: string }) {
           <p className="text-sm text-[var(--text-secondary)]">No playlists yet.</p>
         ) : (
           <div className="space-y-3">
-            {playlists.rows.map((pl) => {
+            {plPaged.shown.map((pl) => {
               const inList = links.rows
                 .filter((l) => l.playlist_id === pl.id)
                 .sort((a, b) => a.position - b.position)
@@ -219,14 +280,27 @@ export function ProMusic({ adminId }: { adminId: string }) {
               return (
                 <div key={pl.id} className="p-3 rounded-xl space-y-2" style={{ backgroundColor: "var(--bg-main)" }}>
                   <div className="flex flex-wrap items-center gap-3">
-                    <p className="font-semibold text-sm flex-1 min-w-[8rem]">{pl.name}</p>
+                    <div className="flex-1 min-w-[8rem]">
+                      <p className="font-semibold text-sm">{pl.name}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {names[pl.owner_id] ? `by ${names[pl.owner_id]}` : "by a member"}
+                        {pl.description ? ` · ${pl.description}` : ""}
+                      </p>
+                    </div>
                     <Switch on={pl.published} label={pl.name} onChange={async (v) => {
                       const { error } = await db().from("playlists").update({ published: v }).eq("id", pl.id);
                       if (error) { toast.error("Could not change that."); return; }
                       playlists.set((p) => p.map((x) => (x.id === pl.id ? { ...x, published: v } : x)));
+                      await audit(adminId, { entityId: pl.id, entityType: "playlist", action: v ? "publish_playlist" : "unpublish_playlist", reason: pl.name });
                     }} />
+                    <Button size="sm" variant="ghost" onClick={() => setPlDraft({ ...pl })}>Edit</Button>
                     <Button size="sm" variant="ghost" icon={<Trash2 className="w-3.5 h-3.5 text-red-500" />}
-                      onClick={async () => { if (await playlists.drop("id", pl.id)) toast.success("Playlist deleted."); }}>
+                      onClick={async () => {
+                        if (await playlists.drop("id", pl.id)) {
+                          await audit(adminId, { entityId: pl.id, entityType: "playlist", action: "delete_playlist", reason: pl.name });
+                          toast.success("Playlist deleted.");
+                        }
+                      }}>
                       Delete
                     </Button>
                   </div>
@@ -264,9 +338,35 @@ export function ProMusic({ adminId }: { adminId: string }) {
                 </div>
               );
             })}
+            <Pager page={plPaged.page} pages={plPaged.pages} total={plPaged.total} goTo={plPaged.goTo} singular="playlist" />
           </div>
         )}
       </Panel>
+
+      {plDraft && (
+        <Panel title={`Edit “${plDraft.name}”`} hint="The wording members read on the shelf.">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="Name"><input className="input" value={plDraft.name} onChange={(e) => setPlDraft({ ...plDraft, name: e.target.value })} /></Field>
+            <Field label="Description"><input className="input" value={plDraft.description || ""} onChange={(e) => setPlDraft({ ...plDraft, description: e.target.value || null })} /></Field>
+          </div>
+          <div className="flex gap-2">
+            <Button loading={busy === plDraft.id} icon={<Save className="w-4 h-4" />} onClick={async () => {
+              const name = plDraft.name.trim();
+              if (name.length < 2) { toast.error("Give the playlist a name."); return; }
+              setBusy(plDraft.id);
+              const { data, error } = await db().from("playlists")
+                .update({ name, description: plDraft.description?.trim() || null }).eq("id", plDraft.id).select().single();
+              setBusy(null);
+              if (error || !data) { toast.error("Nothing was saved: " + (error?.message ?? "")); return; }
+              playlists.set((p) => p.map((x) => (x.id === plDraft.id ? (data as Playlist) : x)));
+              await audit(adminId, { entityId: plDraft.id, entityType: "playlist", action: "edit_playlist", reason: name });
+              setPlDraft(null);
+              toast.success("Playlist updated.");
+            }}>Save playlist</Button>
+            <Button variant="ghost" onClick={() => setPlDraft(null)}>Cancel</Button>
+          </div>
+        </Panel>
+      )}
     </div>
   );
 }
@@ -297,6 +397,7 @@ function AddTrack({ adminId, onAdded }: { adminId: string; onAdded: (t: Track) =
     setBusy(false);
     if (error || !data) { toast.error("Could not add the track: " + (error?.message ?? "paste migration 031")); return; }
     onAdded(data as Track);
+    await audit(adminId, { entityId: (data as Track).id, entityType: "music", action: "add_track", reason: form.title.trim() });
     setForm({ title: "", artist: "", genre: "", description: "", source_url: "" });
     setAudio(null);
     setCover(null);

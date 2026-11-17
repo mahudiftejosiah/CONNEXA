@@ -86,6 +86,9 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
   const [displayUser, setDisplayUser] = useState<Profile | null>(null);
   const [displayValue, setDisplayValue] = useState("");
   const [savingDisplay, setSavingDisplay] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [userResults, setUserResults] = useState<Profile[] | null>(null);
+  const [searchingUsers, setSearchingUsers] = useState(false);
   const [reports, setReports] = useState(initReports);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [upgradeRows, setUpgradeRows] = useState(initUpgrades);
@@ -135,6 +138,23 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
     toast.success(`User @${username} flagged. Implement auth ban via Supabase dashboard.`);
   }
 
+  // The rail only holds the newest accounts, so finding one person among
+  // thousands has to ask the database rather than filter what is on screen.
+  async function findUsers() {
+    const term = userSearch.trim().replace(/[^a-zA-Z0-9_ .@-]/g, "");
+    if (term.length < 2) { setUserResults(null); return; }
+    setSearchingUsers(true);
+    const supabase = createClient();
+    const { data, error } = await supabase.from("profiles")
+      .select("*")
+      .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setSearchingUsers(false);
+    if (error) { toast.error("That search failed: " + error.message); return; }
+    setUserResults((data ?? []) as Profile[]);
+  }
+
   // A display-only number that lives in its own column. It never touches the
   // followers table: the real count keeps driving follows, unfollows, analytics
   // and notifications, this only changes what a profile prints.
@@ -166,6 +186,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
         : `Displayed follower count set to ${value?.toLocaleString()}`,
     });
     setUserRows((prev) => prev.map((u) => (u.id === displayUser.id ? { ...u, display_followers: value } : u)));
+    setUserResults((prev) => (prev ? prev.map((u) => (u.id === displayUser.id ? { ...u, display_followers: value } : u)) : prev));
     setSavingDisplay(false);
     setDisplayUser(null);
     toast.success(reset
@@ -449,13 +470,34 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
 
       {tab === "users" && (
         <div className="card overflow-hidden">
-          <div className="p-4 border-b border-[var(--border)]">
-            <p className="text-sm text-[var(--text-secondary)]">Showing most recent {userRows.length} users</p>
+          <div className="p-4 border-b border-[var(--border)] space-y-2">
+            <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); void findUsers(); }}>
+              <input
+                className="input text-sm flex-1 min-w-[12rem]"
+                placeholder="Search every account by name or @username"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+              />
+              <Button size="sm" type="submit" loading={searchingUsers}>Search</Button>
+              {userResults && (
+                <Button size="sm" variant="ghost" type="button" onClick={() => { setUserResults(null); setUserSearch(""); }}>
+                  Show newest
+                </Button>
+              )}
+            </form>
+            <p className="text-sm text-[var(--text-secondary)]">
+              {userResults
+                ? `${userResults.length} match${userResults.length === 1 ? "" : "es"} for “${userSearch.trim()}”`
+                : `Showing most recent ${userRows.length} users`}
+            </p>
           </div>
           {/* Rows keep their natural width and slide sideways instead of
               crushing the name and the four action buttons together. */}
           <div className="divide-y divide-[var(--border)] rail">
-            {userRows.map((u) => (
+            {(userResults ?? userRows).length === 0 && (
+              <p className="px-4 py-6 text-sm text-[var(--text-secondary)]">No account matches that search.</p>
+            )}
+            {(userResults ?? userRows).map((u) => (
               <div key={u.id} className="flex items-center gap-3 px-4 py-3 min-w-[52rem]">
                 <Avatar src={u.avatar_url} name={u.display_name} size={40} />
                 <div className="flex-1 min-w-0">

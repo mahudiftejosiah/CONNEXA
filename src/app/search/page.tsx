@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
+import { AccountBadge } from "@/components/ui/ProBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { Metadata } from "next";
 
@@ -72,7 +73,7 @@ export default async function SearchPage({ searchParams }: Props) {
                     <Link key={p.id} href={`/profile/${p.username}`} className="card p-3 flex items-center gap-3 hover:shadow-md transition-shadow">
                       <Avatar src={p.avatar_url} name={p.display_name} size={44} userId={p.id} />
                       <div className="min-w-0">
-                        <p className="font-semibold text-[var(--text-primary)] truncate">{p.display_name}</p>
+                        <p className="font-semibold text-[var(--text-primary)] truncate">{p.display_name}<AccountBadge account={p} /></p>
                         <p className="text-xs text-[var(--text-secondary)]">@{p.username}</p>
                         {p.bio && <p className="text-xs text-[var(--text-secondary)] truncate">{p.bio}</p>}
                       </div>
@@ -109,7 +110,7 @@ export default async function SearchPage({ searchParams }: Props) {
                     <div key={p.id} className="card p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Avatar src={p.author.avatar_url} name={p.author.display_name} size={32} userId={p.author.id} />
-                        <Link href={`/profile/${p.author.username}`} className="text-sm font-semibold hover:underline">{p.author.display_name}</Link>
+                        <Link href={`/profile/${p.author.username}`} className="text-sm font-semibold hover:underline">{p.author.display_name}<AccountBadge account={p.author} /></Link>
                       </div>
                       <p className="text-sm text-[var(--text-secondary)] line-clamp-3">{p.content}</p>
                     </div>

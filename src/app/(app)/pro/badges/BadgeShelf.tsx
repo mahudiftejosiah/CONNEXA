@@ -1,10 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Award, Check, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
 import { refreshMyBadges } from "@/lib/actions/pro";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { LockedFeaturePreview } from "@/components/pro/LockedFeaturePreview";
 
 type BadgeRow = {
   id: string;
@@ -21,15 +23,22 @@ export function BadgeShelf({
   badges,
   labels,
   canCheck,
+  pro,
 }: {
   badges: BadgeRow[];
   labels: Record<string, string>;
   canCheck: boolean;
+  pro: boolean;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [ready, setReady] = useState(false);
   const earned = badges.filter((b) => b.earned);
   const next = badges.filter((b) => !b.earned).slice(0, 6);
+  // A non-PRO visitor sees a real, shorter slice of the same shelf.
+  const grid = pro ? badges : badges.slice(0, 6);
+
+  useEffect(() => setReady(true), []);
 
   function check() {
     start(async () => {
@@ -53,13 +62,29 @@ export function BadgeShelf({
         </button>
       </div>
 
-      {badges.length === 0 ? (
+      {!pro && (
+        <LockedFeaturePreview blurb="A few badges and your live progress are shown here; the full shelf is a PRO feature." />
+      )}
+
+      {!ready ? (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="card p-4 flex gap-3 items-start">
+              <Skeleton className="w-11 h-11 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : badges.length === 0 ? (
         <div className="card p-8 text-center" style={{ color: "var(--text-secondary)" }}>
           No badge has been defined yet. An administrator creates them in Admin → PRO Management.
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {badges.map((b) => (
+          {grid.map((b) => (
             <div key={b.id} className="card p-4 flex gap-3 items-start">
               {b.icon_url ? (
                 // eslint-disable-next-line @next/next/no-img-element

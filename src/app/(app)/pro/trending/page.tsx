@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProFrame } from "@/components/pro/ProFrame";
 import { ProDataNote } from "@/components/pro/ProDataNote";
+import { LockedFeaturePreview } from "@/components/pro/LockedFeaturePreview";
 import { trendingHashtags } from "@/lib/pro-analytics";
 import { getProStatus } from "@/lib/pro";
 import { compactCount, cn } from "@/lib/utils";
@@ -27,6 +28,8 @@ export default async function TrendingPage({ searchParams }: { searchParams: Pro
   ]);
 
   const peak = tags[0]?.posts ?? 0;
+  // A non-PRO visitor gets a real, shorter slice of the same live ranking.
+  const preview = status.pro ? tags : tags.slice(0, 5);
 
   return (
     <AppLayout>
@@ -44,13 +47,17 @@ export default async function TrendingPage({ searchParams }: { searchParams: Pro
           ))}
         </div>
 
+        {!status.pro && (
+          <LockedFeaturePreview blurb="The first of this window's live ranking is shown here; the full list is a PRO feature." />
+        )}
+
         {tags.length === 0 ? (
           <ProDataNote>
             No hashtag has been used in a post in the last {days} days, so there is nothing to rank.
           </ProDataNote>
         ) : (
           <ol className="card divide-y" style={{ borderColor: "var(--border)" }}>
-            {tags.map((t, i) => (
+            {preview.map((t, i) => (
               <li key={t.tag} className="flex items-center gap-3 px-4 py-3">
                 <span className="w-6 text-sm font-extrabold" style={{ color: "var(--text-secondary)" }}>{i + 1}</span>
                 <TrendingUp className="w-4 h-4" style={{ color: i < 3 ? "var(--brand-gold)" : "var(--text-secondary)" }} />

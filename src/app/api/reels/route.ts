@@ -14,7 +14,7 @@ export async function GET() {
     supabase.from("reel_embeds").select("*").order("created_at", { ascending: false }).limit(20),
     supabase
       .from("posts")
-      .select("id, content, created_at, author_id, visibility, reaction_count, author:profiles(id, username, display_name, avatar_url), media:post_media(id, url, type, position)")
+      .select("id, content, created_at, author_id, visibility, reaction_count, author:profiles(id, username, display_name, avatar_url, is_verified, pro_expires_at), media:post_media(id, url, type, position)")
       .eq("visibility", "public")
       .order("created_at", { ascending: false })
       .limit(80),

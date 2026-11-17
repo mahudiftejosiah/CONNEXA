@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { bookParagraphs, gutenbergId } from "@/lib/gutenberg";
+import { bookText, gutenbergId } from "@/lib/gutenberg";
 
 // Hands the in-app reader a book as paragraphs. The text is fetched here rather
 // than in the browser because Project Gutenberg does not send CORS headers, and
@@ -25,16 +25,31 @@ export async function GET(req: NextRequest) {
   const id = gutenbergId(book.pdf_url);
   if (!id) return NextResponse.json({ external: book.pdf_url });
 
-  const paragraphs = await bookParagraphs(id);
-  if (!paragraphs) {
+  // A reader pressing Retry asks for a fresh attempt, not the remembered failure.
+  const force = req.nextUrl.searchParams.get("retry") === "1";
+  const result = await bookText(id, force);
+
+  if (!result.ok) {
+    if (result.reason === "unavailable") {
+      return NextResponse.json(
+        {
+          error: "Project Gutenberg is serving a maintenance page right now, so no title can be fetched. Your place in the book is kept — try again in a few minutes.",
+          retry: true,
+        },
+        { status: 503, headers: { "cache-control": "no-store" } }
+      );
+    }
     return NextResponse.json(
-      { error: "Project Gutenberg has no plain text for this title yet." },
-      { status: 502 }
+      {
+        error: "Project Gutenberg has no readable text edition of this title — it is published only as a scan or an image file. It still opens on Gutenberg itself.",
+        retry: true,
+      },
+      { status: 502, headers: { "cache-control": "no-store" } }
     );
   }
 
   return NextResponse.json(
-    { paragraphs, source: book.pdf_url },
+    { paragraphs: result.paragraphs, source: result.url, format: result.format },
     { headers: { "cache-control": "public, max-age=0, s-maxage=86400" } }
   );
 }

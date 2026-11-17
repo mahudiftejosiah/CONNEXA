@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Bell, Heart, UserPlus, MessageCircle, Users, UserCheck, Swords, Trash2, X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { AccountBadge } from "@/components/ui/ProBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { createClient } from "@/lib/supabase/client";
@@ -140,7 +141,11 @@ export function NotificationsClient({ notifications, currentUserId }: Notificati
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[var(--text-primary)] leading-snug">{n.message}</p>
+                    <p className="text-sm text-[var(--text-primary)] leading-snug">
+                      {n.message}
+                      {/* The row has no name element, so the actor's mark rides on the sentence. */}
+                      <AccountBadge account={n.actor} />
+                    </p>
                     <p className="text-xs text-[var(--text-secondary)] mt-0.5">{formatRelativeTime(n.created_at)}</p>
                   </div>
                   {!n.is_read && (

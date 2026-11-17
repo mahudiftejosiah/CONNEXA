@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { formatRelativeTime } from "@/lib/utils";
 import { hasActivePro } from "@/lib/pro";
-import { db, useRows, Panel, Notice, Stat, Switch, dayValue } from "./useRows";
+import { db, useRows, usePager, useNames, Panel, Notice, Stat, Switch, Pager, audit, dayValue } from "./useRows";
 import toast from "react-hot-toast";
 
 type Member = {
@@ -28,6 +28,15 @@ type FeatureRow = {
   sort: number;
 };
 
+type AuditRow = {
+  id: string;
+  admin_id: string;
+  target_user_id: string | null;
+  action: string;
+  reason: string | null;
+  created_at: string;
+};
+
 const BUCKETS: { key: string; label: string }[] = [
   { key: "identity", label: "Identity and analytics" },
   { key: "community", label: "Social and community" },
@@ -35,17 +44,10 @@ const BUCKETS: { key: string; label: string }[] = [
   { key: "creator", label: "Creator and lifestyle" },
 ];
 
-// An audit row for every membership decision, so the log says who changed what.
-async function audit(adminId: string, targetUserId: string, action: string, reason: string) {
-  const { error } = await db().from("moderation_actions").insert({
-    admin_id: adminId, target_user_id: targetUserId, action, reason,
-  });
-  if (error) toast("Saved, but the audit log refused the entry: " + error.message);
-}
-
 export function ProMembers({ adminId }: { adminId: string }) {
   const members = useRows<Member>("profiles", { order: "created_at", or: "is_verified.eq.true,pro_expires_at.not.null" });
   const features = useRows<FeatureRow>("pro_features", { order: "sort", ascending: true });
+  const names = useNames();
   const [term, setTerm] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [lookup, setLookup] = useState("");
@@ -60,13 +62,28 @@ export function ProMembers({ adminId }: { adminId: string }) {
     return days <= 7;
   });
   const lapsed = members.rows.filter((m) => m.is_verified && !hasActivePro(m));
+  // An account that once held PRO and no longer carries the tick: either the
+  // end date passed or an administrator pulled it. Both read as cancelled here.
+  const cancelled = members.rows.filter((m) => !m.is_verified && m.pro_expires_at);
 
+  const [status, setStatus] = useState<"all" | "active" | "ending" | "lapsed" | "cancelled">("all");
   const visible = members.rows
     .filter((m) => m.is_verified || m.pro_expires_at)
+    .filter((m) => {
+      if (status === "active") return hasActivePro(m);
+      if (status === "ending") return hasActivePro(m) && !!m.pro_expires_at
+        && (new Date(m.pro_expires_at).getTime() - Date.now()) / 86_400_000 <= 7;
+      if (status === "lapsed") return m.is_verified && !hasActivePro(m);
+      if (status === "cancelled") return !m.is_verified && !!m.pro_expires_at;
+      return true;
+    })
     .filter((m) => {
       const q = term.trim().toLowerCase();
       return !q || m.username.toLowerCase().includes(q) || m.display_name.toLowerCase().includes(q);
     });
+  const paged = usePager(visible, 20);
+  const activity = useRows<AuditRow>("moderation_actions", { order: "created_at", or: "entity_type.eq.pro_membership" });
+  const pagedActivity = usePager(activity.rows, 10);
 
   async function setExpiry(m: Member, expiresAt: string | null, note: string) {
     setBusy(m.id);
@@ -74,7 +91,7 @@ export function ProMembers({ adminId }: { adminId: string }) {
     setBusy(null);
     if (error) { toast.error("Nothing changed — profiles may not be writable until migration 027 is pasted."); return; }
     members.set((prev) => prev.map((x) => (x.id === m.id ? { ...x, pro_expires_at: expiresAt } : x)));
-    await audit(adminId, m.id, "set_pro_expiry", note);
+    await audit(adminId, { targetUserId: m.id, action: "set_pro_expiry", reason: note, entityType: "pro_membership" });
     toast.success(note);
   }
 
@@ -84,8 +101,12 @@ export function ProMembers({ adminId }: { adminId: string }) {
     setBusy(null);
     if (error) { toast.error("Could not change the badge."); return; }
     members.set((prev) => prev.map((x) => (x.id === m.id ? { ...x, is_verified: next } : x)));
-    await audit(adminId, m.id, next ? "grant_pro" : "revoke_pro",
-      next ? `PRO badge granted to @${m.username}` : `PRO badge removed from @${m.username}`);
+    await audit(adminId, {
+      targetUserId: m.id,
+      action: next ? "grant_pro" : "revoke_pro",
+      reason: next ? `PRO badge granted to @${m.username}` : `PRO badge removed from @${m.username}`,
+      entityType: "pro_membership",
+    });
     toast.success(next ? `@${m.username} now has PRO.` : `PRO removed from @${m.username}.`);
   }
 
@@ -103,10 +124,11 @@ export function ProMembers({ adminId }: { adminId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Stat label="Active PRO members" value={pro.length} />
         <Stat label="Ending within 7 days" value={expiring.length} />
         <Stat label="Lapsed but still ticked" value={lapsed.length} />
+        <Stat label="Cancelled" value={cancelled.length} />
         <Stat label="Ever held PRO" value={members.rows.length} />
       </div>
 
@@ -136,14 +158,23 @@ export function ProMembers({ adminId }: { adminId: string }) {
 
       <Panel title="PRO members" hint="The gold badge and every premium gate read these two values, so changing them here changes the site at once.">
         <Notice text={members.error} />
-        <input className="input" placeholder="Filter by name or username" value={term} onChange={(e) => setTerm(e.target.value)} />
+        <div className="flex flex-wrap gap-2">
+          <input className="input flex-1 min-w-[12rem]" placeholder="Filter by name or username" value={term} onChange={(e) => setTerm(e.target.value)} />
+          <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value as typeof status)} aria-label="Subscription status">
+            <option value="all">Every status</option>
+            <option value="active">Active</option>
+            <option value="ending">Ending within 7 days</option>
+            <option value="lapsed">Past its end date</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
         {members.loading ? (
           <p className="text-sm text-[var(--text-secondary)]">Loading…</p>
         ) : visible.length === 0 ? (
           <p className="text-sm text-[var(--text-secondary)]">Nobody holds PRO yet. Find an account above and grant it.</p>
         ) : (
           <div className="divide-y divide-[var(--border)] rail">
-            {visible.map((m) => (
+            {paged.shown.map((m) => (
               <div key={m.id} className="py-3 flex flex-wrap items-center gap-3 min-w-[40rem]">
                 <Avatar src={m.avatar_url} name={m.display_name} size={36} />
                 <div className="flex-1 min-w-[10rem]">
@@ -189,6 +220,7 @@ export function ProMembers({ adminId }: { adminId: string }) {
             ))}
           </div>
         )}
+        <Pager page={paged.page} pages={paged.pages} total={paged.total} goTo={paged.goTo} singular="account" />
       </Panel>
 
       <Panel title="Feature switches" hint="Turning one off hides the feature from every account and blocks it at the database, not just in the page.">
@@ -207,7 +239,7 @@ export function ProMembers({ adminId }: { adminId: string }) {
                   <p className="text-xs font-bold uppercase tracking-wide mb-2">{bucket.label}</p>
                   <div className="space-y-2">
                     {list.map((f) => (
-                      <FeatureEditor key={f.key} feature={f} onSaved={(next) => features.set((p) => p.map((x) => (x.key === next.key ? next : x)))} />
+                      <FeatureEditor key={f.key} adminId={adminId} feature={f} onSaved={(next) => features.set((p) => p.map((x) => (x.key === next.key ? next : x)))} />
                     ))}
                   </div>
                 </div>
@@ -216,11 +248,32 @@ export function ProMembers({ adminId }: { adminId: string }) {
           </div>
         )}
       </Panel>
+
+      <Panel title="Subscription activity" hint="Every grant, removal and end-date change made from this console, newest first.">
+        <Notice text={activity.error} />
+        {activity.rows.length === 0 && !activity.loading ? (
+          <p className="text-sm text-[var(--text-secondary)]">Nothing recorded yet.</p>
+        ) : (
+          <>
+            <div className="divide-y divide-[var(--border)]">
+              {pagedActivity.shown.map((a) => (
+                <div key={a.id} className="py-2 flex flex-wrap items-center gap-2 text-sm">
+                  <span className="font-semibold text-[var(--text-primary)]">{a.reason ?? a.action}</span>
+                  <span className="text-xs text-[var(--text-secondary)]">
+                    {names[a.admin_id] ? `@${names[a.admin_id]}` : "an administrator"} · {formatRelativeTime(a.created_at)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <Pager page={pagedActivity.page} pages={pagedActivity.pages} total={pagedActivity.total} goTo={pagedActivity.goTo} singular="entry" />
+          </>
+        )}
+      </Panel>
     </div>
   );
 }
 
-function FeatureEditor({ feature, onSaved }: { feature: FeatureRow; onSaved: (next: FeatureRow) => void }) {
+function FeatureEditor({ adminId, feature, onSaved }: { adminId: string; feature: FeatureRow; onSaved: (next: FeatureRow) => void }) {
   const [draft, setDraft] = useState(feature);
   const [busy, setBusy] = useState(false);
   const dirty = draft.label !== feature.label || draft.description !== feature.description;
@@ -234,6 +287,19 @@ function FeatureEditor({ feature, onSaved }: { feature: FeatureRow; onSaved: (ne
     const next = data as FeatureRow;
     setDraft(next);
     onSaved(next);
+    if (next.enabled !== feature.enabled) {
+      await audit(adminId, {
+        action: next.enabled ? "enable_pro_feature" : "disable_pro_feature",
+        entityId: next.key, entityType: "pro_feature",
+        reason: `${next.label} switched ${next.enabled ? "on" : "off"} for every account`,
+      });
+    }
+    if (next.label !== feature.label || next.description !== feature.description) {
+      await audit(adminId, {
+        action: "edit_pro_feature", entityId: next.key, entityType: "pro_feature",
+        reason: `Copies changed for ${next.key}`,
+      });
+    }
     toast.success(enabled ? `${next.label} is on.` : `${next.label} is off for everyone.`);
   }
 

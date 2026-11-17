@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProFrame } from "@/components/pro/ProFrame";
 import { ProDataNote } from "@/components/pro/ProDataNote";
+import { LockedFeaturePreview } from "@/components/pro/LockedFeaturePreview";
 import { growthLabel, proAnalytics } from "@/lib/pro-analytics";
 import { getProStatus } from "@/lib/pro";
 import { compactCount, cn } from "@/lib/utils";
@@ -23,20 +24,30 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
   const status = await getProStatus(supabase, user.id);
   if (!status.pro) {
+    const previewTiles = [
+      { label: "Profile visits", icon: <Eye className="w-4 h-4" /> },
+      { label: "Unique visitors", icon: <Users className="w-4 h-4" /> },
+      { label: "Post views", icon: <TrendingUp className="w-4 h-4" /> },
+      { label: "Reactions", icon: <Heart className="w-4 h-4" /> },
+      { label: "Comments", icon: <MessageCircle className="w-4 h-4" /> },
+      { label: "Shares", icon: <Share2 className="w-4 h-4" /> },
+    ];
     return (
       <AppLayout>
         <ProFrame title="Advanced Analytics" pro={false} expiresAt={status.expiresAt}
           subtitle="A private look at who reaches your profile, which posts land, and how the audience moves.">
-          <div className="card p-6 space-y-3 text-center">
-            <TrendingUp className="w-8 h-8 mx-auto" style={{ color: "var(--brand-gold)" }} />
-            <p className="font-bold" style={{ color: "var(--text-primary)" }}>Analytics is a PRO dashboard</p>
-            <p className="text-sm mx-auto max-w-md" style={{ color: "var(--text-secondary)" }}>
-              It counts profile visits, post views, reactions, comments, shares and follower growth from your own rows.
-              Visitor identities are never shown — only how many people came, and when.
-            </p>
-            <Link href="/pro#upgrade" className="btn-primary text-sm inline-flex mx-auto" style={{ background: "var(--brand-gold)", color: "var(--brand-green)" }}>
-              Upgrade to PRO
-            </Link>
+          <div className="space-y-4">
+            <LockedFeaturePreview blurb="Analytics counts profile visits, post views, reactions, comments, shares and follower growth from your own rows; visitor identities are never shown. These are the figures it reports:" />
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {previewTiles.map((t) => (
+                <div key={t.label} className="card p-4 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-secondary)" }}>
+                    {t.icon}{t.label}
+                  </div>
+                  <p className="text-2xl font-extrabold" style={{ color: "var(--text-primary)" }}>—</p>
+                </div>
+              ))}
+            </div>
           </div>
         </ProFrame>
       </AppLayout>

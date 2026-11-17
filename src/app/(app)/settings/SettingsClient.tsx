@@ -12,6 +12,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { toggleBlock } from "@/lib/actions/friends";
 import { updatePreferences, requestAccountDeletion } from "@/lib/actions/profile";
+import { setVisitActivityHidden } from "@/lib/actions/pro";
 import type { Profile, UserPreferences, UserBlock, SiteContent } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
@@ -58,6 +59,8 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
       : {}),
   });
   const [savingPrefs, setSavingPrefs] = useState(false);
+  const [hideVisits, setHideVisits] = useState(!!profile.hide_visit_activity);
+  const [savingVisits, setSavingVisits] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -211,6 +214,33 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
               <div>
                 <label className="label">Profile visibility</label>
                 <p className="text-sm text-[var(--text-secondary)] mb-2">Change in <Link href="/settings/profile" className="text-[rgb(var(--a-800))] dark:text-[rgb(var(--b-400))] hover:underline">Edit Profile</Link>.</p>
+              </div>
+              <div className="pt-4 border-t" style={{ borderColor: "var(--border)" }}>
+                <label className="label">Profile visit activity</label>
+                <p className="text-sm text-[var(--text-secondary)] mb-3">
+                  PRO analytics counts how many people open a profile, never who they are. Switch this off and your
+                  own visits stop being counted for anybody else — their totals simply stop rising because of you.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button type="button" role="switch" aria-checked={hideVisits} aria-label="Keep my profile visits private"
+                    disabled={savingVisits}
+                    onClick={async () => {
+                      const next = !hideVisits;
+                      setSavingVisits(true);
+                      const result = await setVisitActivityHidden(next);
+                      setSavingVisits(false);
+                      if ("error" in result) { toast.error(result.error); return; }
+                      setHideVisits(next);
+                      toast.success(next ? "Your visits are no longer counted." : "Your visits count again.");
+                    }}
+                    className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-50"
+                    style={{ backgroundColor: hideVisits ? "rgb(var(--a-800))" : "var(--border)" }}>
+                    <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all" style={{ left: hideVisits ? "1.5rem" : "0.125rem" }} />
+                  </button>
+                  <span className="text-sm text-[var(--text-primary)]">
+                    {hideVisits ? "My visits are private" : "My visits are counted"}
+                  </span>
+                </div>
               </div>
               <Button onClick={() => handleSavePrefs()} loading={savingPrefs}>Save</Button>
             </div>

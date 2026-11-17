@@ -5,6 +5,8 @@ import { getBbcNews } from "@/lib/news";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { DiscoverClient } from "./DiscoverClient";
 import { REEL_POOL, shuffleTake } from "@/lib/reel-pool";
+import { getHashingSettings } from "@/lib/hashing-settings";
+import { getProStatus } from "@/lib/pro";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Discover" };
@@ -19,7 +21,7 @@ export default async function DiscoverPage() {
   const friendIds = (friendships || []).map((f) => f.friend_id);
 
   const { data: me } = await supabase
-    .from("profiles").select("interests").eq("id", user.id).single();
+    .from("profiles").select("interests, is_admin").eq("id", user.id).single();
   const interests = ((me?.interests || []) as string[]).map((s) => s.toLowerCase());
 
   const [groupsRes, postsRes, peopleRes, studyRes, sitesRes, featuredRes, booksRes] = await Promise.all([
@@ -85,6 +87,14 @@ export default async function DiscoverPage() {
   const trendingPosts = await signPostMedia(supabase, rankedPosts);
   const news = await getBbcNews();
 
+  // The hashing bot only earns a shortcut when this account may actually use it.
+  const [hashing, proStatus] = await Promise.all([
+    getHashingSettings(supabase),
+    getProStatus(supabase, user.id),
+  ]);
+  const hashingOpen = hashing.enabled && hashing.visible
+    && (!!me?.is_admin || hashing.audience === "all" || (hashing.audience === "pro" && proStatus.pro));
+
   return (
     <AppLayout>
       <DiscoverClient
@@ -98,6 +108,7 @@ export default async function DiscoverPage() {
         featuredSites={(featuredRes.data || []) as any}
         studyBooks={(booksRes.data || []) as any}
         watchReels={shuffleTake(REEL_POOL, 12)}
+        hashingOpen={hashingOpen}
       />
     </AppLayout>
   );

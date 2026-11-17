@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Flag, Ghost, ShieldOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { reportConfession, submitConfession } from "@/lib/actions/pro";
 import { formatRelativeTime } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type Confession = { id: string; body: string; tag: string | null; created_at: string };
 
@@ -26,6 +27,9 @@ export function ConfessionWall({
   const [tag, setTag] = useState("");
   const [reported, setReported] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => setReady(true), []);
 
   const mine = new Set(myIds);
 
@@ -81,7 +85,7 @@ export function ConfessionWall({
       ) : (
         <div className="card p-4 text-sm" style={{ color: "var(--text-secondary)" }}>
           Sending a confession is part of PRO.{" "}
-          <a href="/pro" style={{ color: "var(--brand-gold)", fontWeight: 700 }}>Upgrade to PRO</a>.
+          <a href="/pro" style={{ color: "var(--brand-gold-text)", fontWeight: 700 }}>Upgrade to PRO</a>.
         </div>
       )}
 
@@ -91,7 +95,17 @@ export function ConfessionWall({
         </p>
       )}
 
-      {confessions.length === 0 ? (
+      {!ready ? (
+        <div className="grid sm:grid-cols-2 gap-3">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="card p-4 space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+          ))}
+        </div>
+      ) : confessions.length === 0 ? (
         <div className="card p-8 text-center space-y-2">
           <Ghost className="w-8 h-8 mx-auto" style={{ color: "var(--text-secondary)" }} />
           <p className="font-semibold" style={{ color: "var(--text-primary)" }}>The wall is empty</p>
@@ -109,7 +123,7 @@ export function ConfessionWall({
                   </span>
                 )}
                 <span>{formatRelativeTime(c.created_at)}</span>
-                {mine.has(c.id) && <span style={{ color: "var(--brand-gold)", fontWeight: 700 }}>yours</span>}
+                {mine.has(c.id) && <span style={{ color: "var(--brand-gold-text)", fontWeight: 700 }}>yours</span>}
                 <button type="button" className="ml-auto inline-flex items-center gap-1 font-semibold"
                   style={{ color: "#ef4444" }} onClick={() => setReported(reported === c.id ? null : c.id)}>
                   <Flag className="w-3.5 h-3.5" /> Report

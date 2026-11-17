@@ -49,6 +49,7 @@ export interface Database {
           is_verified: boolean
           pro_expires_at?: string | null
           display_followers?: number | null
+          hide_visit_activity?: boolean | null
           profile_visibility: "public" | "friends" | "private"
           created_at: string
           updated_at: string
@@ -283,8 +284,9 @@ export interface Database {
           id: string
           reporter_id: string
           entity_id: string
-          // Migration 030 widened the database CHECK to the PRO entities.
-          entity_type: "post" | "comment" | "profile" | "group" | "confession" | "poll" | "question" | "music" | "event" | "listing"
+          // Migration 030 widened the database CHECK to the PRO entities;
+          // 033 added a broadcast, which reports name as "stream".
+          entity_type: "post" | "comment" | "profile" | "group" | "confession" | "poll" | "question" | "music" | "event" | "listing" | "stream"
           reason: string
           details: string | null
           status: ReportStatus
@@ -395,13 +397,14 @@ export interface Database {
           id: string
           author_id: string
           question: string
+          description?: string | null
           category: string | null
           asked_on: string
           published: boolean
           created_at: string
         }
-        Insert: { author_id: string; question: string; category?: string | null; asked_on?: string; published?: boolean }
-        Update: Partial<{ question: string; category: string | null; asked_on: string; published: boolean }>
+        Insert: { author_id: string; question: string; description?: string | null; category?: string | null; asked_on?: string; published?: boolean }
+        Update: Partial<{ question: string; description: string | null; category: string | null; asked_on: string; published: boolean }>
       }
       daily_question_replies: {
         Row: {
@@ -441,12 +444,13 @@ export interface Database {
           id: string
           owner_id: string
           question: string
+          category?: string | null
           closes_at: string | null
           published: boolean
           created_at: string
         }
-        Insert: { owner_id: string; question: string; closes_at?: string | null; published?: boolean }
-        Update: Partial<{ question: string; closes_at: string | null; published: boolean }>
+        Insert: { owner_id: string; question: string; category?: string | null; closes_at?: string | null; published?: boolean }
+        Update: Partial<{ question: string; category: string | null; closes_at: string | null; published: boolean }>
       }
       poll_options: {
         Row: {
@@ -490,17 +494,19 @@ export interface Database {
           audio_path: string | null
           cover_path: string | null
           published: boolean
+          availability?: "available" | "unavailable" | "removed"
           added_by: string | null
           created_at: string
         }
         Insert: {
           title: string; artist: string; genre?: string | null; description?: string | null;
           source_url?: string | null; audio_path?: string | null; cover_path?: string | null;
-          published?: boolean; added_by?: string | null
+          published?: boolean; availability?: "available" | "unavailable" | "removed"; added_by?: string | null
         }
         Update: Partial<{
           title: string; artist: string; genre: string | null; description: string | null;
-          source_url: string | null; audio_path: string | null; cover_path: string | null; published: boolean
+          source_url: string | null; audio_path: string | null; cover_path: string | null; published: boolean;
+          availability: "available" | "unavailable" | "removed"
         }>
       }
       playlists: {
@@ -577,18 +583,22 @@ export interface Database {
           title: string
           description: string | null
           starts_at: string
+          ends_at?: string | null
           location: string | null
           category: string | null
           cover_path: string | null
+          banner_path?: string | null
           published: boolean
           created_at: string
         }
         Insert: {
           owner_id: string; title: string; description?: string | null; starts_at: string;
+          ends_at?: string | null; banner_path?: string | null;
           location?: string | null; category?: string | null; cover_path?: string | null; published?: boolean
         }
         Update: Partial<{
-          title: string; description: string | null; starts_at: string; location: string | null;
+          title: string; description: string | null; starts_at: string; ends_at: string | null;
+          banner_path: string | null; location: string | null;
           category: string | null; cover_path: string | null; published: boolean
         }>
       }
@@ -723,16 +733,66 @@ export interface Database {
           id: string
           user_id: string
           title: string
-          status: "live" | "ended"
+          status: "scheduled" | "live" | "ended"
           started_at: string
           ended_at: string | null
+          scheduled_at?: string | null
           clip_seq: number
           clip_path: string | null
+          highlight_path?: string | null
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Database["public"]["Tables"]["live_sessions"]["Row"], "id" | "started_at" | "ended_at" | "clip_seq" | "clip_path" | "created_at" | "updated_at" | "title" | "status"> & { title?: string; status?: "live" | "ended" }
+        Insert: Omit<Database["public"]["Tables"]["live_sessions"]["Row"], "id" | "started_at" | "ended_at" | "clip_seq" | "clip_path" | "created_at" | "updated_at" | "title" | "status"> & { title?: string; status?: "scheduled" | "live" | "ended" }
         Update: Partial<Omit<Database["public"]["Tables"]["live_sessions"]["Row"], "id" | "user_id" | "created_at">>
+      }
+      live_messages: {
+        Row: {
+          id: string
+          session_id: string
+          user_id: string
+          kind: "message" | "reaction"
+          body: string
+          created_at: string
+        }
+        Insert: { session_id: string; user_id: string; kind?: "message" | "reaction"; body: string }
+        Update: never
+      }
+      quiz_duels: {
+        Row: {
+          id: string
+          quiz_id: string
+          requester_id: string
+          opponent_id: string
+          status: "pending" | "accepted" | "declined" | "played" | "cancelled"
+          requester_score: number | null
+          opponent_score: number | null
+          requested_at: string
+          responded_at: string | null
+          finished_at: string | null
+        }
+        Insert: {
+          quiz_id: string; requester_id: string; opponent_id: string;
+          status?: "pending" | "accepted" | "declined" | "played" | "cancelled";
+          responded_at?: string | null; finished_at?: string | null
+        }
+        Update: Partial<{
+          status: "pending" | "accepted" | "declined" | "played" | "cancelled";
+          requester_score: number | null; opponent_score: number | null;
+          responded_at: string | null; finished_at: string | null
+        }>
+      }
+      event_invites: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          invited_by: string
+          status: "invited" | "joined" | "dismissed"
+          created_at: string
+        }
+        Insert: { event_id: string; user_id: string; invited_by: string; status?: "invited" | "joined" | "dismissed" }
+        Update: Partial<{ status: "invited" | "joined" | "dismissed" }>
       }
       study_books: {
         Row: {
@@ -895,6 +955,22 @@ export interface Database {
         Args: { p_user?: string }
         Returns: { awarded: string }[]
       }
+      record_duel_score: {
+        Args: { p_duel: string; p_score: number }
+        Returns: { status: string; requester_score: number | null; opponent_score: number | null }[]
+      }
+      count_duels: {
+        Args: { p_user: string }
+        Returns: number
+      }
+      record_profile_visit: {
+        Args: { p_profile: string }
+        Returns: void
+      }
+      stream_allowed: {
+        Args: { p_user: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -931,6 +1007,9 @@ export type StudyResource = Database["public"]["Tables"]["study_resources"]["Row
 export type ReelEmbed = Database["public"]["Tables"]["reel_embeds"]["Row"]
 export type SiteShortcut = Database["public"]["Tables"]["site_shortcuts"]["Row"]
 export type LiveSession = Database["public"]["Tables"]["live_sessions"]["Row"]
+export type LiveMessage = Database["public"]["Tables"]["live_messages"]["Row"]
+export type QuizDuel = Database["public"]["Tables"]["quiz_duels"]["Row"]
+export type EventInvite = Database["public"]["Tables"]["event_invites"]["Row"]
 export type StudyBook = Database["public"]["Tables"]["study_books"]["Row"]
 export type StudyProgress = Database["public"]["Tables"]["study_progress"]["Row"]
 export type StudyProgressInsert = Database["public"]["Tables"]["study_progress"]["Insert"]

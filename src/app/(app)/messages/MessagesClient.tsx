@@ -19,7 +19,7 @@ import {
 } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-type FriendLite = Pick<Profile, "id" | "username" | "display_name" | "avatar_url" | "is_verified"> & { last_seen?: string | null };
+type FriendLite = Pick<Profile, "id" | "username" | "display_name" | "avatar_url" | "is_verified" | "pro_expires_at"> & { last_seen?: string | null };
 
 const ONLINE_WINDOW_MS = 5 * 60_000;
 function isOnline(lastSeen?: string | null) {
@@ -749,7 +749,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   <>
                     <Avatar src={other.avatar_url} name={other.display_name} size={40} online={isOnline(other.last_seen)} userId={other.id} />
                     <div>
-                      <p className="font-semibold text-[var(--text-primary)]">{other.display_name}</p>
+                      <p className="font-semibold text-[var(--text-primary)]">{other.display_name}<AccountBadge account={other} /></p>
                       <p className="text-xs" style={{ color: isOnline(other.last_seen) ? "rgb(var(--a-600))" : "var(--text-secondary)" }}>
                         {isOnline(other.last_seen) ? "Online now" : other.last_seen ? `Active ${formatRelativeTime(other.last_seen)}` : `@${other.username}`}
                       </p>

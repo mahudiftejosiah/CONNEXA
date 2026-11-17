@@ -15,7 +15,7 @@ export default async function NotificationsPage() {
   // must name the constraint or PostgREST rejects the whole select.
   const { data: notifications } = await supabase
     .from("notifications")
-    .select("*, actor:profiles!notifications_actor_id_fkey(id, username, display_name, avatar_url)")
+    .select("*, actor:profiles!notifications_actor_id_fkey(id, username, display_name, avatar_url, is_verified, pro_expires_at)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(50);

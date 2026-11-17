@@ -6,6 +6,7 @@ import { useState } from "react";
 import { MessageSquare, Send, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { answerDailyQuestion, askDailyQuestion, retireDailyQuestion } from "@/lib/actions/pro";
+import { ReportButton } from "@/components/pro/ReportButton";
 
 type Reply = { id: string; answer: string; user_id: string; created_at: string };
 type Question = {
@@ -151,7 +152,7 @@ export function QuestionsBoard({
                   </div>
                 ) : (
                   <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                    <a href="/pro" style={{ color: "var(--brand-gold)", fontWeight: 700 }}>Upgrade to PRO</a> to answer.
+                    <a href="/pro" style={{ color: "var(--brand-gold-text)", fontWeight: 700 }}>Upgrade to PRO</a> to answer.
                   </p>
                 )}
 
@@ -174,6 +175,7 @@ export function QuestionsBoard({
                     ))}
                   </ul>
                 )}
+                <ReportButton entityType="question" entityId={q.id} />
               </article>
             );
           })}
