@@ -16,6 +16,9 @@ const CACHE_MS = 6 * 60 * 60 * 1000;
 // same unavailable title does not turn into a request per reader per second.
 const MISS_MS = 2 * 60 * 1000;
 const FETCH_MS = 12000;
+// Six candidates at twelve seconds each would outlast the reader's own patience,
+// so the whole hunt shares one budget and answers before the reader gives up.
+const BUDGET_MS = 30000;
 
 export type BookText =
   | { ok: true; paragraphs: string[]; format: "text" | "html"; url: string }
@@ -118,11 +121,14 @@ export async function bookText(id: string, force = false): Promise<BookText> {
   }
 
   let unavailable = false;
+  const startedAt = Date.now();
   for (const candidate of candidates(id)) {
+    const left = BUDGET_MS - (Date.now() - startedAt);
+    if (left <= 0) { unavailable = true; break; }
     let text: string;
     try {
       const res = await fetch(candidate.url, {
-        signal: AbortSignal.timeout(FETCH_MS),
+        signal: AbortSignal.timeout(Math.min(FETCH_MS, left)),
         headers: { "user-agent": "CONNEXA study room (reading aid)" },
         cache: "no-store",
       });

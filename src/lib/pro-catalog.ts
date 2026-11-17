@@ -18,7 +18,7 @@ export const PRO_FEATURES: ProFeatureMeta[] = [
   { key: "polls", label: "Community Polls", blurb: "Ask a question with choices and watch the counts move in real numbers.", bucket: "community", href: "/pro/polls" },
   { key: "trending_hashtags", label: "Trending Hashtags", blurb: "The tags CONNEXA people are actually using right now, from live posts.", bucket: "community", href: "/pro/trending" },
   { key: "quiz_battles", label: "Live Quiz Battles", blurb: "Timed quizzes against the clock, run inside the Study Room.", bucket: "entertainment", href: "/pro/quizzes" },
-  { key: "music_corner", label: "Music Corner", blurb: "Tracks and playlists published by the CONNEXA team from legally supported sources.", bucket: "entertainment", href: "/pro/music" },
+  { key: "music_corner", label: "Music Corner", blurb: "Share tracks and build playlists of your own, from legally supported music sources.", bucket: "entertainment", href: "/pro/music" },
   { key: "live_streaming", label: "Live Streaming", blurb: "Go live to your followers with the same broadcaster everyone already uses.", bucket: "entertainment", href: "/live" },
   { key: "events_hub", label: "Events Hub", blurb: "Publish an event with a poster, dates and a guest list people can join.", bucket: "entertainment", href: "/pro/events" },
   { key: "achievement_badges", label: "Achievement Badges", blurb: "Milestones earned from real activity, awarded by the server, never bought.", bucket: "creator", href: "/pro/badges" },
