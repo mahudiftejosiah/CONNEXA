@@ -134,6 +134,13 @@ from (
     case when exists (select 1 from pg_attribute
                       where attrelid = to_regclass('public.profiles') and attname = 'hide_visit_activity')
           and to_regprocedure('public.record_profile_visit(uuid)') is not null then 'yes' else 'no' end),
+  ('034 admin whole-database user search',
+    case when to_regprocedure('public.admin_find_users(text,integer,integer)') is not null then 'yes' else 'no' end),
+  ('035 PRO subscription plans',
+    case when to_regclass('public.pro_plans') is not null then 'yes' else 'no' end),
+  ('035 plans published',
+    (select case when to_regclass('public.pro_plans') is null then 'table missing'
+                 else (select count(*)::text from public.pro_plans where active) end)),
   ('seed: book covers filled in',
     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
       from public.study_books where cover_url is not null)),

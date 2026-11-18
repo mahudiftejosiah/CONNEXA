@@ -25,7 +25,7 @@ import {
 } from "@/lib/actions/friends";
 import { compactCount, formatJoinDate } from "@/lib/utils";
 import { AccountBadge } from "@/components/ui/ProBadge";
-import { UpgradePanel, type UpgradeStatus } from "@/components/profile/UpgradePanel";
+import { UpgradePanel, type UpgradeStatus, type PlanChoice } from "@/components/profile/UpgradePanel";
 import { hasActivePro } from "@/lib/pro";
 import type { LiveSession, Profile, PostWithAuthor } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
@@ -48,6 +48,7 @@ interface ProfileClientProps {
   upgradeConfigText: string;
   upgradeStatus: UpgradeStatus;
   upgradeReference: string | null;
+  upgradePlans?: PlanChoice[];
 }
 
 export function ProfileClient({
@@ -55,7 +56,7 @@ export function ProfileClient({
   isFriend: initFriend, isFollowing: initFollowing, isBlocked: initBlocked,
   friendRequestStatus: initReqStatus, friendRequestId: initReqId,
   followersCount, followingCount, friendsCount, initialPosts, initialLive, initialHighlight,
-  upgradeConfigText, upgradeStatus, upgradeReference,
+  upgradeConfigText, upgradeStatus, upgradeReference, upgradePlans = [],
 }: ProfileClientProps) {
   const [isFriend, setIsFriend] = useState(initFriend);
   const [isFollowing, setIsFollowing] = useState(initFollowing);
@@ -492,6 +493,7 @@ export function ProfileClient({
             initialStatus={upgradeStatus}
             initialReference={upgradeReference}
             configText={upgradeConfigText}
+            plans={upgradePlans}
           />
 
           <div className="card p-5 space-y-3">

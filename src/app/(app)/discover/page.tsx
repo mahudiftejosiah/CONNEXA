@@ -109,6 +109,7 @@ export default async function DiscoverPage() {
         studyBooks={(booksRes.data || []) as any}
         watchReels={shuffleTake(REEL_POOL, 12)}
         hashingOpen={hashingOpen}
+        liveOpen={proStatus.pro}
       />
     </AppLayout>
   );

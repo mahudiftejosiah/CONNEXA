@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="AWW sticker">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#A2D2FF"/>
+      <stop offset="1" stop-color="#3D5A80"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.32" cy="0.24" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="104" fill="#ffffff"/>
+  <circle cx="128" cy="128" r="96" fill="url(#g)"/>
+  <circle cx="128" cy="128" r="96" fill="url(#sheen)"/>
+  <path d="M98 134q-11 20 0 27 11-7 0-27z" fill="#7FD3FF"/>
+  <circle cx="98" cy="116" r="10" fill="#2B2118"/><circle cx="158" cy="116" r="10" fill="#2B2118"/>
+           <path d="M84 98q14-8 28 0" stroke="#2B2118" stroke-width="7" fill="none" stroke-linecap="round"/>
+           <path d="M144 98q14-8 28 0" stroke="#2B2118" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M104 160q24-22 48 0" stroke="#2B2118" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <g>
+    <rect x="60" y="188" width="136" height="38" rx="19" fill="#ffffff"/>
+    <text x="128" y="215" text-anchor="middle" font-family="Verdana, Geneva, sans-serif" font-size="24" font-weight="bold" fill="#3D5A80">AWW</text>
+  </g>
+</svg>

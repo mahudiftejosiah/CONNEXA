@@ -331,7 +331,7 @@ export interface Database {
       }
       site_content: {
         Row: {
-          key: "terms" | "rules" | "privacy" | "about"
+          key: "terms" | "rules" | "privacy" | "about" | "upgrade"
           title: string
           body: string
           updated_at: string
@@ -369,6 +369,22 @@ export interface Database {
         }
         Insert: { key: string; label: string; description?: string; bucket: "identity" | "community" | "entertainment" | "creator"; enabled?: boolean; sort?: number }
         Update: Partial<{ label: string; description: string; bucket: "identity" | "community" | "entertainment" | "creator"; enabled: boolean; sort: number }>
+      }
+      pro_plans: {
+        Row: {
+          id: string
+          name: string
+          price: number
+          currency: string
+          duration_days: number
+          blurb: string
+          active: boolean
+          sort: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: { name: string; price?: number; currency?: string; duration_days?: number; blurb?: string; active?: boolean; sort?: number }
+        Update: Partial<Omit<Database["public"]["Tables"]["pro_plans"]["Row"], "id" | "created_at">>
       }
       profile_visits: {
         Row: {
@@ -970,6 +986,10 @@ export interface Database {
       stream_allowed: {
         Args: { p_user: string }
         Returns: boolean
+      }
+      admin_find_users: {
+        Args: { p_term: string; p_page?: number; p_size?: number }
+        Returns: { id: string; email: string | null; total_count: number }[]
       }
     }
     Enums: {

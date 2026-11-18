@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Check, Lock, TrendingUp } from "lucide-react";
+import { Check, Lock, Megaphone, TrendingUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProFrame } from "@/components/pro/ProFrame";
-import { UpgradePanel } from "@/components/profile/UpgradePanel";
+import { UpgradePanel, type PlanChoice } from "@/components/profile/UpgradePanel";
 import { getProStatus, listProFeatures } from "@/lib/pro";
 import { PRO_BUCKETS, featuresInBucket } from "@/lib/pro-catalog";
 import { trendingHashtags } from "@/lib/pro-analytics";
@@ -22,7 +22,7 @@ export default async function ProPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [status, switches, tags, profileRes, upgradeContent, ownUpgrade] = await Promise.all([
+  const [status, switches, tags, profileRes, upgradeContent, ownUpgrade, planRes, promoRes] = await Promise.all([
     getProStatus(supabase, user.id),
     listProFeatures(supabase),
     trendingHashtags(supabase, 7, 10),
@@ -30,7 +30,13 @@ export default async function ProPage() {
     supabase.from("site_content").select("body").eq("key", "upgrade").single(),
     supabase.from("account_upgrades").select("status, reference").eq("user_id", user.id)
       .order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("pro_plans").select("id, name, price, currency, duration_days, blurb")
+      .eq("active", true).order("sort", { ascending: true }),
+    supabase.from("site_settings").select("value").eq("key", "pro_promo").maybeSingle(),
   ]);
+
+  const plans = (planRes.data ?? []) as PlanChoice[];
+  const promo = promoRes.data?.value?.trim() ?? "";
 
   const enabledByKey = new Map(switches.map((f) => [f.key, f.enabled]));
   const username = profileRes.data?.username ?? "";
@@ -47,12 +53,19 @@ export default async function ProPage() {
       >
         {!status.pro && (
           <div id="upgrade" className="space-y-3">
+            {promo && (
+              <div className="card p-4 flex items-start gap-3" style={{ borderColor: "var(--brand-gold)", borderWidth: 1 }}>
+                <Megaphone className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--brand-gold)" }} />
+                <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{promo}</p>
+              </div>
+            )}
             <UpgradePanel
               userId={user.id}
               verified={!!profileRes.data?.is_verified}
               initialStatus={(ownUpgrade.data?.status as "none" | "pending" | "approved" | "rejected" | undefined) ?? "none"}
               initialReference={ownUpgrade.data?.reference ?? null}
               configText={upgradeContent.data?.body || UPGRADE_FALLBACK}
+              plans={plans}
             />
             <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
               Confirmation happens on the server. No page can switch PRO on by itself.

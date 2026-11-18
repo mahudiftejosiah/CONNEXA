@@ -5,6 +5,7 @@ import { requireAdmin } from "./admin";
 import { revalidateSite } from "@/lib/revalidateSite";
 import { BOT_OFF_MESSAGE, readBotSettings, type Supa } from "@/lib/bot";
 import { healthSummary, runHealthChecks } from "@/lib/botHealth";
+import { runProCommand } from "@/lib/botPro";
 import type { BotFlag } from "@/lib/supabase/types";
 
 export type CommandResult = { output: string; ok: boolean };
@@ -117,9 +118,18 @@ export async function runBotCommand(input: string): Promise<CommandResult> {
           "turn on | turn off     master switch — off means no scanning at all",
           "autohide on | off      hide matches without asking you first",
           "keywords a, b, c       replace the word list",
+          "pro                    manage CONNEXA PRO — plans, prices, benefits, members",
+          "pro help               every PRO command the bot understands",
         ].join("\n"),
         ok: true,
       };
+
+    // PRO management is console work, not moderation: it stays reachable even
+    // with the scanning bot switched off, and it writes through the same server
+    // actions the admin PRO panels use.
+    case "pro":
+    case "crown":
+      return runProCommand(rest);
 
     case "status": {
       const { count } = await supabase.from("bot_flags").select("id", { count: "exact", head: true }).eq("open", true);

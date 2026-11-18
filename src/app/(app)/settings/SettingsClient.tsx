@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import {
   Shield, Bell, User, Trash2, LogOut, Eye, Palette,
-  FileText, Users, BookOpen, Info, Heart,
+  FileText, Users, BookOpen, Info, Heart, ChevronDown, Check, SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -139,20 +139,13 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">Settings</h1>
 
-      <div className="space-y-2">
-        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Settings">
-          {mainNav.map((item) => (
-            <TabButton key={item.key} item={item} active={section === item.key} onClick={setSection} />
-          ))}
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Information and legal">
-          {infoNav.map((item) => (
-            <TabButton key={item.key} item={item} active={section === item.key} onClick={setSection} />
-          ))}
-        </div>
-      </div>
+      <SettingsMenu groups={[
+        { key: "account-prefs", label: "Account", icon: <User className="w-4 h-4" />, items: mainNav.filter((i) => i.key === "account" || i.key === "blocked" || i.key === "danger") },
+        { key: "preferences", label: "Preferences", icon: <SlidersHorizontal className="w-4 h-4" />, items: mainNav.filter((i) => i.key === "notifications" || i.key === "privacy" || i.key === "appearance") },
+        { key: "information", label: "Help & information", icon: <Info className="w-4 h-4" />, items: infoNav },
+      ]} section={section} onSelect={setSection} />
 
-      <div role="tabpanel" className="pt-1">
+      <div className="pt-1">
           {section === "account" && (
             <div className="card p-6 space-y-4">
               <h2 className="font-bold text-lg text-[var(--text-primary)]">Account</h2>
@@ -338,21 +331,88 @@ export function SettingsClient({ profile, preferences: initPrefs, blockedUsers: 
   );
 }
 
-// Every tab sits in a strip that scrolls sideways on a phone, so its panel
-// always begins directly under the strip instead of under a tall column.
-function TabButton({ item, active, onClick }: {
-  item: { key: Section; label: string; icon: React.ReactNode };
-  active: boolean;
-  onClick: (key: Section) => void;
+// Settings are reached through expandable groups rather than a strip of tabs:
+// three headings, each opening the categories that belong to it. The group
+// holding the current category stays open so the place you are is always shown.
+type NavItem = { key: Section; label: string; icon: React.ReactNode };
+type NavGroup = { key: string; label: string; icon: React.ReactNode; items: NavItem[] };
+
+function SettingsMenu({ groups, section, onSelect }: {
+  groups: NavGroup[];
+  section: Section;
+  onSelect: (key: Section) => void;
 }) {
+  const homeOf = (key: Section) => groups.find((g) => g.items.some((i) => i.key === key))?.key ?? null;
+  const [open, setOpen] = useState<string | null>(homeOf(section));
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDown(event: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(event.target as Node)) setOpen(null);
+    }
+    function onKey(event: KeyboardEvent) { if (event.key === "Escape") setOpen(null); }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, []);
+
+  const current = groups.flatMap((g) => g.items).find((i) => i.key === section);
+
   return (
-    <button type="button" role="tab" aria-selected={active} onClick={() => onClick(item.key)}
-      className={"flex-none flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border whitespace-nowrap transition-colors " +
-        (active ? "text-white" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]")}
-      style={active
-        ? { backgroundColor: "rgb(var(--a-800))", borderColor: "rgb(var(--a-800))" }
-        : { backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
-      {item.icon} {item.label}
-    </button>
+    <div ref={boxRef} className="card p-3 space-y-2">
+      <p className="px-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+        {current ? <>Settings · <span style={{ color: "var(--text-primary)" }}>{current.label}</span></> : "Settings"}
+      </p>
+      <div className="grid gap-2 sm:grid-cols-3">
+        {groups.map((group) => {
+          const expanded = open === group.key;
+          const holds = group.items.some((i) => i.key === section);
+          return (
+            <div key={group.key} className="sm:relative">
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-controls={`settings-group-${group.key}`}
+                onClick={() => setOpen(expanded ? null : group.key)}
+                className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold border transition-colors"
+                style={holds
+                  ? { backgroundColor: "rgb(var(--a-800))", borderColor: "rgb(var(--a-800))", color: "#fff" }
+                  : { backgroundColor: "var(--bg)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+              >
+                {group.icon}
+                <span className="flex-1 text-left truncate">{group.label}</span>
+                <ChevronDown className={"w-4 h-4 transition-transform " + (expanded ? "rotate-180" : "")} />
+              </button>
+              {expanded && (
+                <div
+                  id={`settings-group-${group.key}`}
+                  className="mt-1 rounded-xl border overflow-hidden sm:absolute sm:left-0 sm:right-0 sm:z-30 sm:mt-1 sm:shadow-lg"
+                  style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+                >
+                  {group.items.map((item) => {
+                    const active = item.key === section;
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => { onSelect(item.key); setOpen(null); }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-left transition-colors hover:bg-[var(--border)]"
+                        style={active
+                          ? { backgroundColor: "var(--border)", color: "var(--text-primary)", fontWeight: 700 }
+                          : { color: "var(--text-secondary)" }}
+                      >
+                        {item.icon}
+                        <span className="flex-1 truncate">{item.label}</span>
+                        {active && <Check className="w-4 h-4" style={{ color: "rgb(var(--a-800))" }} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

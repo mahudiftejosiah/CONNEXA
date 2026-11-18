@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe, Bot, BookOpen, Library, Eye, EyeOff, Pencil, Star, Crown } from "lucide-react";
+import { Shield, Users, FileText, AlertTriangle, CheckCircle, XCircle, Ban, UserCog, Palette, Gamepad2, Plus, Trash2, ExternalLink, Clapperboard, BadgeCheck, Globe, Bot, BookOpen, Library, Eye, EyeOff, Pencil, Star, Crown, Search } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { SiteIconGrid } from "@/components/ui/SiteIconGrid";
@@ -18,6 +18,7 @@ import type { HashingSettings, HashingUsage } from "@/lib/hashing-settings";
 import type { HashAlgorithm } from "@/lib/hashing";
 import toast from "react-hot-toast";
 import { formatRelativeTime } from "@/lib/utils";
+import { adminFindUsers, type UserSearchPage } from "@/lib/actions/admin-users";
 
 export type UpgradeRow = {
   id: string;
@@ -87,7 +88,8 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
   const [displayValue, setDisplayValue] = useState("");
   const [savingDisplay, setSavingDisplay] = useState(false);
   const [userSearch, setUserSearch] = useState("");
-  const [userResults, setUserResults] = useState<Profile[] | null>(null);
+  const [userResults, setUserResults] = useState<UserSearchPage | null>(null);
+  const [userSearchError, setUserSearchError] = useState<string | null>(null);
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [reports, setReports] = useState(initReports);
   const [actioningId, setActioningId] = useState<string | null>(null);
@@ -140,19 +142,22 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
 
   // The rail only holds the newest accounts, so finding one person among
   // thousands has to ask the database rather than filter what is on screen.
-  async function findUsers() {
-    const term = userSearch.trim().replace(/[^a-zA-Z0-9_ .@-]/g, "");
-    if (term.length < 2) { setUserResults(null); return; }
+  // Results land in their own panel; the newest-accounts rail is never touched.
+  async function findUsers(page = 1) {
+    const term = userSearch.trim();
+    if (term.length < 2) { setUserSearchError("Type at least two characters."); return; }
     setSearchingUsers(true);
-    const supabase = createClient();
-    const { data, error } = await supabase.from("profiles")
-      .select("*")
-      .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)
-      .order("created_at", { ascending: false })
-      .limit(50);
+    setUserSearchError(null);
+    const res = await adminFindUsers(term, page);
     setSearchingUsers(false);
-    if (error) { toast.error("That search failed: " + error.message); return; }
-    setUserResults((data ?? []) as Profile[]);
+    if ("error" in res) { setUserSearchError(res.error); setUserResults(null); return; }
+    setUserResults(res);
+  }
+
+  function clearUserSearch() {
+    setUserSearch("");
+    setUserResults(null);
+    setUserSearchError(null);
   }
 
   // A display-only number that lives in its own column. It never touches the
@@ -186,7 +191,7 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
         : `Displayed follower count set to ${value?.toLocaleString()}`,
     });
     setUserRows((prev) => prev.map((u) => (u.id === displayUser.id ? { ...u, display_followers: value } : u)));
-    setUserResults((prev) => (prev ? prev.map((u) => (u.id === displayUser.id ? { ...u, display_followers: value } : u)) : prev));
+    setUserResults((prev) => (prev ? { ...prev, rows: prev.rows.map((u) => (u.id === displayUser.id ? { ...u, display_followers: value } : u)) } : prev));
     setSavingDisplay(false);
     setDisplayUser(null);
     toast.success(reset
@@ -392,7 +397,48 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
     const supabase = createClient();
     const { error } = await supabase.from("profiles").update({ is_verified: next }).eq("id", userId);
     if (error) { toast.error("Could not change verification."); return; }
+    setUserResults((prev) => prev && ({ ...prev, rows: prev.rows.map((r) => (r.id === userId ? { ...r, is_verified: next } : r)) }));
     toast.success(next ? "Verified tick added." : "Verification removed.");
+  }
+
+  // One row shape for both lists, so a searched account offers exactly the
+  // same controls as one from the newest-accounts rail.
+  function renderUserRow(u: Profile, email: string | null) {
+    return (
+      <div key={u.id} className="flex items-center gap-3 px-4 py-3 min-w-[52rem]">
+        <Avatar src={u.avatar_url} name={u.display_name} size={40} />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm whitespace-nowrap flex items-center gap-1.5">
+            {u.display_name}
+            {u.is_verified && <BadgeCheck className="w-4 h-4 text-[#1d9bf0]" />}
+          </p>
+          <p className="text-xs whitespace-nowrap text-[var(--text-secondary)]">
+            @{u.username} · {formatRelativeTime(u.created_at)}{email ? ` · ${email}` : ""}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {u.is_admin && <span className="text-xs bg-brand-gold-400/20 text-brand-green-800 dark:text-brand-gold-400 px-2 py-0.5 rounded font-medium">Admin</span>}
+          <Button size="sm" variant="ghost" icon={<Users className="w-3.5 h-3.5" />}
+            onClick={() => { setDisplayUser(u); setDisplayValue(u.display_followers == null ? "" : String(u.display_followers)); }}>
+            Manage Displayed Followers
+          </Button>
+          <Button size="sm" variant="ghost" icon={<BadgeCheck className="w-3.5 h-3.5" style={{ color: u.is_verified ? "#1d9bf0" : "var(--text-secondary)" }} />}
+            onClick={() => toggleVerified(u.id, !u.is_verified)}>
+            {u.is_verified ? "Unverify" : "Verify"}
+          </Button>
+          <Link href={`/admin/users/${u.id}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold text-brand-green-800 dark:text-brand-gold-400 hover:bg-[var(--border)] transition-colors">
+            <UserCog className="w-3.5 h-3.5" /> Manage
+          </Link>
+          {u.id !== currentAdminId && (
+            <Button size="sm" variant="ghost" icon={<Ban className="w-3.5 h-3.5 text-red-500" />}
+              onClick={() => handleBanUser(u.id, u.username)}>
+              Ban
+            </Button>
+          )}
+        </div>
+      </div>
+    );
   }
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
@@ -469,67 +515,89 @@ export function AdminClient({ users, pendingReports: initReports, recentActions,
       )}
 
       {tab === "users" && (
-        <div className="card overflow-hidden">
-          <div className="p-4 border-b border-[var(--border)] space-y-2">
-            <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); void findUsers(); }}>
-              <input
-                className="input text-sm flex-1 min-w-[12rem]"
-                placeholder="Search every account by name or @username"
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-              />
-              <Button size="sm" type="submit" loading={searchingUsers}>Search</Button>
-              {userResults && (
-                <Button size="sm" variant="ghost" type="button" onClick={() => { setUserResults(null); setUserSearch(""); }}>
-                  Show newest
-                </Button>
-              )}
-            </form>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {userResults
-                ? `${userResults.length} match${userResults.length === 1 ? "" : "es"} for “${userSearch.trim()}”`
-                : `Showing most recent ${userRows.length} users`}
-            </p>
-          </div>
-          {/* Rows keep their natural width and slide sideways instead of
-              crushing the name and the four action buttons together. */}
-          <div className="divide-y divide-[var(--border)] rail">
-            {(userResults ?? userRows).length === 0 && (
-              <p className="px-4 py-6 text-sm text-[var(--text-secondary)]">No account matches that search.</p>
+        <div className="space-y-4">
+          {/* Search reaches the whole registered database and prints its own
+              panel. The newest-accounts rail below is a separate list. */}
+          <div className="card overflow-hidden">
+            <div className="p-4 border-b border-[var(--border)] space-y-2">
+              <h2 className="font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <Search className="w-4 h-4" /> Find any registered account
+              </h2>
+              <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); void findUsers(1); }}>
+                <input
+                  className="input text-sm flex-1 min-w-[14rem]"
+                  placeholder="Full name, @username, email address or user ID"
+                  aria-label="Search every registered account"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                />
+                <Button size="sm" type="submit" loading={searchingUsers} icon={<Search className="w-3.5 h-3.5" />}>Search</Button>
+                {(userResults || userSearchError || userSearch) && (
+                  <Button size="sm" variant="ghost" type="button" onClick={clearUserSearch}>Clear</Button>
+                )}
+              </form>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Searches every account ever registered, not just the ones loaded on this page.
+                {userResults && !userResults.withEmail && " Email matching arrives with migration 034."}
+              </p>
+            </div>
+
+            {searchingUsers && (
+              <p className="px-4 py-6 text-sm text-[var(--text-secondary)]">Searching the whole database…</p>
             )}
-            {(userResults ?? userRows).map((u) => (
-              <div key={u.id} className="flex items-center gap-3 px-4 py-3 min-w-[52rem]">
-                <Avatar src={u.avatar_url} name={u.display_name} size={40} />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm whitespace-nowrap flex items-center gap-1.5">
-                    {u.display_name}
-                    {u.is_verified && <BadgeCheck className="w-4 h-4 text-[#1d9bf0]" />}
-                  </p>
-                  <p className="text-xs whitespace-nowrap text-[var(--text-secondary)]">@{u.username} · {formatRelativeTime(u.created_at)}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {u.is_admin && <span className="text-xs bg-brand-gold-400/20 text-brand-green-800 dark:text-brand-gold-400 px-2 py-0.5 rounded font-medium">Admin</span>}
-                  <Button size="sm" variant="ghost" icon={<Users className="w-3.5 h-3.5" />}
-                    onClick={() => { setDisplayUser(u); setDisplayValue(u.display_followers == null ? "" : String(u.display_followers)); }}>
-                    Manage Displayed Followers
-                  </Button>
-                  <Button size="sm" variant="ghost" icon={<BadgeCheck className="w-3.5 h-3.5" style={{ color: u.is_verified ? "#1d9bf0" : "var(--text-secondary)" }} />}
-                    onClick={() => toggleVerified(u.id, !u.is_verified)}>
-                    {u.is_verified ? "Unverify" : "Verify"}
-                  </Button>
-                  <Link href={`/admin/users/${u.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold text-brand-green-800 dark:text-brand-gold-400 hover:bg-[var(--border)] transition-colors">
-                    <UserCog className="w-3.5 h-3.5" /> Manage
-                  </Link>
-                  {u.id !== currentAdminId && (
-                    <Button size="sm" variant="ghost" icon={<Ban className="w-3.5 h-3.5 text-red-500" />}
-                      onClick={() => handleBanUser(u.id, u.username)}>
-                      Ban
-                    </Button>
+
+            {!searchingUsers && userSearchError && (
+              <p className="px-4 py-6 text-sm font-semibold text-red-500">{userSearchError}</p>
+            )}
+
+            {!searchingUsers && !userSearchError && userResults && (
+              <>
+                <div className="px-4 py-2.5 text-sm text-[var(--text-secondary)] border-b border-[var(--border)] flex flex-wrap items-center gap-2">
+                  <span>
+                    {userResults.total === 0
+                      ? <>No account matches “{userSearch.trim()}”.</>
+                      : <>{userResults.total} match{userResults.total === 1 ? "" : "es"} · page {userResults.page} of {Math.max(1, Math.ceil(userResults.total / userResults.pageSize))}</>}
+                  </span>
+                  {userResults.total > userResults.pageSize && (
+                    <span className="ml-auto flex items-center gap-2">
+                      <Button size="sm" variant="ghost" type="button"
+                        onClick={() => void findUsers(userResults.page - 1)}
+                        {...(userResults.page <= 1 ? { disabled: true } : {})}>
+                        Previous
+                      </Button>
+                      <Button size="sm" variant="ghost" type="button"
+                        onClick={() => void findUsers(userResults.page + 1)}
+                        {...(userResults.page * userResults.pageSize >= userResults.total ? { disabled: true } : {})}>
+                        Next
+                      </Button>
+                    </span>
                   )}
                 </div>
-              </div>
-            ))}
+                <div className="divide-y divide-[var(--border)] rail">
+                  {userResults.rows.map((u) => renderUserRow(u, u.email))}
+                </div>
+              </>
+            )}
+
+            {!searchingUsers && !userSearchError && !userResults && (
+              <p className="px-4 py-6 text-sm text-[var(--text-secondary)]">
+                Type a name, username, email or ID above and press Search.
+              </p>
+            )}
+          </div>
+
+          <div className="card overflow-hidden">
+            <div className="p-4 border-b border-[var(--border)]">
+              <p className="text-sm text-[var(--text-secondary)]">Showing most recent {userRows.length} users</p>
+            </div>
+            {/* Rows keep their natural width and slide sideways instead of
+                crushing the name and the four action buttons together. */}
+            <div className="divide-y divide-[var(--border)] rail">
+              {userRows.length === 0 && (
+                <p className="px-4 py-6 text-sm text-[var(--text-secondary)]">No accounts yet.</p>
+              )}
+              {userRows.map((u) => renderUserRow(u, null))}
+            </div>
           </div>
         </div>
       )}

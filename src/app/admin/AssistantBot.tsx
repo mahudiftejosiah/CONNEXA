@@ -20,6 +20,15 @@ interface AssistantBotProps {
 
 type LogLine = { input: string; output: string; ok: boolean };
 
+const PRO_READS = ["pro", "pro plans", "pro benefits", "pro members", "pro requests", "pro price", "pro help"];
+const PRO_TEMPLATES = [
+  "pro plan add | Monthly | 5000 | 30 | NGN | Everything in PRO",
+  "pro benefit KEY off",
+  "pro grant @username 30",
+  "pro approve CNXA-XXXXXX",
+  "pro promo Launch offer: three months for the price of two",
+];
+
 export function AssistantBot({ settings, openFlags, resolved, checks }: AssistantBotProps) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -80,11 +89,15 @@ export function AssistantBot({ settings, openFlags, resolved, checks }: Assistan
   async function submitCommand() {
     const text = command.trim();
     if (!text) return;
+    await run(text);
+    setCommand("");
+  }
+
+  async function run(text: string) {
     setBusy("cmd");
     const res = await runBotCommand(text);
     setBusy(null);
     setLog((p) => [{ input: text, output: res.output, ok: res.ok }, ...p].slice(0, 12));
-    setCommand("");
     if (res.ok) router.refresh();
   }
 
@@ -296,7 +309,28 @@ export function AssistantBot({ settings, openFlags, resolved, checks }: Assistan
           <Button size="sm" loading={busy === "cmd"} onClick={submitCommand}>Run</Button>
         </div>
         <p className="text-xs text-[var(--text-secondary)]">
-          Type <span className="font-mono">help</span> for the full list — status, check, security, scan, hide CODE, restore CODE, turn on/off, autohide on/off, keywords.
+          Type <span className="font-mono">help</span> for moderation commands, or <span className="font-mono">pro help</span> for
+          PRO management — plans, prices, benefits, members, payments and the promo banner. Both write to the same database as the admin panels.
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {PRO_READS.map((c) => (
+            <button key={c} type="button" disabled={busy === "cmd"} onClick={() => void run(c)}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold border transition-colors hover:bg-[var(--border)] disabled:opacity-50"
+              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}>
+              {c}
+            </button>
+          ))}
+          {PRO_TEMPLATES.map((c) => (
+            <button key={c} type="button" onClick={() => setCommand(c)}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold border transition-colors hover:bg-[var(--border)]"
+              style={{ borderColor: "var(--brand-gold)", color: "var(--brand-gold-text)" }}>
+              {c}
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] text-[var(--text-secondary)]">
+          Gold chips fill the line for you to edit. Destructive commands need the word <span className="font-mono font-semibold">confirm</span> at
+          the end — run one without it first and the bot tells you exactly what would change.
         </p>
         {log.length > 0 && (
           <div className="space-y-2">

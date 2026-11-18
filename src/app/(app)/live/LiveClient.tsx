@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Video, VideoOff, Radio, Square, Send, RotateCcw, ArrowLeft, SwitchCamera, Calendar, Play, Trash2 } from "lucide-react";
+import { Video, VideoOff, Radio, Square, Send, RotateCcw, ArrowLeft, SwitchCamera, Calendar, Play, Trash2, Lock, Crown } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -290,6 +290,66 @@ export function LiveClient({ profile, canBroadcast = true, broadcastReason = nul
   }
 
   const fmt = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+
+  // The whole room is PRO, not just the red button: a non-member never reaches
+  // the camera, the recorder or the scheduler. The server says so first.
+  if (!canBroadcast) {
+    return (
+      <div className="space-y-4 max-w-3xl mx-auto">
+        <div className="flex items-center gap-3">
+          <Link href="/discover" className="p-2 rounded-xl hover:bg-[var(--border)] text-[var(--text-secondary)]" aria-label="Back to Discover">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div className="flex items-center gap-2 flex-1">
+            <Radio className="w-6 h-6 text-red-500" />
+            <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">Go Live</h1>
+          </div>
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full"
+            style={{ backgroundColor: "var(--border)", color: "var(--text-secondary)" }}>
+            <Lock className="w-3.5 h-3.5" /> PRO only
+          </span>
+        </div>
+
+        <div className="card overflow-hidden">
+          <div className="relative aspect-video flex flex-col items-center justify-center gap-4 text-center px-6"
+            style={{ background: "linear-gradient(160deg, var(--brand-green), #000)" }}>
+            <img src="/crown.png" alt="" width={72} height={72} className="w-[72px] h-[72px]"
+              style={{ filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.45))" }} />
+            <div className="inline-flex items-center gap-2 text-white/90 text-sm font-semibold">
+              <Lock className="w-4 h-4" /> This room is locked
+            </div>
+            <p className="text-white/70 text-sm max-w-md">
+              Live streaming belongs to CONNEXA PRO. Members broadcast straight to their followers,
+              read viewer chat as it arrives and schedule a stream ahead of time.
+            </p>
+          </div>
+          <div className="p-5 space-y-4">
+            <h2 className="font-bold text-lg text-[var(--text-primary)]">Unlock the live room</h2>
+            {broadcastReason && (
+              <p className="text-sm pl-3 border-l-2" style={{ borderColor: "var(--brand-gold)", color: "var(--text-secondary)" }}>
+                {broadcastReason}
+              </p>
+            )}
+            <ul className="grid sm:grid-cols-2 gap-2 text-sm text-[var(--text-secondary)]">
+              {["Broadcast to your followers", "Live viewer chat and reactions", "Schedule a stream in advance", "A highlight reel on your profile cover"].map((line) => (
+                <li key={line} className="flex items-start gap-2">
+                  <Radio className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--brand-gold)" }} />
+                  {line}
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/pro#upgrade" className="btn-primary inline-flex items-center gap-2"
+                style={{ background: "var(--brand-gold)", color: "var(--brand-green)" }}>
+                <Crown className="w-4 h-4" /> Upgrade to PRO
+              </Link>
+              <Link href="/pro" className="btn-ghost inline-flex items-center gap-2">See everything PRO includes</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 max-w-3xl mx-auto">

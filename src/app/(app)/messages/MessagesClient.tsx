@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck, Trash2, Image as ImageIcon, Bot, Pin, PinOff, CornerUpLeft, Share, Pencil } from "lucide-react";
+import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck, Trash2, Image as ImageIcon, Bot, Pin, PinOff, CornerUpLeft, Share, Pencil, Mic, Square, Sticker as StickerIcon } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
@@ -9,6 +9,11 @@ import { ConfirmDialog } from "@/components/ui/Modal";
 import { AccountBadge } from "@/components/ui/ProBadge";
 import { ActiveUsersButton } from "@/components/layout/ActiveUsersButton";
 import { HelpThread } from "@/components/messages/HelpThread";
+import { WelcomeMessages } from "@/components/messages/WelcomeMessages";
+import { VoiceNote } from "@/components/messages/VoiceNote";
+import { StickerPicker } from "@/components/messages/StickerPicker";
+import { useVoiceRecorder, MAX_VOICE_SECONDS, type VoiceDraft } from "@/lib/useVoiceRecorder";
+import { isStickerPath, isVoiceNote, type Sticker } from "@/lib/stickers";
 import { MessageMenu, type MessageAction } from "@/components/messages/MessageMenu";
 import { ForwardDialog, type ForwardTarget } from "@/components/messages/ForwardDialog";
 import { createClient } from "@/lib/supabase/client";
@@ -44,8 +49,18 @@ function fileSizeLabel(bytes?: number | null) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function attachmentPreview(kind?: MessageAttachmentKind | null, viewOnce?: boolean | null) {
-  if (viewOnce && (kind === "image" || kind === "video")) {
+type PreviewSource = {
+  attachment_kind?: MessageAttachmentKind | null;
+  view_once?: boolean | null;
+  attachment_name?: string | null;
+  attachment_url?: string | null;
+} | null | undefined;
+
+function attachmentPreview(msg: PreviewSource) {
+  if (isStickerPath(msg?.attachment_url)) return "Sent a sticker";
+  if (isVoiceNote(msg?.attachment_name)) return "Sent a voice note";
+  const kind = msg?.attachment_kind;
+  if (msg?.view_once && (kind === "image" || kind === "video")) {
     return kind === "image" ? "View-once photo" : "View-once video";
   }
   if (kind === "image") return "Sent a photo";
@@ -119,6 +134,8 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const [tab, setTab] = useState<"all" | "active" | "offline">(initialTab);
   const [search, setSearch] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [voiceDraft, setVoiceDraft] = useState<VoiceDraft | null>(null);
+  const [stickerOpen, setStickerOpen] = useState(false);
   const [viewOnce, setViewOnce] = useState(false);
   const [viewer, setViewer] = useState<ViewOnceView | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
@@ -155,12 +172,18 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   }
 
   // Attachments live in a private bucket, so every path needs a signed URL.
+  // Stickers are public artwork served by the app itself, so they map to
+  // themselves and never reach the bucket.
   async function signAttachments(rows: Message[]) {
     const paths = Array.from(new Set(rows
       .filter((r) => r.attachment_url && !isPeerViewOnce(r))
       .map((r) => r.attachment_url!)));
-    const todo = paths.filter((p) => !p.startsWith("http") && !urlsRef.current[p]);
-    if (todo.length === 0) return;
+    let publicChanged = false;
+    for (const p of paths) {
+      if (p.startsWith("/") && !urlsRef.current[p]) { urlsRef.current[p] = p; publicChanged = true; }
+    }
+    const todo = paths.filter((p) => !p.startsWith("http") && !p.startsWith("/") && !urlsRef.current[p]);
+    if (todo.length === 0) { if (publicChanged) setUrls({ ...urlsRef.current }); return; }
     const { data } = await supabase.storage.from("chat-files").createSignedUrls(todo, 6 * 60 * 60);
     let changed = false;
     (data || []).forEach((row) => {
@@ -292,7 +315,12 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     toast.success("Chat deleted.");
   }
 
+  function dropVoiceDraft() {
+    setVoiceDraft((prev) => { if (prev) URL.revokeObjectURL(prev.url); return null; });
+  }
+
   function pickFile(next: File | null) {
+    dropVoiceDraft();
     if (!next) { setFile(null); setViewOnce(false); return; }
     const kind = kindOfFile(next);
     const limit = sizeLimit(kind);
@@ -306,10 +334,48 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     if (!isViewOnceMedia(kind)) setViewOnce(false);
   }
 
+  const voice = useVoiceRecorder(
+    (draft) => {
+      setVoiceDraft((prev) => { if (prev) URL.revokeObjectURL(prev.url); return draft; });
+      setFile(draft.file);
+      setViewOnce(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    (message) => toast.error(message)
+  );
+
+  // A sticker is public artwork, so the message carries its path directly and
+  // nothing is uploaded. It still travels as a normal message row.
+  async function sendSticker(sticker: Sticker) {
+    setStickerOpen(false);
+    if (!active || sending) return;
+    setSending(true);
+    const quoted = replyTo?.id ?? null;
+    const { data, error } = await supabase.from("messages").insert({
+      conversation_id: active.id,
+      sender_id: currentUserId,
+      content: "",
+      attachment_url: sticker.url,
+      attachment_kind: "image",
+      attachment_name: `sticker:${sticker.label}`.slice(0, 120),
+      attachment_size: null,
+      ...(quoted ? { reply_to: quoted } : {}),
+    }).select().single();
+    setSending(false);
+    if (error) { toast.error("That sticker did not send."); return; }
+    setReplyTo(null);
+    void signAttachments([data]);
+    setMessages((p) => p.some((m) => m.id === data.id) ? p : [...p, data]);
+    bumpConversation(active.id, data);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
+  }
+
   async function sendMessage() {
     if (!active || sending) return;
     const content = input.trim();
     if (!content && !file) return;
+    if (voice.recording) { toast.error("Stop the recording first."); return; }
     setSending(true);
 
     let attachment: { url: string; kind: MessageAttachmentKind; name: string; size: number } | null = null;
@@ -330,12 +396,16 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
 
     const asViewOnce = viewOnce && !!attachment && isViewOnceMedia(attachment.kind);
     const quoted = replyTo?.id ?? null;
+    const heldFile = file;
+    const heldVoice = voiceDraft;
 
     setInput("");
     setFile(null);
+    setVoiceDraft(null);
     setViewOnce(false);
     setReplyTo(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (photoInputRef.current) photoInputRef.current.value = "";
 
     const payload = {
       conversation_id: active.id,
@@ -359,10 +429,13 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
         ? `Failed to send${quoted ? " the reply" : ""}. Has migration ${asViewOnce ? "017" : "023"} been applied?`
         : "Failed to send message.");
       setInput(content);
+      setFile(heldFile);
+      setVoiceDraft(heldVoice);
       setReplyTo(quoted ? messages.find((m) => m.id === quoted) ?? null : null);
       if (attachment) void supabase.storage.from("chat-files").remove([attachment.url]);
       return;
     }
+    if (heldVoice) URL.revokeObjectURL(heldVoice.url);
     if (attachment) void signAttachments([data]);
     // Render it immediately; the realtime echo can also arrive, so dedupe by id.
     setMessages((p) => p.some((m) => m.id === data.id) ? p : [...p, data]);
@@ -659,6 +732,11 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
               <p className="text-xs truncate" style={{ color: "rgb(var(--a-600))" }}>Ask how anything works · instant answers</p>
             </div>
           </button>
+          {conversations.length === 0 && (
+            <div className="md:hidden border-b" style={{ borderColor: "var(--border)" }}>
+              <WelcomeMessages compact />
+            </div>
+          )}
           {rows.length === 0 ? (
             <EmptyState icon={<MessageCircle className="w-8 h-8" />} title="No messages"
               description={tab === "active" ? "No one is online right now." : tab === "offline" ? "No offline friends yet." : "Start a conversation from someone's profile."} />
@@ -709,7 +787,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                       <p className="text-xs text-[var(--text-secondary)] truncate">
                         {conv.last_message
                           ? (conv.last_message.content ||
-                              attachmentPreview(conv.last_message.attachment_kind, conv.last_message.view_once))
+                              attachmentPreview(conv.last_message))
                           : "No messages yet"}
                       </p>
                     </div>
@@ -737,9 +815,13 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
         {helpOpen ? (
           <HelpThread userId={currentUserId} displayName={profile.display_name} onBack={() => setHelpOpen(false)} />
         ) : !active ? (
-          <div className="flex-1 flex items-center justify-center">
-            <EmptyState icon={<MessageCircle className="w-8 h-8" />} title="Select a conversation" description="Choose a conversation from the list to start chatting." />
-          </div>
+          conversations.length === 0 ? (
+            <WelcomeMessages />
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <EmptyState icon={<MessageCircle className="w-8 h-8" />} title="Select a conversation" description="Choose a conversation from the list to start chatting." />
+            </div>
+          )
         ) : (
           <>
             {/* Header */}
@@ -773,7 +855,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     <span className="font-semibold" style={{ color: "rgb(var(--a-600))" }}>
                       {nameOf(mostRecentPin.sender_id)}:
                     </span>{" "}
-                    {mostRecentPin.content || attachmentPreview(mostRecentPin.attachment_kind, mostRecentPin.view_once)}
+                    {mostRecentPin.content || attachmentPreview(mostRecentPin)}
                   </p>
                 </button>
                 {pinnedMessages.length > 1 && (
@@ -831,6 +913,17 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                         </span>
                       </button>
                     );
+                  } else if (isStickerPath(msg.attachment_url)) {
+                    attachment = (
+                      <div className="px-3 pt-3">
+                        <img src={msg.attachment_url!} alt={msg.attachment_name?.replace(/^sticker:/, "") || "Sticker"}
+                          className="w-28 h-28 sm:w-32 sm:h-32" draggable={false} />
+                      </div>
+                    );
+                  } else if (isVoiceNote(msg.attachment_name)) {
+                    attachment = media ? (
+                      <VoiceNote src={media} mine={isMe} />
+                    ) : <p className="px-4 pt-2.5 text-xs opacity-60">Loading voice note…</p>;
                   } else if (msg.attachment_kind === "image") {
                     attachment = media ? (
                       <a href={media} target="_blank" rel="noopener noreferrer" className="block">
@@ -879,7 +972,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     <MessageMenu
                       actions={actions}
                       pinned={!!msg.pinned_at}
-                      label={msg.content || attachmentPreview(msg.attachment_kind, msg.view_once)}
+                      label={msg.content || attachmentPreview(msg)}
                       onAction={(a) => {
                         if (a === "reply") { setReplyTo(msg); setEditing(null); messageInputRef.current?.focus(); }
                         if (a === "edit") { beginEdit(msg); messageInputRef.current?.focus(); }
@@ -896,9 +989,11 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                       className={`group flex items-start gap-1.5 ${isMe ? "justify-end" : "justify-start"}`}>
                       {!isMe && menu}
                       <div className={`max-w-[80%] md:max-w-[75%] rounded-2xl text-sm overflow-hidden ${
-                        isMe
-                          ? "bg-brand-green-800 text-white rounded-br-sm"
-                          : "bg-[var(--border)] text-[var(--text-primary)] rounded-bl-sm"
+                        isStickerPath(msg.attachment_url) && !msg.content
+                          ? "bg-transparent"
+                          : isMe
+                            ? "bg-brand-green-800 text-white rounded-br-sm"
+                            : "bg-[var(--border)] text-[var(--text-primary)] rounded-bl-sm"
                       }`}>
                         {deleted ? (
                           <p className={`italic px-4 py-2.5 text-xs ${isMe ? "text-white/70" : "text-[var(--text-secondary)]"}`}>
@@ -911,7 +1006,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                                 isMe ? "bg-black/15 border-white/50" : "bg-[var(--bg-card)] border-[rgb(var(--a-700))]"
                               }`}>
                                 <p className="opacity-80 truncate">{nameOf(quoted.sender_id)}</p>
-                                <p className="truncate">{quoted.content || attachmentPreview(quoted.attachment_kind, quoted.view_once)}</p>
+                                <p className="truncate">{quoted.content || attachmentPreview(quoted)}</p>
                               </div>
                             )}
                             {msg.forwarded_from && (
@@ -927,7 +1022,11 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                               </p>
                             )}
                             {msg.content && <p className="leading-relaxed px-4 pt-2.5">{msg.content}</p>}
-                            <p className={`flex items-center gap-1.5 text-[10px] px-4 pt-1 pb-2 ${isMe ? "text-white/60" : "text-[var(--text-secondary)]"}`}>
+                            <p className={`flex items-center gap-1.5 text-[10px] px-4 pt-1 pb-2 ${
+                              isStickerPath(msg.attachment_url) && !msg.content
+                                ? "text-[var(--text-secondary)] px-3"
+                                : isMe ? "text-white/60" : "text-[var(--text-secondary)]"
+                            }`}>
                               {msg.pinned_at && <Pin className="w-3 h-3 flex-shrink-0" />}
                               <span>{formatMessageTime(msg.created_at)}</span>
                               {msg.edited_at && <span>· edited</span>}
@@ -959,7 +1058,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                         {composerLabel}
                       </span>
                       <span className="block truncate">
-                        {composerQuote.content || attachmentPreview(composerQuote.attachment_kind, composerQuote.view_once)}
+                        {composerQuote.content || attachmentPreview(composerQuote)}
                       </span>
                     </span>
                     <button
@@ -972,7 +1071,52 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   </div>
                 </div>
               )}
-              {file && (
+              {voice.recording && (
+                <div className="px-4 pt-3">
+                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border"
+                    style={{ borderColor: "#ef4444", backgroundColor: "var(--bg-card)" }}>
+                    <span className="relative flex items-center justify-center w-8 h-8 flex-shrink-0">
+                      <span className="absolute inset-0 rounded-full bg-red-500/25"
+                        style={{ transform: `scale(${1 + voice.level * 0.6})`, transition: "transform 90ms linear" }} />
+                      <Mic className="w-4 h-4 text-red-500 relative" />
+                    </span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">
+                      {Math.floor(voice.seconds / 60)}:{String(voice.seconds % 60).padStart(2, "0")}
+                    </span>
+                    <span className="text-[11px] text-[var(--text-secondary)] flex-1 min-w-0 truncate">
+                      Recording… up to {Math.floor(MAX_VOICE_SECONDS / 60)} minutes
+                    </span>
+                    <button type="button" onClick={() => voice.stop(true)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--border)]">
+                      Cancel
+                    </button>
+                    <button type="button" onClick={() => voice.stop(false)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-red-500 hover:bg-red-600 inline-flex items-center gap-1.5">
+                      <Square className="w-3 h-3 fill-current" /> Stop
+                    </button>
+                  </div>
+                </div>
+              )}
+              {voiceDraft && !voice.recording && (
+                <div className="px-4 pt-3">
+                  <div className="inline-flex flex-col gap-1 max-w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
+                    <div className="flex items-center gap-2">
+                      <Mic className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "rgb(var(--a-600))" }} />
+                      <span className="text-xs font-semibold text-[var(--text-primary)]">
+                        Voice note · {Math.floor(voiceDraft.seconds / 60)}:{String(voiceDraft.seconds % 60).padStart(2, "0")}
+                      </span>
+                      <span className="text-[11px] text-[var(--text-secondary)]">{fileSizeLabel(voiceDraft.file.size)}</span>
+                      <button onClick={() => pickFile(null)} aria-label="Discard this voice note"
+                        className="ml-auto p-0.5 rounded hover:bg-[var(--border)] flex-shrink-0">
+                        <X className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                      </button>
+                    </div>
+                    <VoiceNote src={voiceDraft.url} mine={false} durationHint={voiceDraft.seconds} />
+                    <p className="text-[11px] text-[var(--text-secondary)] px-1 pb-1">Listen back, then press send.</p>
+                  </div>
+                </div>
+              )}
+              {file && !voiceDraft && (
                 <div className="px-4 pt-3">
                   <div className="inline-flex items-center gap-2 max-w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
                     <FileText className="w-4 h-4 flex-shrink-0 text-[var(--text-secondary)]" />
@@ -993,7 +1137,10 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   </div>
                 </div>
               )}
-              <div className="px-4 py-3 flex gap-2 items-end">
+              <div className="px-4 py-3 flex gap-2 items-end relative">
+                {stickerOpen && (
+                  <StickerPicker onPick={(s) => void sendSticker(s)} onClose={() => setStickerOpen(false)} />
+                )}
                 <input
                   ref={photoInputRef}
                   type="file"
@@ -1036,6 +1183,34 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   }`}
                 >
                   <Eye className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  data-sticker-toggle
+                  onClick={() => setStickerOpen((v) => !v)}
+                  disabled={sending || !!editing || voice.recording}
+                  aria-label="Open the sticker picker"
+                  aria-expanded={stickerOpen}
+                  className={`p-2.5 rounded-xl border flex-shrink-0 transition-colors disabled:opacity-40 ${
+                    stickerOpen
+                      ? "bg-brand-green-800 text-white border-brand-green-800"
+                      : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  <StickerIcon className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => (voice.recording ? voice.stop(false) : void voice.start())}
+                  disabled={sending || !!editing}
+                  aria-label={voice.recording ? "Stop and preview the voice note" : "Record a voice note"}
+                  className={`p-2.5 rounded-xl border flex-shrink-0 transition-colors disabled:opacity-40 ${
+                    voice.recording
+                      ? "bg-red-500 text-white border-red-500 animate-pulse"
+                      : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  {voice.recording ? <Square className="w-4 h-4 fill-current" /> : <Mic className="w-4 h-4" />}
                 </button>
                 <input
                   ref={messageInputRef}
@@ -1133,7 +1308,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
           open
           onClose={() => setForwarding(null)}
           targets={forwardTargets}
-          preview={`Forwarding: ${forwarding.content || attachmentPreview(forwarding.attachment_kind, forwarding.view_once)}`}
+          preview={`Forwarding: ${forwarding.content || attachmentPreview(forwarding)}`}
           onPick={(target) => void forwardTo(forwarding, target)}
         />
       )}

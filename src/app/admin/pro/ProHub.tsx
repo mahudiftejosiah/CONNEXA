@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Award, CalendarDays, Crown, HardDrive, History, MessagesSquare, Music, ShieldAlert, Store, Trophy, Video } from "lucide-react";
+import { Award, CalendarDays, Crown, HardDrive, History, MessagesSquare, Music, ShieldAlert, Store, Trophy, Video, Wallet } from "lucide-react";
 import { ProMembers } from "./ProMembers";
+import { ProPlans } from "./ProPlans";
 import { ProMusic } from "./ProMusic";
 import { ProQuizzes } from "./ProQuizzes";
 import { ProCommunity } from "./ProCommunity";
@@ -12,10 +13,11 @@ import { ProBadges, ProMarketplace } from "./ProCreator";
 import { ProUploads } from "./ProUploads";
 import { ProMemories } from "./ProMemories";
 
-type Section = "members" | "community" | "reports" | "quizzes" | "music" | "live" | "events" | "badges" | "market" | "memories" | "uploads";
+type Section = "members" | "plans" | "community" | "reports" | "quizzes" | "music" | "live" | "events" | "badges" | "market" | "memories" | "uploads";
 
 const SECTIONS: { key: Section; label: string; icon: React.ReactNode }[] = [
   { key: "members",   label: "Membership",     icon: <Crown className="w-4 h-4" /> },
+  { key: "plans",     label: "Plans & pricing", icon: <Wallet className="w-4 h-4" /> },
   { key: "community", label: "Community",      icon: <MessagesSquare className="w-4 h-4" /> },
   { key: "reports",   label: "Reports",        icon: <ShieldAlert className="w-4 h-4" /> },
   { key: "quizzes",   label: "Quiz battles",   icon: <Trophy className="w-4 h-4" /> },
@@ -43,6 +45,10 @@ export function ProHub({ adminId }: { adminId: string }) {
           Everything here is written straight to the database, so a change shows for members the next time they open the page.
           No sample content, no placeholder numbers: an empty section means it is genuinely empty.
         </p>
+        <p className="text-xs text-[var(--text-secondary)] mt-2">
+          The assistant bot manages the same rows. Type <span className="font-mono font-semibold">pro help</span> in the bot console
+          for plans, prices, benefits, members and payments — a change made there appears here on reload, and the other way round.
+        </p>
       </div>
 
       <div className="card rail flex overflow-x-auto">
@@ -59,6 +65,7 @@ export function ProHub({ adminId }: { adminId: string }) {
       </div>
 
       {section === "members" && <ProMembers adminId={adminId} />}
+      {section === "plans" && <ProPlans />}
       {section === "community" && <ProCommunity adminId={adminId} />}
       {section === "reports" && <ProReports adminId={adminId} />}
       {section === "quizzes" && <ProQuizzes adminId={adminId} />}

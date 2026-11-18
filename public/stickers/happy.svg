@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="YAY sticker">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#FFE066"/>
+      <stop offset="1" stop-color="#FFB703"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.32" cy="0.24" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="104" fill="#ffffff"/>
+  <circle cx="128" cy="128" r="96" fill="url(#g)"/>
+  <circle cx="128" cy="128" r="96" fill="url(#sheen)"/>
+  <path d="M40 62l5 13 13 5-13 5-5 13-5-13-13-5 13-5z" fill="#fff"/>
+          <path d="M214 52l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#fff" opacity=".85"/>
+          <path d="M206 176l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#fff" opacity=".7"/>
+  <path d="M86 116q12-16 24 0" stroke="#2B2118" stroke-width="9" fill="none" stroke-linecap="round"/>
+           <path d="M146 116q12-16 24 0" stroke="#2B2118" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M100 144q28 34 56 0z" fill="#2B2118"/>
+          <path d="M112 158q16 12 32 0q-16-6-32 0z" fill="#FF8FAB"/>
+  <g>
+    <rect x="60" y="188" width="136" height="38" rx="19" fill="#ffffff"/>
+    <text x="128" y="215" text-anchor="middle" font-family="Verdana, Geneva, sans-serif" font-size="24" font-weight="bold" fill="#FFB703">YAY</text>
+  </g>
+</svg>

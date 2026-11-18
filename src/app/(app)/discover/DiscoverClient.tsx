@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Users, Globe, TrendingUp, UserPlus, Newspaper, Radio, Gamepad2, Clapperboard, ArrowRight, GraduationCap, Play, Star, ExternalLink, Fingerprint } from "lucide-react";
+import { Users, Globe, TrendingUp, UserPlus, Newspaper, Radio, Gamepad2, Clapperboard, ArrowRight, GraduationCap, Play, Star, ExternalLink, Fingerprint, Lock } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -49,9 +49,10 @@ interface DiscoverClientProps {
   studyBooks: StudyBook[];
   watchReels: PoolReel[];
   hashingOpen?: boolean;
+  liveOpen?: boolean;
 }
 
-export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, currentUserId, news, studyResources, studySites, featuredSites, studyBooks, watchReels, hashingOpen = false }: DiscoverClientProps) {
+export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, currentUserId, news, studyResources, studySites, featuredSites, studyBooks, watchReels, hashingOpen = false, liveOpen = true }: DiscoverClientProps) {
   const [sentTo, setSentTo] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<"for-you" | "featured" | "study">("for-you");
   const room = useFullscreen<HTMLDivElement>();
@@ -105,7 +106,8 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
         </p>
         <div className="flex flex-wrap gap-2 mt-5 relative z-10">
           <Link href="/live" className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
-            <Radio className="w-4 h-4" /> Go Live
+            {liveOpen ? <Radio className="w-4 h-4" /> : <Lock className="w-4 h-4" />} Go Live
+            {!liveOpen && <span className="text-[10px] font-extrabold uppercase tracking-wide px-1.5 py-px rounded" style={{ background: "var(--brand-gold)", color: "var(--brand-green)" }}>PRO</span>}
           </Link>
           <Link href="/games" className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
             <Gamepad2 className="w-4 h-4" /> Play games
@@ -187,15 +189,25 @@ export function DiscoverClient({ suggestedPeople, publicGroups, trendingPosts, c
       )}
 
       {/* Go live banner */}
-      <Link href="/live" className="card p-4 flex items-center gap-4 hover:shadow-md transition-shadow border-l-4 !border-l-red-500">
+      <Link href={liveOpen ? "/live" : "/pro#upgrade"} className="card p-4 flex items-center gap-4 hover:shadow-md transition-shadow border-l-4 !border-l-red-500">
         <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
-          <Clapperboard className="w-6 h-6 text-red-500" />
+          {liveOpen ? <Clapperboard className="w-6 h-6 text-red-500" /> : <Lock className="w-6 h-6 text-red-500" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>Share a live moment</p>
-          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Go to your camera studio, record, and post it straight to your feed.</p>
+          <p className="font-semibold text-sm flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+            Share a live moment
+            {!liveOpen && <img src="/crown.png" alt="CONNEXA PRO" width={16} height={16} className="w-4 h-4" />}
+          </p>
+          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            {liveOpen
+              ? "Go to your camera studio, record, and post it straight to your feed."
+              : "The live room is a CONNEXA PRO feature. Upgrade to broadcast to your followers."}
+          </p>
         </div>
-        <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-red-500 text-white flex-shrink-0">GO LIVE</span>
+        <span className="text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0 inline-flex items-center gap-1.5"
+          style={liveOpen ? { backgroundColor: "#ef4444", color: "#fff" } : { backgroundColor: "var(--brand-gold)", color: "var(--brand-green)" }}>
+          {liveOpen ? "GO LIVE" : <><Lock className="w-3 h-3" /> UNLOCK</>}
+        </span>
       </Link>
 
       {/* Watch — a fresh online reel mix on every refresh */}

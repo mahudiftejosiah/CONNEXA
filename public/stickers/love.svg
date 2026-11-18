@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="LOVE sticker">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#FF8FAB"/>
+      <stop offset="1" stop-color="#E5383B"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.32" cy="0.24" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="104" fill="#ffffff"/>
+  <circle cx="128" cy="128" r="96" fill="url(#g)"/>
+  <circle cx="128" cy="128" r="96" fill="url(#sheen)"/>
+  <path d="M46 74c-13-9-18-15-18-21a9 9 0 0 1 18-4 9 9 0 0 1 18 4c0 6-5 12-18 21z" fill="#fff"/>
+           <path d="M212 96c-10-7-14-12-14-16a7 7 0 0 1 14-3 7 7 0 0 1 14 3c0 4-4 9-14 16z" fill="#fff" opacity=".85"/>
+           <path d="M196 46c-8-6-11-9-11-13a6 6 0 0 1 11-2 6 6 0 0 1 11 2c0 4-3 7-11 13z" fill="#fff" opacity=".7"/>
+  <path d="M98 124c-16-11-22-19-22-26a11 11 0 0 1 22-5 11 11 0 0 1 22 5c0 7-6 15-22 26z" fill="#E5383B"/>
+           <path d="M158 124c-16-11-22-19-22-26a11 11 0 0 1 22-5 11 11 0 0 1 22 5c0 7-6 15-22 26z" fill="#E5383B"/>
+  <path d="M104 148q24 22 48 0" stroke="#2B2118" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <g>
+    <rect x="60" y="188" width="136" height="38" rx="19" fill="#ffffff"/>
+    <text x="128" y="215" text-anchor="middle" font-family="Verdana, Geneva, sans-serif" font-size="24" font-weight="bold" fill="#E5383B">LOVE</text>
+  </g>
+</svg>

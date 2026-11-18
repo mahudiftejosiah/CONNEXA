@@ -7,6 +7,23 @@ import toast from "react-hot-toast";
 
 export type UpgradeStatus = "none" | "pending" | "approved" | "rejected";
 
+export type PlanChoice = {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  duration_days: number;
+  blurb: string;
+};
+
+const SYMBOLS: Record<string, string> = { NGN: "₦", USD: "$", GHS: "₵", KES: "KSh ", ZAR: "R", EUR: "€", GBP: "£" };
+
+function money(amount: number, currency: string) {
+  const symbol = SYMBOLS[currency.toUpperCase()];
+  const value = amount.toLocaleString();
+  return symbol ? `${symbol}${value}` : `${value} ${currency}`;
+}
+
 // Pull editable fields out of the admin's upgrade instructions text.
 function parseConfig(body: string) {
   const grab = (label: string) => {
@@ -31,29 +48,42 @@ export function UpgradePanel({
   initialStatus,
   initialReference,
   configText,
+  plans = [],
 }: {
   userId: string;
   verified: boolean;
   initialStatus: UpgradeStatus;
   initialReference: string | null;
   configText: string;
+  plans?: PlanChoice[];
 }) {
   const cfg = parseConfig(configText);
   const [status, setStatus] = useState<UpgradeStatus>(verified ? "approved" : initialStatus);
   const [reference, setReference] = useState<string | null>(initialReference);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [planId, setPlanId] = useState<string>(plans[0]?.id ?? "");
+
+  // A published plan overrides the flat price in the upgrade text, and its
+  // length is written into the request so approving it grants what was bought.
+  const chosen = plans.filter((p) => p.id === planId)[0] ?? plans[0];
+  const amount = chosen ? chosen.price : cfg.amount;
+  const currency = chosen?.currency ?? "NGN";
 
   async function markPaid() {
     setBusy(true);
     const supabase = createClient();
     const ref = makeRef();
+    const details = [
+      cfg.accNo ? `Paid to ${cfg.accNo}` : null,
+      chosen ? `${chosen.name} (${chosen.duration_days} days)` : null,
+    ].filter(Boolean).join(" · ");
     const { error } = await supabase.from("account_upgrades").insert({
       user_id: userId,
-      amount: cfg.amount,
+      amount,
       reference: ref,
       status: "pending",
-      note: cfg.accNo ? `Paid to ${cfg.accNo}` : null,
+      note: details || null,
     });
     if (error) {
       toast.error(error.message);
@@ -93,9 +123,38 @@ export function UpgradePanel({
       </div>
       <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{cfg.instructions || "Get a green verification tick on your profile."}</p>
 
+      {plans.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-secondary)" }}>Choose a plan</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {plans.map((p) => {
+              const active = p.id === (chosen?.id ?? "");
+              return (
+                <button key={p.id} type="button" onClick={() => setPlanId(p.id)}
+                  className="text-left rounded-xl border p-3 transition-all"
+                  style={{
+                    borderColor: active ? "var(--brand-gold)" : "var(--border)",
+                    background: active ? "rgb(var(--a-800) / 0.06)" : "transparent",
+                    boxShadow: active ? "0 0 0 1px var(--brand-gold)" : "none",
+                  }}>
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>{p.name}</span>
+                    <span className="font-extrabold text-sm" style={{ color: "var(--brand-gold-text)" }}>{money(p.price, p.currency)}</span>
+                  </span>
+                  <span className="block text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                    {p.duration_days} day{p.duration_days === 1 ? "" : "s"} of PRO{p.blurb ? ` · ${p.blurb}` : ""}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Payment details (admin-controlled) */}
       <div className="rounded-xl border p-4 space-y-2" style={{ borderColor: "var(--border)" }}>
-        <Row label="Amount" value={`₦${cfg.amount.toLocaleString()}`} strong />
+        <Row label="Amount" value={money(amount, currency)} strong />
+        {chosen && <Row label="Membership length" value={`${chosen.duration_days} day${chosen.duration_days === 1 ? "" : "s"}`} />}
         <Row label="Account name" value={cfg.accName || "—"} />
         <div className="flex items-center justify-between gap-2">
           <Row label="Account number" value={cfg.accNo || "—"} mono />

@@ -563,6 +563,8 @@ export async function sendLiveMessage(
 ): Promise<{ error: string } | Empty> {
   const s = await session();
   if ("error" in s) return s;
+  const locked = await gate(s.supabase, s.user.id, "live_streaming");
+  if (locked) return { error: locked };
   const text = body.trim();
   if (!text) return { error: "Say something first." };
 

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="HELLO sticker">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#7AE582"/>
+      <stop offset="1" stop-color="#12A594"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.32" cy="0.24" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="104" fill="#ffffff"/>
+  <circle cx="128" cy="128" r="96" fill="url(#g)"/>
+  <circle cx="128" cy="128" r="96" fill="url(#sheen)"/>
+  <path d="M40 62l5 13 13 5-13 5-5 13-5-13-13-5 13-5z" fill="#fff"/>
+          <path d="M214 52l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#fff" opacity=".85"/>
+          <path d="M206 176l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#fff" opacity=".7"/>
+  <circle cx="98" cy="112" r="10" fill="#2B2118"/><circle cx="158" cy="112" r="10" fill="#2B2118"/>
+  <path d="M104 148q24 22 48 0" stroke="#2B2118" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <g>
+    <rect x="60" y="188" width="136" height="38" rx="19" fill="#ffffff"/>
+    <text x="128" y="215" text-anchor="middle" font-family="Verdana, Geneva, sans-serif" font-size="24" font-weight="bold" fill="#12A594">HELLO</text>
+  </g>
+</svg>

@@ -7,6 +7,7 @@ import { recordProfileVisit } from "@/lib/pro-analytics";
 import { recordProfileVisit as recordConsentedVisit } from "@/lib/actions/pro";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProfileClient } from "./ProfileClient";
+import type { PlanChoice } from "@/components/profile/UpgradePanel";
 import type { Metadata } from "next";
 
 interface Props { params: Promise<{ username: string }> }
@@ -112,7 +113,7 @@ export default async function ProfilePage({ params }: Props) {
       : await baseQuery.eq("visibility", "public");
 
   // Upgrade / verification info (own profile)
-  const [{ data: upgradeContent }, ownUpgrade] = await Promise.all([
+  const [{ data: upgradeContent }, ownUpgrade, planRes] = await Promise.all([
     supabase.from("site_content").select("body").eq("key", "upgrade").single(),
     isOwn && user
       ? supabase.from("account_upgrades")
@@ -122,7 +123,10 @@ export default async function ProfilePage({ params }: Props) {
           .limit(1)
           .maybeSingle()
       : Promise.resolve({ data: null as { status: "pending" | "approved" | "rejected"; reference: string } | null }),
+    supabase.from("pro_plans").select("id, name, price, currency, duration_days, blurb")
+      .eq("active", true).order("sort", { ascending: true }),
   ]);
+  const upgradePlans = (planRes.data ?? []) as PlanChoice[];
   const upgradeConfigText =
     upgradeContent?.body ||
     "PRICE: 0\nPAY TO ACCOUNT NAME: CONNEXA\nPAY TO ACCOUNT NUMBER: —\nINSTRUCTIONS: Verification is currently unavailable.";
@@ -168,6 +172,7 @@ export default async function ProfilePage({ params }: Props) {
         upgradeConfigText={upgradeConfigText}
         upgradeStatus={upgradeStatus}
         upgradeReference={upgradeReference}
+        upgradePlans={upgradePlans}
       />
     </AppLayout>
   );
