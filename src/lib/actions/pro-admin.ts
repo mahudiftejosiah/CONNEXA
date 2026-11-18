@@ -71,8 +71,8 @@ export type MemberInfo = {
   streamAllowed: boolean | null;
 };
 
-export const PRO_BUCKETS = ["identity", "community", "entertainment", "creator"] as const;
-export const PROMO_KEY = "pro_promo";
+const PRO_BUCKETS = ["identity", "community", "entertainment", "creator"] as const;
+const PROMO_KEY = "pro_promo";
 
 const MISSING_TABLE = /does not exist|schema cache|42P01/i;
 
