@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { CreatePost } from "@/components/posts/CreatePost";
 import { StoriesTray } from "@/components/stories/StoriesTray";
+import { FeaturedSlideshow } from "@/components/feed/FeaturedSlideshow";
 import { PostCard } from "@/components/posts/PostCard";
 import { CommentSection } from "@/components/posts/CommentSection";
 import { PostSkeleton } from "@/components/ui/Skeleton";
@@ -12,6 +13,7 @@ import { signPostMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
 import { attachFeedActivity } from "@/lib/feed-activity";
 import type { PostWithAuthor, Profile, StoryWithAuthor } from "@/lib/supabase/types";
+import type { FeaturedSlide } from "@/lib/slides";
 import { Users, Clapperboard, Newspaper, Play } from "lucide-react";
 import { ReelsViewer } from "@/components/reels/ReelsViewer";
 import type { PoolReel } from "@/lib/reel-pool";
@@ -24,9 +26,10 @@ interface FeedClientProps {
   friendIds: string[];
   manyFriends: boolean;
   reelSpotlights: PoolReel[];
+  slides: FeaturedSlide[];
 }
 
-export function FeedClient({ initialPosts, stories, profile, currentUserId, friendIds, manyFriends, reelSpotlights }: FeedClientProps) {
+export function FeedClient({ initialPosts, stories, profile, currentUserId, friendIds, manyFriends, reelSpotlights, slides }: FeedClientProps) {
   const [tab, setTab] = useState<"feed" | "reels">("feed");
   const [posts, setPosts] = useState<PostWithAuthor[]>(initialPosts);
   const [loading, setLoading] = useState(false);
@@ -146,6 +149,8 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
       <CreatePost profile={profile} onCreated={refreshFeed} />
 
       <StoriesTray stories={stories} profile={profile} currentUserId={currentUserId} />
+
+      <FeaturedSlideshow slides={slides} />
 
       {posts.length === 0 && !loading && (
         <EmptyState

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signPostMedia, signStoryMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
 import { attachFeedActivity } from "@/lib/feed-activity";
+import { getLiveSlides } from "@/lib/slides";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { FeedClient } from "./FeedClient";
 import { REEL_POOL, shuffleTake } from "@/lib/reel-pool";
@@ -46,6 +47,10 @@ export default async function FeedPage() {
     supabase,
     (stories || []).map((s) => ({ ...s, has_viewed: storyViewedSet.has(s.id) }))
   );
+
+  // The featured carousel reads the same rows the admin Slideshow tab writes.
+  // A missing table (migration 036 not pasted yet) simply yields no slides.
+  const slides = await getLiveSlides(supabase);
 
   const feedFilter = manyFriends
     ? `visibility.eq.public,visibility.eq.friends,author_id.eq.${user.id}`
@@ -132,6 +137,7 @@ export default async function FeedPage() {
       <FeedClient
         initialPosts={enrichedPosts as any}
         stories={(feedStories as any) || []}
+        slides={slides}
         profile={profile}
         currentUserId={user.id}
         friendIds={cappedFriendIds}

@@ -141,6 +141,14 @@ from (
   ('035 plans published',
     (select case when to_regclass('public.pro_plans') is null then 'table missing'
                  else (select count(*)::text from public.pro_plans where active) end)),
+  ('036 featured slideshow table',
+    case when to_regclass('public.featured_slides') is not null then 'yes' else 'no' end),
+  ('036 slideshow live slides',
+    (select case when to_regclass('public.featured_slides') is null then 'table missing'
+                 else (select count(*)::text from public.featured_slides
+                        where active
+                          and (starts_at is null or starts_at <= now())
+                          and (ends_at is null or ends_at > now())) end)),
   ('seed: book covers filled in',
     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
       from public.study_books where cover_url is not null)),

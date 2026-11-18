@@ -386,6 +386,33 @@ export interface Database {
         Insert: { name: string; price?: number; currency?: string; duration_days?: number; blurb?: string; active?: boolean; sort?: number }
         Update: Partial<Omit<Database["public"]["Tables"]["pro_plans"]["Row"], "id" | "created_at">>
       }
+      featured_slides: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          alt: string
+          image_url: string
+          destination_type: "none" | "internal" | "event" | "announcement" | "post" | "group" | "profile" | "external"
+          link_url: string
+          cta_enabled: boolean
+          cta_text: string
+          active: boolean
+          sort: number
+          duration_ms: number
+          starts_at: string | null
+          ends_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          image_url: string; title?: string; description?: string; alt?: string
+          destination_type?: Database["public"]["Tables"]["featured_slides"]["Row"]["destination_type"]
+          link_url?: string; cta_enabled?: boolean; cta_text?: string; active?: boolean; sort?: number
+          duration_ms?: number; starts_at?: string | null; ends_at?: string | null
+        }
+        Update: Partial<Omit<Database["public"]["Tables"]["featured_slides"]["Row"], "id" | "created_at">>
+      }
       profile_visits: {
         Row: {
           id: string
