@@ -375,7 +375,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     if (!active || sending) return;
     const content = input.trim();
     if (!content && !file) return;
-    if (voice.recording) { toast.error("Stop the recording first."); return; }
+    if (voice.recording || voice.requesting) { toast.error("Stop the recording first."); return; }
     setSending(true);
 
     let attachment: { url: string; kind: MessageAttachmentKind; name: string; size: number } | null = null;
@@ -1071,6 +1071,20 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   </div>
                 </div>
               )}
+              {voice.requesting && (
+                <div className="px-4 pt-3">
+                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
+                    <Mic className="w-4 h-4 flex-shrink-0 animate-pulse" style={{ color: "rgb(var(--a-600))" }} />
+                    <span className="text-[11px] text-[var(--text-secondary)] flex-1 min-w-0">
+                      Waiting for microphone permission… choose <strong className="text-[var(--text-primary)]">Allow</strong> in your browser.
+                    </span>
+                    <button type="button" onClick={() => voice.stop(true)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--border)]">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
               {voice.recording && (
                 <div className="px-4 pt-3">
                   <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border"
@@ -1137,7 +1151,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   </div>
                 </div>
               )}
-              <div className="px-4 py-3 flex gap-2 items-end relative">
+              <div className="px-3 sm:px-4 py-3 flex gap-1.5 sm:gap-2 items-end relative">
                 {stickerOpen && (
                   <StickerPicker onPick={(s) => void sendSticker(s)} onClose={() => setStickerOpen(false)} />
                 )}
@@ -1158,7 +1172,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                 <button
                   onClick={() => photoInputRef.current?.click()}
                   disabled={sending || !!editing}
-                  className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 flex-shrink-0"
+                  className="p-2 sm:p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 flex-shrink-0"
                   aria-label="Send a photo from your device"
                 >
                   <ImageIcon className="w-4 h-4" />
@@ -1166,7 +1180,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={sending || !!editing}
-                  className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 flex-shrink-0"
+                  className="p-2 sm:p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 flex-shrink-0"
                   aria-label="Attach a video or document"
                 >
                   <Paperclip className="w-4 h-4" />
@@ -1176,7 +1190,9 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   disabled={!file || !isViewOnceMedia(kindOfFile(file)) || sending}
                   aria-label="Send this photo or video for one view only"
                   aria-pressed={viewOnce}
-                  className={`p-2.5 rounded-xl border flex-shrink-0 transition-colors disabled:opacity-40 ${
+                  className={`p-2 sm:p-2.5 rounded-xl border flex-shrink-0 transition-colors disabled:opacity-40 ${
+                    file && isViewOnceMedia(kindOfFile(file)) ? "" : "hidden sm:block"
+                  } ${
                     viewOnce
                       ? "bg-brand-green-800 text-white border-brand-green-800"
                       : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -1191,7 +1207,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   disabled={sending || !!editing || voice.recording}
                   aria-label="Open the sticker picker"
                   aria-expanded={stickerOpen}
-                  className={`p-2.5 rounded-xl border flex-shrink-0 transition-colors disabled:opacity-40 ${
+                  className={`p-2 sm:p-2.5 rounded-xl border flex-shrink-0 transition-colors disabled:opacity-40 ${
                     stickerOpen
                       ? "bg-brand-green-800 text-white border-brand-green-800"
                       : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -1201,13 +1217,15 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                 </button>
                 <button
                   type="button"
-                  onClick={() => (voice.recording ? voice.stop(false) : void voice.start())}
+                  onClick={() => (voice.recording || voice.requesting ? voice.stop(!voice.recording) : void voice.start())}
                   disabled={sending || !!editing}
-                  aria-label={voice.recording ? "Stop and preview the voice note" : "Record a voice note"}
-                  className={`p-2.5 rounded-xl border flex-shrink-0 transition-colors disabled:opacity-40 ${
+                  aria-label={voice.recording ? "Stop and preview the voice note" : voice.requesting ? "Cancel the microphone request" : "Record a voice note"}
+                  className={`p-2 sm:p-2.5 rounded-xl border flex-shrink-0 transition-colors disabled:opacity-40 ${
                     voice.recording
                       ? "bg-red-500 text-white border-red-500 animate-pulse"
-                      : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      : voice.requesting
+                        ? "border-[rgb(var(--a-600))] text-[rgb(var(--a-600))] animate-pulse"
+                        : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {voice.recording ? <Square className="w-4 h-4 fill-current" /> : <Mic className="w-4 h-4" />}
@@ -1223,13 +1241,13 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     e.preventDefault();
                     if (editing) void saveEdit(); else void sendMessage();
                   }}
-                  className="input flex-1"
+                  className="input flex-1 min-w-0"
                   maxLength={5000}
                 />
                 <button
                   onClick={() => (editing ? saveEdit() : sendMessage())}
                   disabled={sending || (editing ? !editText.trim() : (!input.trim() && !file))}
-                  className="btn-primary px-4 py-2.5 rounded-xl disabled:opacity-40 flex-shrink-0"
+                  className="btn-primary px-3 sm:px-4 py-2.5 rounded-xl disabled:opacity-40 flex-shrink-0"
                   aria-label={editing ? "Save the edited message" : "Send message"}
                 >
                   {editing ? <CheckCheck className="w-4 h-4" /> : <Send className="w-4 h-4" />}

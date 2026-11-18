@@ -15,16 +15,16 @@ export function StickerPicker({ onPick, onClose }: {
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function onDown(event: MouseEvent) {
+    function onDown(event: Event) {
       const target = event.target as HTMLElement | null;
       if (boxRef.current?.contains(target)) return;
       if (target?.closest?.("[data-sticker-toggle]")) return;
       onClose();
     }
     function onKey(event: KeyboardEvent) { if (event.key === "Escape") onClose(); }
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+    return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
   }, [onClose]);
 
   const shown = STICKERS.filter((s) => s.category === category);
@@ -52,6 +52,7 @@ export function StickerPicker({ onPick, onClose }: {
             key={c.key}
             type="button"
             onClick={() => { setCategory(c.key); setHovered(null); }}
+            aria-pressed={category === c.key}
             className="flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold transition-colors"
             style={category === c.key
               ? { backgroundColor: "rgb(var(--a-800))", color: "#fff" }

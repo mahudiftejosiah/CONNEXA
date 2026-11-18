@@ -19,6 +19,7 @@ function pickMime() {
 // back a draft with its own object URL so it can be played before it leaves.
 export function useVoiceRecorder(onDraft: (draft: VoiceDraft) => void, onError: (message: string) => void) {
   const [recording, setRecording] = useState(false);
+  const [requesting, setRequesting] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [level, setLevel] = useState(0);
 
@@ -29,6 +30,7 @@ export function useVoiceRecorder(onDraft: (draft: VoiceDraft) => void, onError: 
   const rafRef = useRef<number | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const startedRef = useRef(0);
+  const requestRef = useRef(0);
   const discardedRef = useRef(false);
   const draftRef = useRef(onDraft);
   const errorRef = useRef(onError);
@@ -50,6 +52,8 @@ export function useVoiceRecorder(onDraft: (draft: VoiceDraft) => void, onError: 
   useEffect(() => () => release(), [release]);
 
   const stop = useCallback((discard: boolean) => {
+    requestRef.current++;
+    setRequesting(false);
     discardedRef.current = discard;
     const recorder = recorderRef.current;
     if (recorder && recorder.state !== "inactive") recorder.stop();
@@ -58,15 +62,18 @@ export function useVoiceRecorder(onDraft: (draft: VoiceDraft) => void, onError: 
   }, [release]);
 
   const start = useCallback(async () => {
-    if (recording) return;
+    if (recording || requesting) return;
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       errorRef.current("This browser cannot record audio. Try Chrome, Edge or Safari.");
       return;
     }
+    const ticket = ++requestRef.current;
+    setRequesting(true);
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
     } catch (err) {
+      setRequesting(false);
       const name = (err as { name?: string })?.name;
       errorRef.current(
         name === "NotAllowedError" || name === "SecurityError"
@@ -77,6 +84,14 @@ export function useVoiceRecorder(onDraft: (draft: VoiceDraft) => void, onError: 
       );
       return;
     }
+
+    // The sender may have pressed Cancel while the permission prompt was open.
+    if (ticket !== requestRef.current) {
+      stream.getTracks().forEach((t) => t.stop());
+      setRequesting(false);
+      return;
+    }
+    setRequesting(false);
 
     streamRef.current = stream;
     const mime = pickMime();
@@ -144,7 +159,7 @@ export function useVoiceRecorder(onDraft: (draft: VoiceDraft) => void, onError: 
       setSeconds(elapsed);
       if (elapsed >= MAX_VOICE_SECONDS) stop(false);
     }, 250);
-  }, [recording, release, stop]);
+  }, [recording, requesting, release, stop]);
 
-  return { recording, seconds, level, start, stop };
+  return { recording, requesting, seconds, level, start, stop };
 }
