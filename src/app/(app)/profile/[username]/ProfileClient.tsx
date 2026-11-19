@@ -25,6 +25,7 @@ import {
 } from "@/lib/actions/friends";
 import { compactCount, formatJoinDate } from "@/lib/utils";
 import { AccountBadge } from "@/components/ui/ProBadge";
+import { PeopleListModal, type PeopleKind } from "@/components/profile/PeopleListModal";
 import { UpgradePanel, type UpgradeStatus, type PlanChoice } from "@/components/profile/UpgradePanel";
 import { hasActivePro } from "@/lib/pro";
 import type { LiveSession, Profile, PostWithAuthor } from "@/lib/supabase/types";
@@ -73,6 +74,12 @@ export function ProfileClient({
   const [highlightBroken, setHighlightBroken] = useState<string | null>(null);
   const [watching, setWatching] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
+  const [listKind, setListKind] = useState<PeopleKind | null>(null);
+  // The header numbers move with the actions taken on this page, so they stay
+  // truthful between server renders.
+  const [statFriends, setStatFriends] = useState(friendsCount);
+  const [statFollowers, setStatFollowers] = useState(followersCount);
+  const [statFollowing, setStatFollowing] = useState(followingCount);
   const router = useRouter();
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
@@ -145,7 +152,7 @@ export function ProfileClient({
     } else if (reqStatus === "received" && reqId) {
       const res = await acceptFriendRequest(reqId);
       if (res.error) toast.error(res.error);
-      else { setIsFriend(true); setReqStatus("none"); toast.success("Friend request accepted!"); }
+      else { setIsFriend(true); setReqStatus("none"); setStatFriends((c) => c + 1); toast.success("Friend request accepted!"); }
     } else {
       const res = await sendFriendRequest(profile.id);
       if (res.error) toast.error(res.error);
@@ -157,14 +164,18 @@ export function ProfileClient({
   async function handleUnfriend() {
     const res = await removeFriend(profile.id);
     if (res.error) toast.error(res.error);
-    else { setIsFriend(false); setReqStatus("none"); toast.success("Removed from friends."); }
+    else { setIsFriend(false); setReqStatus("none"); setStatFriends((c) => Math.max(0, c - 1)); toast.success("Removed from friends."); }
     setConfirmUnfriend(false);
   }
 
   async function handleFollow() {
     const res = await toggleFollow(profile.id);
     if (res.error) toast.error(res.error);
-    else { setIsFollowing(res.following ?? false); toast.success(res.following ? "Now following!" : "Unfollowed."); }
+    else {
+      setIsFollowing(res.following ?? false);
+      setStatFollowers((c) => Math.max(0, c + (res.following ? 1 : -1)));
+      toast.success(res.following ? "Now following!" : "Unfollowed.");
+    }
   }
 
   async function handleBlock() {
@@ -378,21 +389,23 @@ export function ProfileClient({
               </div>
             )}
 
-            {/* Stats */}
+            {/* Stats — each count opens its own people list */}
             <div className="flex gap-6 mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-              {[
-                { label: "Friends",   value: friendsCount },
-                { label: "Followers", value: followersCount },
-                { label: "Following", value: followingCount },
-              ].map((s) => (
-                <div key={s.label}>
-                  <span className="text-lg font-extrabold" style={{ color: "var(--text-primary)" }}>
+              {([
+                { label: "Friends",   value: statFriends,   kind: "friends" },
+                { label: "Followers", value: statFollowers, kind: "followers" },
+                { label: "Following", value: statFollowing, kind: "following" },
+              ] as { label: string; value: number; kind: PeopleKind }[]).map((s) => (
+                <button key={s.label} onClick={() => setListKind(s.kind)}
+                  className="text-left hover:opacity-75 transition-opacity"
+                  aria-label={`Show ${s.label.toLowerCase()} of ${profile.display_name}`}>
+                  <span className="text-lg font-extrabold block" style={{ color: "var(--text-primary)" }}>
                     {compactCount(s.value)}
                   </span>
                   <span className="text-xs block" style={{ color: "var(--text-secondary)" }}>
                     {s.label}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -562,6 +575,20 @@ export function ProfileClient({
           onClose={() => setStoryOpen(false)}
           currentUserId={currentProfile.id}
           onPublished={() => router.refresh()}
+        />
+      )}
+
+      {currentProfile && (
+        <PeopleListModal
+          open={listKind !== null}
+          onClose={() => setListKind(null)}
+          profileId={profile.id}
+          kind={listKind}
+          currentUserId={currentProfile.id}
+          onMutate={(changedKind, delta) => {
+            if (changedKind === "friends") setStatFriends((c) => Math.max(0, c + delta));
+            if (changedKind === "following") setStatFollowing((c) => Math.max(0, c + delta));
+          }}
         />
       )}
     </div>

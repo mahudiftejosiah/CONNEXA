@@ -78,10 +78,12 @@ export function bytesToMB(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
-// Counts on a profile get long fast, so thousands and millions read as 1k and 1m.
+// Counts on a profile get long fast, so they read as 1K, 15K, 1M, 2.5M and 1B
+// — the uppercase abbreviations shown under every stat label.
 export function compactCount(n: number): string {
-  if (Math.abs(n) >= 1_000_000) return shortCount(n / 1_000_000, "m");
-  if (Math.abs(n) >= 1_000) return shortCount(n / 1_000, "k");
+  if (Math.abs(n) >= 1_000_000_000) return shortCount(n / 1_000_000_000, "B");
+  if (Math.abs(n) >= 1_000_000) return shortCount(n / 1_000_000, "M");
+  if (Math.abs(n) >= 1_000) return shortCount(n / 1_000, "K");
   return String(n);
 }
 

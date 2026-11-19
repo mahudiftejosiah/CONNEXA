@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { CreatePost } from "@/components/posts/CreatePost";
 import { StoriesTray } from "@/components/stories/StoriesTray";
+import { CreateStory } from "@/components/stories/CreateStory";
 import { FeaturedSlideshow } from "@/components/feed/FeaturedSlideshow";
 import { PostCard } from "@/components/posts/PostCard";
 import { CommentSection } from "@/components/posts/CommentSection";
@@ -35,7 +37,9 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialPosts.length === 20);
   const [activeComments, setActiveComments] = useState<string | null>(null);
+  const [storyOpen, setStoryOpen] = useState(false);
   const pageRef = useRef(1);
+  const router = useRouter();
 
   // /feed?tab=reels opens straight on the reels viewer (spotlight cards link here)
   useEffect(() => {
@@ -148,7 +152,13 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
         <>
       <CreatePost profile={profile} onCreated={refreshFeed} />
 
-      <StoriesTray stories={stories} profile={profile} currentUserId={currentUserId} />
+      <StoriesTray
+        stories={stories}
+        profile={profile}
+        currentUserId={currentUserId}
+        onCreate={() => setStoryOpen(true)}
+        onOpen={(authorId) => router.push(`/stories?author=${authorId}`)}
+      />
 
       <FeaturedSlideshow slides={slides} />
 
@@ -195,6 +205,13 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
           You&apos;re all caught up!
         </p>
       )}
+
+      <CreateStory
+        open={storyOpen}
+        onClose={() => setStoryOpen(false)}
+        currentUserId={currentUserId}
+        onPublished={() => router.refresh()}
+      />
         </>
       )}
     </div>

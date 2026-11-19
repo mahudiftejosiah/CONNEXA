@@ -156,6 +156,7 @@ export interface Database {
           media_type: "image" | "video"
           caption: string | null
           expires_at: string
+          audience: "public" | "friends"
           view_count: number
           created_at: string
         }
@@ -171,6 +172,17 @@ export interface Database {
         }
         Insert: Partial<Omit<Database["public"]["Tables"]["story_views"]["Row"], "id" | "created_at">>
         Update: never
+      }
+      story_reactions: {
+        Row: {
+          id: string
+          story_id: string
+          user_id: string
+          emoji: string
+          created_at: string
+        }
+        Insert: Partial<Omit<Database["public"]["Tables"]["story_reactions"]["Row"], "id" | "created_at">>
+        Update: Pick<Database["public"]["Tables"]["story_reactions"]["Row"], "emoji">
       }
       conversations: {
         Row: {
@@ -214,9 +226,22 @@ export interface Database {
           pinned_by: string | null
           reply_to: string | null
           forwarded_from: string | null
+          story_id: string | null
         }
         Insert: Partial<Omit<Database["public"]["Tables"]["messages"]["Row"], "id" | "is_read" | "created_at">>
         Update: Partial<Omit<Database["public"]["Tables"]["messages"]["Row"], "id" | "conversation_id" | "sender_id" | "created_at">>
+      }
+      message_reactions: {
+        Row: {
+          id: string
+          conversation_id: string
+          message_id: string
+          user_id: string
+          emoji: string
+          created_at: string
+        }
+        Insert: Partial<Omit<Database["public"]["Tables"]["message_reactions"]["Row"], "id" | "created_at">>
+        Update: Pick<Database["public"]["Tables"]["message_reactions"]["Row"], "emoji">
       }
       groups: {
         Row: {
@@ -1018,6 +1043,18 @@ export interface Database {
         Args: { p_term: string; p_page?: number; p_size?: number }
         Returns: { id: string; email: string | null; total_count: number }[]
       }
+      profile_friend_ids: {
+        Args: { p_profile_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          id: string
+          username: string
+          display_name: string
+          avatar_url: string | null
+          is_verified: boolean
+          pro_expires_at: string | null
+          last_seen: string | null
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1036,9 +1073,11 @@ export type Friendship = Database["public"]["Tables"]["friendships"]["Row"]
 export type Follower = Database["public"]["Tables"]["followers"]["Row"]
 export type Story = Database["public"]["Tables"]["stories"]["Row"]
 export type StoryView = Database["public"]["Tables"]["story_views"]["Row"]
+export type StoryReaction = Database["public"]["Tables"]["story_reactions"]["Row"]
 export type Conversation = Database["public"]["Tables"]["conversations"]["Row"]
 export type ConversationParticipant = Database["public"]["Tables"]["conversation_participants"]["Row"]
 export type Message = Database["public"]["Tables"]["messages"]["Row"]
+export type MessageReaction = Database["public"]["Tables"]["message_reactions"]["Row"]
 export type Group = Database["public"]["Tables"]["groups"]["Row"]
 export type GroupMembership = Database["public"]["Tables"]["group_memberships"]["Row"]
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"]

@@ -149,6 +149,21 @@ from (
                         where active
                           and (starts_at is null or starts_at <= now())
                           and (ends_at is null or ends_at > now())) end)),
+  ('037 message reactions table',
+    case when to_regclass('public.message_reactions') is not null then 'yes' else 'no' end),
+  ('037 story reactions table',
+    case when to_regclass('public.story_reactions') is not null then 'yes' else 'no' end),
+  ('037 story replies column',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.messages') and attname = 'story_id')
+         then 'yes' else 'no' end),
+  ('037 story audience column',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.stories') and attname = 'audience')
+         then 'yes' else 'no' end),
+  ('037 friend list RPC',
+    case when to_regprocedure('public.profile_friend_ids(uuid,integer,integer)') is not null
+         then 'yes' else 'no' end),
   ('seed: book covers filled in',
     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
       from public.study_books where cover_url is not null)),

@@ -24,6 +24,7 @@ export function CreateStory({ open, onClose, currentUserId, onPublished }: Creat
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
+  const [audience, setAudience] = useState<"public" | "friends">("public");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -66,9 +67,33 @@ export function CreateStory({ open, onClose, currentUserId, onPublished }: Creat
       media_type: mediaType,
       caption: caption.trim() || null,
       expires_at: expiresAt,
+      audience,
     }).select("*, author:profiles(*)").single();
     setUploading(false);
     if (error || !story) {
+      // A database without migration 037 rejects the audience column; the
+      // story itself is still publishable, so try again without it.
+      if (/audience/i.test(error?.message || "")) {
+        setUploading(true);
+        const retry = await supabase.from("stories").insert({
+          author_id: currentUserId,
+          media_url: path,
+          media_type: mediaType,
+          caption: caption.trim() || null,
+          expires_at: expiresAt,
+        }).select("*, author:profiles(*)").single();
+        setUploading(false);
+        if (retry.error || !retry.data) {
+          toast.error("Failed to create story.");
+          return;
+        }
+        const [signed] = await signStoryMedia(supabase, [retry.data]);
+        onPublished?.(signed as unknown as StoryWithAuthor);
+        refreshStoryRings();
+        toast.success("Story published!");
+        onClose();
+        return;
+      }
       toast.error("Failed to create story.");
       return;
     }
@@ -123,6 +148,16 @@ export function CreateStory({ open, onClose, currentUserId, onPublished }: Creat
           className="input text-sm"
           aria-label="Caption"
         />
+
+        <select
+          value={audience}
+          onChange={(e) => setAudience(e.target.value === "friends" ? "friends" : "public")}
+          className="input text-sm"
+          aria-label="Who can see this story"
+        >
+          <option value="public">Audience: everyone</option>
+          <option value="friends">Audience: friends only</option>
+        </select>
 
         <Button onClick={publish} disabled={!file} loading={uploading} className="w-full">
           Publish story

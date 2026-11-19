@@ -40,11 +40,17 @@ export function StoriesTray({ stories, profile, currentUserId, onCreate, onOpen 
     (a.author.id === currentUserId ? -1 : b.author.id === currentUserId ? 1 : 0)
   );
 
+  // Facebook's own tile: with a live story it opens it, without one it opens
+  // the creator. Where no viewer exists (tray without onOpen) it falls back to
+  // the old link behaviour.
+  const hasOwnStory = groups.some((g) => g.author.id === currentUserId);
+  const ownTileClick = () => (hasOwnStory && onOpen ? onOpen(currentUserId) : onCreate?.());
+
   return (
     <div className="card p-3">
       <div className="rail flex items-start gap-4 pb-1">
         {/* Your story */}
-        <TrayTile href="/stories" onClick={onCreate} className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16 group">
+        <TrayTile href="/stories" onClick={ownTileClick} className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16 group">
           <span className="relative block w-14 h-14 rounded-full p-[2px]" style={{ background: "var(--border)" }}>
             <span className="relative block w-full h-full rounded-full overflow-hidden" style={{ backgroundColor: "var(--bg)" }}>
               {profile.avatar_url ? (

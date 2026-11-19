@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck, Trash2, Image as ImageIcon, Bot, Pin, PinOff, CornerUpLeft, Share, Pencil, Mic, Square, Sticker as StickerIcon } from "lucide-react";
+import { Send, MessageCircle, Search, ArrowLeft, Users, Zap, Moon, Paperclip, FileText, X, Eye, CheckCheck, Check, Trash2, Image as ImageIcon, Bot, Pin, PinOff, CornerUpLeft, Share, Pencil, Mic, Square, Sticker as StickerIcon } from "lucide-react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MessageSkeleton } from "@/components/ui/Skeleton";
@@ -17,7 +18,7 @@ import { isStickerPath, isVoiceNote, type Sticker } from "@/lib/stickers";
 import { MessageMenu, type MessageAction } from "@/components/messages/MessageMenu";
 import { ForwardDialog, type ForwardTarget } from "@/components/messages/ForwardDialog";
 import { createClient } from "@/lib/supabase/client";
-import type { ConversationWithDetails, Profile, Message, MessageAttachmentKind } from "@/lib/supabase/types";
+import type { ConversationWithDetails, Profile, Message, MessageAttachmentKind, MessageReaction } from "@/lib/supabase/types";
 import {
   formatMessageTime, formatRelativeTime,
   isValidImageType, isValidVideoType,
@@ -89,6 +90,9 @@ interface MessagesClientProps {
 // a short TTL here is what actually keeps the link from being reusable.
 const VIEW_ONCE_URL_SECONDS = 60;
 
+// WhatsApp's six: short, distinct faces that survive both themes.
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
+
 type ViewOnceView = {
   url: string;
   kind: MessageAttachmentKind;
@@ -123,6 +127,27 @@ async function writeClipboard(text: string): Promise<boolean> {
   }
 }
 
+// Search-in-chat highlighting: every hit gets a soft marker, the rest of the
+// text stays untouched.
+function highlightText(text: string, query: string): React.ReactNode {
+  const q = query.trim().toLowerCase();
+  if (!q) return text;
+  const lower = text.toLowerCase();
+  const parts: React.ReactNode[] = [];
+  let from = 0;
+  for (let idx = lower.indexOf(q); idx >= 0; idx = lower.indexOf(q, from)) {
+    if (idx > from) parts.push(text.slice(from, idx));
+    parts.push(
+      <mark key={`${idx}`} className="bg-yellow-300/70 text-inherit rounded-sm px-0.5">
+        {text.slice(idx, idx + q.length)}
+      </mark>
+    );
+    from = idx + q.length;
+  }
+  parts.push(text.slice(from));
+  return parts;
+}
+
 export function MessagesClient({ conversations: initConvs, profile, currentUserId, friends, openPeerId, initialTab = "all" }: MessagesClientProps) {
   const [conversations, setConversations] = useState(initConvs);
   const [active, setActive] = useState<ConversationWithDetails | null>(null);
@@ -148,6 +173,17 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const [forwarding, setForwarding] = useState<Message | null>(null);
   const [pendingUnsend, setPendingUnsend] = useState<Message | null>(null);
   const [unsending, setUnsending] = useState(false);
+  // Message reactions, keyed by message id. The optimistic row carries a tmp id
+  // that is swapped for the database row once the upsert answers.
+  const [reactions, setReactions] = useState<Record<string, MessageReaction[]>>({});
+  const [reactingId, setReactingId] = useState<string | null>(null);
+  const [peerTyping, setPeerTyping] = useState(false);
+  const [chatSearch, setChatSearch] = useState(false);
+  const [chatQuery, setChatQuery] = useState("");
+  const typingChannelRef = useRef<RealtimeChannel | null>(null);
+  const typingTimerRef = useRef<number>(0);
+  const lastTypingSentRef = useRef<number>(0);
+  const convsRef = useRef<ConversationWithDetails[]>(initConvs);
   const urlsRef = useRef<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -157,6 +193,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
   activeIdRef.current = active?.id ?? null;
+  useEffect(() => { convsRef.current = conversations; }, [conversations]);
 
   // The header's active-users button points here, so a arriving ?tab= has to
   // move the list even when this view was already open.
@@ -250,6 +287,27 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
           setMessages((p) => p.some((m) => m.id === row.id) ? p : [...p, row]);
           void signAttachments([row]);
           bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        } else if (row.sender_id !== currentUserId) {
+          // Message notifications: a toast with the sender and the preview that
+          // jumps straight into the thread when tapped.
+          const conv = convsRef.current.find((c) => c.id === row.conversation_id);
+          const who = conv?.participants.find((p) => p.user_id === row.sender_id)?.profile.display_name;
+          if (conv && who) {
+            const preview = row.content || attachmentPreview(row);
+            toast.custom((t) => (
+              <button
+                onClick={() => { toast.dismiss(t.id); void openConversation(conv); }}
+                className="w-full max-w-xs flex items-start gap-2.5 px-3 py-2.5 rounded-xl border shadow-lg text-left"
+                style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+              >
+                <MessageCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "rgb(var(--a-600))" }} />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{who}</span>
+                  <span className="block text-xs truncate" style={{ color: "var(--text-secondary)" }}>{preview}</span>
+                </span>
+              </button>
+            ), { duration: 6000 });
+          }
         }
       })
       // An edit, a pin or an unsend has to land in the other person's open
@@ -268,6 +326,65 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId]);
 
+  // Per-thread channel: typing broadcasts travel on it, and so do the
+  // reaction rows for this conversation. DELETE events carry the full old row
+  // (REPLICA IDENTITY FULL in migration 037), so a peer un-reacting updates
+  // the bubble live.
+  useEffect(() => {
+    if (!active) return;
+    const convId = active.id;
+    const channel = supabase
+      .channel(`rt:chat:${convId}`)
+      .on("broadcast", { event: "typing" }, ({ payload }) => {
+        const who = (payload as { user?: string }).user;
+        if (!who || who === currentUserId) return;
+        setPeerTyping(true);
+        window.clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = window.setTimeout(() => setPeerTyping(false), 3000);
+      })
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "message_reactions",
+        filter: `conversation_id=eq.${convId}`,
+      }, (payload) => {
+        const row = payload.new as MessageReaction;
+        setReactions((p) => ({
+          ...p,
+          [row.message_id]: [...(p[row.message_id] || []).filter((r) => r.user_id !== row.user_id), row],
+        }));
+      })
+      .on("postgres_changes", {
+        event: "DELETE", schema: "public", table: "message_reactions",
+        filter: `conversation_id=eq.${convId}`,
+      }, (payload) => {
+        const old = payload.old as MessageReaction;
+        if (!old?.id) return;
+        setReactions((p) => {
+          const next: Record<string, MessageReaction[]> = {};
+          for (const mid of Object.keys(p)) next[mid] = p[mid].filter((r) => r.id !== old.id);
+          return next;
+        });
+      })
+      .subscribe();
+    typingChannelRef.current = channel;
+    return () => {
+      supabase.removeChannel(channel);
+      typingChannelRef.current = null;
+      window.clearTimeout(typingTimerRef.current);
+      setPeerTyping(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active?.id, currentUserId]);
+
+  // Typing pings are throttled: one broadcast every 1.5s while typing.
+  function emitTyping() {
+    const ch = typingChannelRef.current;
+    if (!ch) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1500) return;
+    lastTypingSentRef.current = now;
+    void ch.send({ type: "broadcast", event: "typing", payload: { user: currentUserId } });
+  }
+
   async function openConversation(conv: ConversationWithDetails) {
     setActive(conv);
     setHelpOpen(false);
@@ -275,6 +392,10 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     setReplyTo(null);
     setEditing(null);
     setForwarding(null);
+    setReactingId(null);
+    setPeerTyping(false);
+    setChatSearch(false);
+    setChatQuery("");
     setLoadingMsgs(true);
     const { data } = await supabase
       .from("messages")
@@ -284,6 +405,22 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
       .limit(50);
     setMessages(data || []);
     void signAttachments(data || []);
+
+    // Reactions arrive with the thread, so a bubble shows its chips at once.
+    const msgIds = (data || []).map((m) => m.id);
+    if (msgIds.length > 0) {
+      const { data: rx } = await supabase
+        .from("message_reactions")
+        .select("*")
+        .in("message_id", msgIds);
+      const grouped: Record<string, MessageReaction[]> = {};
+      (rx || []).forEach((r) => {
+        grouped[r.message_id] = [...(grouped[r.message_id] || []), r];
+      });
+      setReactions(grouped);
+    } else {
+      setReactions({});
+    }
     setLoadingMsgs(false);
 
     // Mark as read
@@ -561,6 +698,56 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
     toast.success("Message unsent.");
   }
 
+  // One reaction per person per message: tapping the same emoji takes it back,
+  // a different one switches. The chip set stays optimistic while the upsert
+  // runs, then adopts the database row.
+  async function toggleReaction(msg: Message, emoji: string) {
+    if (!active) return;
+    setReactingId(null);
+    const mine = (reactions[msg.id] || []).find((r) => r.user_id === currentUserId);
+    if (mine && mine.emoji === emoji) {
+      setReactions((p) => ({ ...p, [msg.id]: (p[msg.id] || []).filter((r) => r.user_id !== currentUserId) }));
+      const { error } = await supabase.from("message_reactions").delete().eq("id", mine.id);
+      if (error) toast.error("Could not remove the reaction.");
+      return;
+    }
+    if (mine) {
+      setReactions((p) => ({
+        ...p,
+        [msg.id]: (p[msg.id] || []).map((r) => (r.user_id === currentUserId ? { ...r, emoji } : r)),
+      }));
+      const { error } = await supabase.from("message_reactions").update({ emoji }).eq("id", mine.id);
+      if (error) toast.error("Could not change the reaction.");
+      return;
+    }
+    const optimistic: MessageReaction = {
+      id: `tmp-${Date.now()}`,
+      conversation_id: active.id,
+      message_id: msg.id,
+      user_id: currentUserId,
+      emoji,
+      created_at: new Date().toISOString(),
+    };
+    setReactions((p) => ({ ...p, [msg.id]: [...(p[msg.id] || []), optimistic] }));
+    const { data, error } = await supabase
+      .from("message_reactions")
+      .upsert(
+        { conversation_id: active.id, message_id: msg.id, user_id: currentUserId, emoji },
+        { onConflict: "message_id,user_id" }
+      )
+      .select()
+      .single();
+    if (error || !data) {
+      toast.error("Could not react. Has migration 037 been applied?");
+      setReactions((p) => ({ ...p, [msg.id]: (p[msg.id] || []).filter((r) => r.id !== optimistic.id) }));
+      return;
+    }
+    setReactions((p) => ({
+      ...p,
+      [msg.id]: (p[msg.id] || []).map((r) => (r.id === optimistic.id ? data : r)),
+    }));
+  }
+
   // Threads the inbox already knows about, and the friends still without one.
   const chattedIds = new Set(
     conversations.map((c) => getOtherParticipant(c)?.id).filter((id): id is string => Boolean(id))
@@ -676,6 +863,14 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
   // The bubble list is the only place a reply or a pin can be resolved from:
   // both point at another row in the same thread, which is already loaded.
   const byId = new Map(messages.map((m) => [m.id, m]));
+  // In-chat search narrows the bubbles to the hits only; an empty query shows
+  // everything, so the same map serves both states.
+  const chatQueryTrim = chatQuery.trim().toLowerCase();
+  const matchesChatQuery = (m: Message) =>
+    !chatQueryTrim ||
+    (m.content || "").toLowerCase().includes(chatQueryTrim) ||
+    (m.attachment_name || "").toLowerCase().includes(chatQueryTrim);
+  const visibleMessages = messages.filter(matchesChatQuery);
   const nameOf = (senderId: string) =>
     active?.participants.find((p) => p.user_id === senderId)?.profile.display_name ?? "Earlier message";
   const pinnedMessages = messages.filter((m) => m.pinned_at && !m.deleted_at);
@@ -834,16 +1029,56 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                 return other ? (
                   <>
                     <Avatar src={other.avatar_url} name={other.display_name} size={40} online={isOnline(other.last_seen)} userId={other.id} />
-                    <div>
-                      <p className="font-semibold text-[var(--text-primary)]">{other.display_name}<AccountBadge account={other} /></p>
-                      <p className="text-xs" style={{ color: isOnline(other.last_seen) ? "rgb(var(--a-600))" : "var(--text-secondary)" }}>
-                        {isOnline(other.last_seen) ? "Online now" : other.last_seen ? `Active ${formatRelativeTime(other.last_seen)}` : `@${other.username}`}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[var(--text-primary)] truncate">{other.display_name}<AccountBadge account={other} /></p>
+                      <p className="text-xs" style={{ color: peerTyping ? "rgb(var(--a-600))" : isOnline(other.last_seen) ? "rgb(var(--a-600))" : "var(--text-secondary)" }}>
+                        {peerTyping
+                          ? "typing…"
+                          : isOnline(other.last_seen)
+                            ? "Online now"
+                            : other.last_seen
+                              ? `Active ${formatRelativeTime(other.last_seen)}`
+                              : `@${other.username}`}
                       </p>
                     </div>
+                    <button
+                      onClick={() => { setChatSearch((v) => !v); setChatQuery(""); }}
+                      aria-label="Search in this chat"
+                      aria-pressed={chatSearch}
+                      className={`ml-auto p-2 rounded-lg transition-colors flex-shrink-0 ${
+                        chatSearch
+                          ? "bg-brand-green-800 text-white"
+                          : "text-[var(--text-secondary)] hover:bg-[var(--border)]"
+                      }`}
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
                   </>
                 ) : null;
               })()}
             </div>
+
+            {/* Search within the open conversation: only the matching bubbles stay. */}
+            {chatSearch && (
+              <div className="px-4 py-2 border-b border-[var(--border)]" style={{ backgroundColor: "var(--bg-card)" }}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+                  <input
+                    autoFocus
+                    type="search"
+                    value={chatQuery}
+                    onChange={(e) => setChatQuery(e.target.value)}
+                    placeholder="Search in this chat…"
+                    className="input pl-9 text-sm"
+                  />
+                </div>
+                {chatQuery.trim() && (
+                  <p className="mt-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
+                    {visibleMessages.length} {visibleMessages.length === 1 ? "result" : "results"} in the loaded messages
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Pinned messages stay one tap away from the top of the thread. */}
             {mostRecentPin && (
@@ -878,7 +1113,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   <MessageSkeleton /> <MessageSkeleton /> <MessageSkeleton />
                 </>
               ) : (
-                messages.map((msg) => {
+                visibleMessages.map((msg) => {
                   const isMe = msg.sender_id === currentUserId;
                   const peerViewOnce = isPeerViewOnce(msg);
                   const opened = peerViewOnce && !!msg.viewed_at;
@@ -960,6 +1195,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   // Which actions apply is decided here, so the menu itself
                   // stays a list of things the thread can actually do.
                   const actions: MessageAction[] = deleted ? [] : ([
+                    "react",
                     "reply",
                     isMe && msg.content ? "edit" : null,
                     msg.content ? "copy" : null,
@@ -974,6 +1210,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                       pinned={!!msg.pinned_at}
                       label={msg.content || attachmentPreview(msg)}
                       onAction={(a) => {
+                        if (a === "react") setReactingId(reactingId === msg.id ? null : msg.id);
                         if (a === "reply") { setReplyTo(msg); setEditing(null); messageInputRef.current?.focus(); }
                         if (a === "edit") { beginEdit(msg); messageInputRef.current?.focus(); }
                         if (a === "copy") void copyText(msg);
@@ -984,17 +1221,39 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                     />
                   );
 
+                  // Chips grouped by emoji; mine highlights the ring so the tap
+                  // that removes it is discoverable.
+                  const chipGroups: { emoji: string; count: number; mine: boolean }[] = [];
+                  (reactions[msg.id] || []).forEach((r) => {
+                    const g = chipGroups.find((c) => c.emoji === r.emoji);
+                    if (g) { g.count += 1; g.mine = g.mine || r.user_id === currentUserId; }
+                    else chipGroups.push({ emoji: r.emoji, count: 1, mine: r.user_id === currentUserId });
+                  });
+
                   return (
                     <div key={msg.id} id={`msg-${msg.id}`}
                       className={`group flex items-start gap-1.5 ${isMe ? "justify-end" : "justify-start"}`}>
                       {!isMe && menu}
-                      <div className={`max-w-[80%] md:max-w-[75%] rounded-2xl text-sm overflow-hidden ${
-                        isStickerPath(msg.attachment_url) && !msg.content
-                          ? "bg-transparent"
-                          : isMe
-                            ? "bg-brand-green-800 text-white rounded-br-sm"
-                            : "bg-[var(--border)] text-[var(--text-primary)] rounded-bl-sm"
-                      }`}>
+                      <div className={`max-w-[80%] md:max-w-[75%] flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}>
+                        {reactingId === msg.id && (
+                          <div className="flex items-center gap-0.5 px-2 py-1 rounded-full border shadow-lg z-20"
+                            style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+                            {REACTION_EMOJIS.map((e) => (
+                              <button key={e} onClick={() => void toggleReaction(msg, e)}
+                                className="p-0.5 text-lg leading-none transition-transform hover:scale-125"
+                                aria-label={`React with ${e}`}>
+                                {e}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <div className={`max-w-full rounded-2xl text-sm overflow-hidden ${
+                          isStickerPath(msg.attachment_url) && !msg.content
+                            ? "bg-transparent"
+                            : isMe
+                              ? "bg-brand-green-800 text-white rounded-br-sm"
+                              : "bg-[var(--border)] text-[var(--text-primary)] rounded-bl-sm"
+                        }`}>
                         {deleted ? (
                           <p className={`italic px-4 py-2.5 text-xs ${isMe ? "text-white/70" : "text-[var(--text-secondary)]"}`}>
                             This message was deleted
@@ -1021,7 +1280,12 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                                 View once{msg.viewed_at ? " · opened" : " · waiting"}
                               </p>
                             )}
-                            {msg.content && <p className="leading-relaxed px-4 pt-2.5">{msg.content}</p>}
+                            {msg.story_id && (
+                              <p className={`flex items-center gap-1.5 px-4 pt-2.5 text-[11px] ${isMe ? "text-white/70" : "text-[var(--text-secondary)]"}`}>
+                                <ImageIcon className="w-3 h-3 flex-shrink-0" /> Story reply
+                              </p>
+                            )}
+                            {msg.content && <p className="leading-relaxed px-4 pt-2.5">{highlightText(msg.content, chatQuery)}</p>}
                             <p className={`flex items-center gap-1.5 text-[10px] px-4 pt-1 pb-2 ${
                               isStickerPath(msg.attachment_url) && !msg.content
                                 ? "text-[var(--text-secondary)] px-3"
@@ -1030,9 +1294,28 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                               {msg.pinned_at && <Pin className="w-3 h-3 flex-shrink-0" />}
                               <span>{formatMessageTime(msg.created_at)}</span>
                               {msg.edited_at && <span>· edited</span>}
+                              {isMe && (
+                                msg.is_read
+                                  ? <CheckCheck className="w-3.5 h-3.5 text-sky-300 flex-shrink-0" aria-label="Read" />
+                                  : <Check className="w-3.5 h-3.5 opacity-80 flex-shrink-0" aria-label="Sent" />
+                              )}
                             </p>
                           </>
                         )}
+                      </div>
+                      {chipGroups.length > 0 && (
+                        <div className={`flex flex-wrap gap-1 ${isMe ? "justify-end" : ""}`}>
+                          {chipGroups.map((c) => (
+                            <button key={c.emoji} onClick={() => void toggleReaction(msg, c.emoji)}
+                              className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full border text-xs ${c.mine ? "border-[rgb(var(--a-600))]" : "border-[var(--border)]"}`}
+                              style={{ backgroundColor: "var(--bg-card)" }}
+                              aria-label={`${c.emoji} from ${c.count} ${c.count === 1 ? "person" : "people"}`}>
+                              <span>{c.emoji}</span>
+                              {c.count > 1 && <span className="font-semibold" style={{ color: "var(--text-secondary)" }}>{c.count}</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       </div>
                       {/* The button always trails the bubble, so both people's
                           menus face the same way. */}
@@ -1235,7 +1518,7 @@ export function MessagesClient({ conversations: initConvs, profile, currentUserI
                   type="text"
                   placeholder={editing ? "Edit your message…" : "Type a message…"}
                   value={editing ? editText : input}
-                  onChange={(e) => (editing ? setEditText(e.target.value) : setInput(e.target.value))}
+                  onChange={(e) => { if (editing) setEditText(e.target.value); else { setInput(e.target.value); emitTyping(); } }}
                   onKeyDown={(e) => {
                     if (e.key !== "Enter" || e.shiftKey) return;
                     e.preventDefault();

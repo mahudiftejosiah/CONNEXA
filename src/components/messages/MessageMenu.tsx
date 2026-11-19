@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CornerUpLeft, Pencil, Copy, Share, Pin, PinOff, Trash2, MoreHorizontal } from "lucide-react";
+import { CornerUpLeft, Pencil, Copy, Share, Pin, PinOff, Trash2, SmilePlus, MoreHorizontal } from "lucide-react";
 
-export type MessageAction = "reply" | "edit" | "copy" | "forward" | "pin" | "unsend";
+export type MessageAction = "react" | "reply" | "edit" | "copy" | "forward" | "pin" | "unsend";
 
 const LABELS: Record<MessageAction, string> = {
+  react: "React",
   reply: "Reply",
   edit: "Edit",
   copy: "Copy text",
@@ -15,6 +16,7 @@ const LABELS: Record<MessageAction, string> = {
 };
 
 const ICONS: Record<MessageAction, React.ReactNode> = {
+  react: <SmilePlus className="w-4 h-4" />,
   reply: <CornerUpLeft className="w-4 h-4" />,
   edit: <Pencil className="w-4 h-4" />,
   copy: <Copy className="w-4 h-4" />,

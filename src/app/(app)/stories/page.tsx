@@ -7,7 +7,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Stories" };
 
-export default async function StoriesPage() {
+export default async function StoriesPage({ searchParams }: { searchParams: Promise<{ author?: string }> }) {
+  const { author } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -43,7 +44,7 @@ export default async function StoriesPage() {
 
   return (
     <AppLayout>
-      <StoriesClient stories={enriched as any} profile={profile} currentUserId={user.id} />
+      <StoriesClient stories={enriched as any} profile={profile} currentUserId={user.id} openAuthorId={author ?? null} />
     </AppLayout>
   );
 }
