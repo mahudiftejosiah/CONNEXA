@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Calendar, Image as ImageIcon, Plus, Radio, Save, Search, Trash2, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatRelativeTime } from "@/lib/utils";
-import { uploadProMedia } from "@/lib/actions/pro";
+import { uploadProMediaFile } from "@/lib/media";
 import { db, useNames, useRows, audit, Field, Panel, Notice, Stat, Switch, whenValue, usePager, Pager } from "./useRows";
 import toast from "react-hot-toast";
 
@@ -233,10 +233,7 @@ export function ProEvents({ adminId }: { adminId: string }) {
   async function upload(file: File | null, folder: string, onDone: (path: string) => void) {
     if (!file) return;
     setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    fd.set("folder", folder);
-    const result = await uploadProMedia(fd);
+    const result = await uploadProMediaFile(db(), file, folder);
     setUploading(false);
     if ("error" in result) { toast.error(result.error); return; }
     onDone(result.path);

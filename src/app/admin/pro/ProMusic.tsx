@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Music, Play, Plus, Trash2, Upload, Save } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { uploadProMedia } from "@/lib/actions/pro";
+import { uploadProMediaFile } from "@/lib/media";
 import { db, useRows, usePager, useNames, Field, Panel, Notice, Stat, Switch, Pager, audit } from "./useRows";
 import toast from "react-hot-toast";
 
@@ -52,10 +52,7 @@ function FilePick({ label, accept, folder, onPicked }: {
   async function send(f: File | null) {
     if (!f) return;
     setBusy(true);
-    const fd = new FormData();
-    fd.set("file", f);
-    fd.set("folder", folder);
-    const result = await uploadProMedia(fd);
+    const result = await uploadProMediaFile(db(), f, folder);
     setBusy(false);
     if ("error" in result) { toast.error(result.error); return; }
     setName(f.name);

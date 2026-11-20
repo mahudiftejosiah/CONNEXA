@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CalendarDays, Image as ImageIcon, MapPin, Plus, Upload, UserPlus, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { createEvent, rsvpEvent, uploadProMedia } from "@/lib/actions/pro";
+import { createEvent, rsvpEvent } from "@/lib/actions/pro";
+import { createClient } from "@/lib/supabase/client";
+import { uploadProMediaFile } from "@/lib/media";
 import { LockedFeaturePreview } from "@/components/pro/LockedFeaturePreview";
 import { ProDataNote } from "@/components/pro/ProDataNote";
 import { ReportButton } from "@/components/pro/ReportButton";
@@ -65,10 +67,7 @@ export function EventsBoard({
   async function pickCover(file: File | null) {
     if (!file) return;
     setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    fd.set("folder", "events");
-    const res = await uploadProMedia(fd);
+    const res = await uploadProMediaFile(createClient(), file, "events");
     setUploading(false);
     if ("error" in res) { toast.error(res.error); return; }
     setCover({ path: res.path, url: res.url });
@@ -77,10 +76,7 @@ export function EventsBoard({
   async function pickBanner(file: File | null) {
     if (!file) return;
     setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    fd.set("folder", "events");
-    const res = await uploadProMedia(fd);
+    const res = await uploadProMediaFile(createClient(), file, "events");
     setUploading(false);
     if ("error" in res) { toast.error(res.error); return; }
     setBanner({ path: res.path, url: res.url });

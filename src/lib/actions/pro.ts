@@ -477,25 +477,6 @@ export async function withdrawListing(listingId: string): Promise<{ error: strin
 
 // One bucket for every PRO file, under a folder named after the uploader, so
 // the existing storage policies decide who may write there.
-export async function uploadProMedia(formData: FormData): Promise<{ error: string } | { path: string; url: string }> {
-  const s = await session();
-  if ("error" in s) return s;
-
-  const file = formData.get("file");
-  const folder = String(formData.get("folder") ?? "misc").replace(/[^a-z0-9_-]/gi, "").slice(0, 24) || "misc";
-  if (!(file instanceof File) || file.size === 0) return { error: "Choose a file first." };
-  if (file.size > 25 * 1024 * 1024) return { error: "That file is over 25 MB." };
-
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
-  const path = `${s.user.id}/${folder}/${Date.now()}-${safeName}`;
-  const { error } = await s.supabase.storage.from("pro-media").upload(path, file, { upsert: false });
-  if (error) {
-    return { error: error.message.includes("Bucket not found") ? "Uploads need migration 031 (the pro-media bucket)." : "That upload was refused." };
-  }
-  const { data } = s.supabase.storage.from("pro-media").getPublicUrl(path);
-  return { path, url: data.publicUrl };
-}
-
 /* ---------------- Badges and view tracking ---------------- */
 
 export async function refreshMyBadges(): Promise<{ error: string; earned: string[] } | { success: true; earned: string[] }> {

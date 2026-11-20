@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BadgeCheck, Package, Plus, Store, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { createListing, uploadProMedia, withdrawListing } from "@/lib/actions/pro";
+import { createListing, withdrawListing } from "@/lib/actions/pro";
+import { createClient } from "@/lib/supabase/client";
+import { uploadProMediaFile } from "@/lib/media";
 import { LockedFeaturePreview } from "@/components/pro/LockedFeaturePreview";
 import { ReportButton } from "@/components/pro/ReportButton";
 
@@ -64,10 +66,7 @@ export function MarketBoard({
     setUploading(true);
     const paths: string[] = [];
     for (const file of Array.from(files).slice(0, 4)) {
-      const fd = new FormData();
-      fd.set("file", file);
-      fd.set("folder", "marketplace");
-      const res = await uploadProMedia(fd);
+      const res = await uploadProMediaFile(createClient(), file, "marketplace");
       if ("error" in res) { toast.error(res.error); continue; }
       paths.push(res.url);
     }

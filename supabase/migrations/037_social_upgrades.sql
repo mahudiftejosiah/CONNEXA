@@ -1,8 +1,16 @@
+
 -- 037 — Social upgrades: message reactions, story reactions + replies,
 -- story privacy audience, and a friend-list RPC for profile stat lists.
 
 -- ---------------------------------------------------------------------------
--- 1. Message reactions (WhatsApp-style: one reaction per person per message)
+-- 1. Create story audience column FIRST (required by story reaction policies)
+-- ---------------------------------------------------------------------------
+ALTER TABLE public.stories
+  ADD COLUMN IF NOT EXISTS audience text NOT NULL DEFAULT 'public'
+  CHECK (audience IN ('public', 'friends'));
+
+-- ---------------------------------------------------------------------------
+-- 2. Message reactions
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.message_reactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -16,37 +24,46 @@ CREATE TABLE IF NOT EXISTS public.message_reactions (
 
 ALTER TABLE public.message_reactions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "message_reactions_select" ON public.message_reactions;
+DROP POLICY IF EXISTS "message_reactions_insert" ON public.message_reactions;
+DROP POLICY IF EXISTS "message_reactions_update" ON public.message_reactions;
+DROP POLICY IF EXISTS "message_reactions_delete" ON public.message_reactions;
+
 CREATE POLICY "message_reactions_select" ON public.message_reactions FOR SELECT USING (
   EXISTS (
     SELECT 1 FROM public.conversation_participants cp
-    WHERE cp.conversation_id = conversation_id
+    WHERE cp.conversation_id = message_reactions.conversation_id
       AND cp.user_id = auth.uid()
       AND cp.deleted_at IS NULL
   )
 );
+
 CREATE POLICY "message_reactions_insert" ON public.message_reactions FOR INSERT WITH CHECK (
   auth.uid() = user_id
   AND EXISTS (
     SELECT 1 FROM public.conversation_participants cp
-    WHERE cp.conversation_id = conversation_id
+    WHERE cp.conversation_id = message_reactions.conversation_id
       AND cp.user_id = auth.uid()
       AND cp.deleted_at IS NULL
   )
-  AND EXISTS (SELECT 1 FROM public.messages m WHERE m.id = message_id AND m.deleted_at IS NULL)
-);
-CREATE POLICY "message_reactions_update" ON public.message_reactions FOR UPDATE USING (
-  auth.uid() = user_id
-) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "message_reactions_delete" ON public.message_reactions FOR DELETE USING (
-  auth.uid() = user_id
+  AND EXISTS (
+    SELECT 1 FROM public.messages m
+    WHERE m.id = message_reactions.message_id
+      AND m.deleted_at IS NULL
+  )
 );
 
--- Full old rows on DELETE events, so the other person's un-react arrives live
--- with enough detail to update the bubble.
+CREATE POLICY "message_reactions_update" ON public.message_reactions FOR UPDATE
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "message_reactions_delete" ON public.message_reactions FOR DELETE
+USING (auth.uid() = user_id);
+
 ALTER TABLE public.message_reactions REPLICA IDENTITY FULL;
 
 -- ---------------------------------------------------------------------------
--- 2. Story reactions (same shape, gated by story visibility)
+-- 3. Story reactions
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.story_reactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -59,10 +76,15 @@ CREATE TABLE IF NOT EXISTS public.story_reactions (
 
 ALTER TABLE public.story_reactions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "story_reactions_select" ON public.story_reactions;
+DROP POLICY IF EXISTS "story_reactions_insert" ON public.story_reactions;
+DROP POLICY IF EXISTS "story_reactions_update" ON public.story_reactions;
+DROP POLICY IF EXISTS "story_reactions_delete" ON public.story_reactions;
+
 CREATE POLICY "story_reactions_select" ON public.story_reactions FOR SELECT USING (
   EXISTS (
     SELECT 1 FROM public.stories s
-    WHERE s.id = story_id
+    WHERE s.id = story_reactions.story_id
       AND s.expires_at > NOW()
       AND (s.author_id = auth.uid() OR NOT public.is_blocked(auth.uid(), s.author_id))
       AND (
@@ -76,11 +98,12 @@ CREATE POLICY "story_reactions_select" ON public.story_reactions FOR SELECT USIN
       )
   )
 );
+
 CREATE POLICY "story_reactions_insert" ON public.story_reactions FOR INSERT WITH CHECK (
   auth.uid() = user_id
   AND EXISTS (
     SELECT 1 FROM public.stories s
-    WHERE s.id = story_id
+    WHERE s.id = story_reactions.story_id
       AND s.expires_at > NOW()
       AND (s.author_id = auth.uid() OR NOT public.is_blocked(auth.uid(), s.author_id))
       AND (
@@ -94,32 +117,28 @@ CREATE POLICY "story_reactions_insert" ON public.story_reactions FOR INSERT WITH
       )
   )
 );
-CREATE POLICY "story_reactions_update" ON public.story_reactions FOR UPDATE USING (
-  auth.uid() = user_id
-) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "story_reactions_delete" ON public.story_reactions FOR DELETE USING (
-  auth.uid() = user_id
-);
+
+CREATE POLICY "story_reactions_update" ON public.story_reactions FOR UPDATE
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "story_reactions_delete" ON public.story_reactions FOR DELETE
+USING (auth.uid() = user_id);
 
 ALTER TABLE public.story_reactions REPLICA IDENTITY FULL;
 
 -- ---------------------------------------------------------------------------
--- 3. Story replies: a DM that carries the story it answered
+-- 4. Story replies: a DM that carries the story it answered
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.messages
-  ADD COLUMN IF NOT EXISTS story_id uuid REFERENCES public.stories(id) ON DELETE SET NULL;
+  ADD COLUMN IF NOT EXISTS story_id uuid
+  REFERENCES public.stories(id) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------
--- 4. Story privacy: audience column + tightened read policy
---    'public' keeps today's behaviour for every existing story; 'friends'
---    restricts reads to the author and mutual friends. Admins keep read
---    access for moderation.
+-- 5. Tightened story read policy
 -- ---------------------------------------------------------------------------
-ALTER TABLE public.stories
-  ADD COLUMN IF NOT EXISTS audience text NOT NULL DEFAULT 'public'
-  CHECK (audience IN ('public', 'friends'));
-
 DROP POLICY IF EXISTS "stories_select" ON public.stories;
+
 CREATE POLICY "stories_select" ON public.stories FOR SELECT USING (
   expires_at > NOW()
   AND (author_id = auth.uid() OR NOT public.is_blocked(auth.uid(), author_id))
@@ -132,16 +151,14 @@ CREATE POLICY "stories_select" ON public.stories FOR SELECT USING (
          OR (f.user_id = author_id AND f.friend_id = auth.uid())
     )
     OR EXISTS (
-      SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_admin = TRUE
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() AND p.is_admin = TRUE
     )
   )
 );
 
 -- ---------------------------------------------------------------------------
--- 5. Friend list for profile stat lists (RLS blocks cross-user friendship
---    reads, so the page needs a guarded definer function). A private profile
---    only shows its list to its own friends; a friends-visibility profile to
---    friends as well.
+-- 6. Friend list for profile stat lists
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.profile_friend_ids(
   p_profile_id uuid,
@@ -159,21 +176,33 @@ CREATE OR REPLACE FUNCTION public.profile_friend_ids(
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT p.id, p.username, p.display_name, p.avatar_url, p.is_verified, p.pro_expires_at, p.last_seen
+  SELECT
+    p.id,
+    p.username,
+    p.display_name,
+    p.avatar_url,
+    p.is_verified,
+    p.pro_expires_at,
+    p.last_seen
   FROM public.friendships f
   JOIN public.profiles p
-    ON p.id = CASE WHEN f.user_id = p_profile_id THEN f.friend_id ELSE f.user_id END
+    ON p.id = CASE
+      WHEN f.user_id = p_profile_id THEN f.friend_id
+      ELSE f.user_id
+    END
   WHERE (f.user_id = p_profile_id OR f.friend_id = p_profile_id)
     AND p.id <> p_profile_id
     AND (
       p_profile_id = auth.uid()
       OR EXISTS (
-        SELECT 1 FROM public.profiles t
+        SELECT 1
+        FROM public.profiles t
         WHERE t.id = p_profile_id
           AND (
             t.profile_visibility = 'public'
             OR EXISTS (
-              SELECT 1 FROM public.friendships vf
+              SELECT 1
+              FROM public.friendships vf
               WHERE (vf.user_id = auth.uid() AND vf.friend_id = p_profile_id)
                  OR (vf.user_id = p_profile_id AND vf.friend_id = auth.uid())
             )
@@ -185,20 +214,32 @@ AS $$
   OFFSET GREATEST(COALESCE(p_offset, 0), 0);
 $$;
 
-REVOKE ALL ON FUNCTION public.profile_friend_ids(uuid, integer, integer) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.profile_friend_ids(uuid, integer, integer) TO authenticated;
+REVOKE ALL ON FUNCTION public.profile_friend_ids(uuid, integer, integer)
+FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.profile_friend_ids(uuid, integer, integer)
+TO authenticated;
 
 -- ---------------------------------------------------------------------------
--- 6. Realtime: reactions must reach postgres_changes subscribers
+-- 7. Realtime publication
 -- ---------------------------------------------------------------------------
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables
-                 WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'message_reactions') THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'message_reactions'
+  ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.message_reactions;
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables
-                 WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'story_reactions') THEN
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'story_reactions'
+  ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.story_reactions;
   END IF;
 END $$;

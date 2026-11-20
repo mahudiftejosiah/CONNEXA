@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { uploadProMedia } from "@/lib/actions/pro";
+import { createClient } from "@/lib/supabase/client";
+import { uploadProMediaFile } from "@/lib/media";
 import { ProDataNote } from "@/components/pro/ProDataNote";
 import { saveEventExtras } from "./eventExtras";
 
@@ -29,10 +30,7 @@ export function EventDetailsEditor({
   async function pick(file: File | null) {
     if (!file) return;
     setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    fd.set("folder", "events");
-    const res = await uploadProMedia(fd);
+    const res = await uploadProMediaFile(createClient(), file, "events");
     setUploading(false);
     if ("error" in res) { toast.error(res.error); return; }
     setBanner({ path: res.path, url: res.url });

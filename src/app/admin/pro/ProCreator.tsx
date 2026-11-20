@@ -5,7 +5,7 @@ import { Award, CheckCircle, Eye, Plus, Save, Search, ShieldCheck, Store, Tags, 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { formatRelativeTime } from "@/lib/utils";
-import { uploadProMedia } from "@/lib/actions/pro";
+import { uploadProMediaFile } from "@/lib/media";
 import { db, useNames, useRows, Field, Panel, Notice, Stat, Switch, usePager, Pager, audit } from "./useRows";
 import toast from "react-hot-toast";
 
@@ -65,10 +65,7 @@ export function ProBadges({ adminId }: { adminId: string }) {
   async function pickIcon(file: File | null, onDone: (path: string) => void) {
     if (!file) return;
     setUploading(true);
-    const fd = new FormData();
-    fd.set("file", file);
-    fd.set("folder", "badges");
-    const result = await uploadProMedia(fd);
+    const result = await uploadProMediaFile(db(), file, "badges");
     setUploading(false);
     if ("error" in result) { toast.error(result.error); return; }
     onDone(result.path);

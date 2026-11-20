@@ -75,3 +75,38 @@ export function proMediaUrl(supabase: MediaClient, path: string | null | undefin
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(path)) return path;
   return supabase.storage.from("pro-media").getPublicUrl(path).data.publicUrl;
 }
+
+const PRO_MEDIA_MAX_BYTES = 25 * 1024 * 1024; // 25MB
+
+/**
+ * Sends a PRO upload from the browser straight to storage. Routing it through a
+ * server action caps the request at the host's body limit (measured in single
+ * megabytes), which no real audio track fits under.
+ */
+export async function uploadProMediaFile(
+  supabase: MediaClient & { auth: SupabaseClient["auth"] },
+  file: File,
+  folder: string
+): Promise<{ path: string; url: string } | { error: string }> {
+  if (file.size === 0) return { error: "Choose a file first." };
+  if (file.size > PRO_MEDIA_MAX_BYTES) return { error: "That file is over 25 MB." };
+  const { data } = await supabase.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) return { error: "Your session expired. Sign in again." };
+  const safeFolder = folder.replace(/[^a-z0-9_-]/gi, "").slice(0, 24) || "misc";
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
+  const path = `${userId}/${safeFolder}/${Date.now()}-${safeName}`;
+  const { error } = await supabase.storage.from("pro-media").upload(path, file, {
+    upsert: false,
+    contentType: file.type || undefined,
+  });
+  if (error) {
+    return {
+      error: /bucket/i.test(error.message)
+        ? "Uploads need migration 031 (the pro-media bucket)."
+        : "That upload was refused. " + error.message,
+    };
+  }
+  const { data: pub } = supabase.storage.from("pro-media").getPublicUrl(path);
+  return { path, url: pub.publicUrl };
+}
