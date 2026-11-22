@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { createClient } from "@/lib/supabase/client";
 import { refreshStoryRings } from "@/components/layout/StoryRingProvider";
 import { signStoryMedia } from "@/lib/media";
+import { storyAuthorIds } from "@/lib/story-audience";
 import type { StoryWithAuthor, Profile, StoryReaction } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 import { formatRelativeTime } from "@/lib/utils";
@@ -255,8 +256,7 @@ export function StoriesClient({ stories: initStories, profile, currentUserId, op
   // Stories posted while the page is open arrive on their own: realtime first,
   // a slow poll for the connections that never open.
   const refetchStories = useCallback(async () => {
-    const { data: friendships } = await supabase.from("friendships").select("friend_id").eq("user_id", currentUserId);
-    const ids = [currentUserId, ...(friendships || []).map((f) => f.friend_id)].slice(0, 100);
+    const ids = await storyAuthorIds(supabase, currentUserId);
     const { data: fresh } = await supabase
       .from("stories")
       .select("*, author:profiles(*)")

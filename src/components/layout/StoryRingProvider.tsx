@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { storyAuthorIds } from "@/lib/story-audience";
 
 const StoryRingContext = createContext<Set<string>>(new Set());
 
@@ -30,10 +31,9 @@ export function StoryRingProvider({
     let cancelled = false;
 
     async function refresh() {
-      // Stories from me + my friends, the same circle the Stories tray shows.
-      const { data: friendships } = await supabase
-        .from("friendships").select("friend_id").eq("user_id", uid);
-      const ids = [uid, ...(friendships || []).map((f) => f.friend_id)].slice(0, 100);
+      // Stories from me, my friends and the people I follow — the same circle
+      // the Stories tray shows.
+      const ids = await storyAuthorIds(supabase, uid);
       const { data: stories } = await supabase
         .from("stories").select("id, author_id")
         .in("author_id", ids)

@@ -55,9 +55,13 @@ type PreviewSource = {
   view_once?: boolean | null;
   attachment_name?: string | null;
   attachment_url?: string | null;
+  deleted_at?: string | null;
 } | null | undefined;
 
 function attachmentPreview(msg: PreviewSource) {
+  // An unsent message keeps its row, so the thread is not empty — it just has
+  // nothing left to show.
+  if (msg?.deleted_at) return "This message was deleted";
   if (isStickerPath(msg?.attachment_url)) return "Sent a sticker";
   if (isVoiceNote(msg?.attachment_name)) return "Sent a voice note";
   const kind = msg?.attachment_kind;

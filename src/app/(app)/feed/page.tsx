@@ -4,6 +4,7 @@ import { signPostMedia, signStoryMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
 import { attachFeedActivity } from "@/lib/feed-activity";
 import { getLiveSlides } from "@/lib/slides";
+import { storyAuthorIds } from "@/lib/story-audience";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { FeedClient } from "./FeedClient";
 import { REEL_POOL, shuffleTake } from "@/lib/reel-pool";
@@ -29,11 +30,12 @@ export default async function FeedPage() {
   const manyFriends = friendIds.length > 100;
   const cappedFriendIds = friendIds.slice(0, 100);
 
-  // Active stories from self + friends (shown as a tray under the composer)
+  // Active stories from self, friends and the people I follow
+  const trayIds = await storyAuthorIds(supabase, user.id);
   const { data: stories } = await supabase
     .from("stories")
     .select("*, author:profiles(*)")
-    .in("author_id", [user.id, ...cappedFriendIds])
+    .in("author_id", trayIds)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false })
     .limit(40);

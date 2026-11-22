@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signStoryMedia } from "@/lib/media";
+import { storyAuthorIds } from "@/lib/story-audience";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StoriesClient } from "./StoriesClient";
 import type { Metadata } from "next";
@@ -16,16 +17,12 @@ export default async function StoriesPage({ searchParams }: { searchParams: Prom
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
   if (!profile) redirect("/login");
 
-  // Get friend IDs — cap the IN() list (long lists blow up request URLs)
-  const { data: friendships } = await supabase.from("friendships").select("friend_id").eq("user_id", user.id);
-  const friendIds = (friendships || []).map((f) => f.friend_id);
-  const allIds = [user.id, ...friendIds].slice(0, 100);
-
-  // Active stories (not expired) from self + friends
+  // Active stories (not expired) from self, friends and the people I follow
+  const trayIds = await storyAuthorIds(supabase, user.id);
   const { data: stories } = await supabase
     .from("stories")
     .select("*, author:profiles(*)")
-    .in("author_id", allIds)
+    .in("author_id", trayIds)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false })
     .limit(40);
