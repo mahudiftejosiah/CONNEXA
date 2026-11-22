@@ -4,6 +4,23 @@
 -- Send me back the "result" column. Anything saying "no" is a feature that
 -- is coded and deployed but still switched off in the database.
 
+-- Counting rows in a table that has not been created yet would abort the whole
+-- check before printing a single line, so the counting goes through a helper
+-- that looks the table up first and only builds the query when it is really
+-- there. It only ever runs a count, and it is dropped again at the bottom.
+create or replace function connexa_probe_count(t text, filt text default null)
+returns text language plpgsql as $$
+declare c bigint;
+begin
+  if to_regclass(t) is null then return 'no (table missing)'; end if;
+  execute format('select count(*) from %s%s', t,
+                 case when filt is null then '' else ' where ' || filt end)
+    into c;
+  return c::text;
+exception when others then
+  return 'no (column missing)';
+end $$;
+
 select q.item, q.result
 from (
   values
@@ -11,7 +28,7 @@ from (
     case when to_regclass('public.bot_flags') is not null then 'yes' else 'no' end),
   ('015 chat attachments column',
     case when exists (select 1 from pg_attribute
-                      where relid = 'public.messages'::regclass
+                      where attrelid = to_regclass('public.messages')
                         and attname = 'attachment_kind') then 'yes' else 'no' end),
   ('015 chat-files bucket',
     case when exists (select 1 from storage.buckets where id = 'chat-files')
@@ -22,17 +39,17 @@ from (
          then 'yes' else 'no' end),
   ('017 view-once messages column',
     case when exists (select 1 from pg_attribute
-                      where relid = 'public.messages'::regclass
+                      where attrelid = to_regclass('public.messages')
                         and attname = 'view_once') then 'yes' else 'no' end),
   ('018 study progress table',
     case when to_regclass('public.study_progress') is not null then 'yes' else 'no' end),
   ('019 delete chat per reader',
     case when exists (select 1 from pg_attribute
-                      where relid = 'public.conversation_participants'::regclass
+                      where attrelid = to_regclass('public.conversation_participants')
                         and attname = 'deleted_at') then 'yes' else 'no' end),
   ('020 book descriptions column',
     case when exists (select 1 from pg_attribute
-                      where relid = 'public.study_books'::regclass
+                      where attrelid = to_regclass('public.study_books')
                         and attname = 'description') then 'yes' else 'no' end),
   ('022 live sessions table',
     case when to_regclass('public.live_sessions') is not null then 'yes' else 'no' end),
@@ -41,7 +58,7 @@ from (
          then 'yes' else 'no' end),
   ('023 message actions columns',
     case when exists (select 1 from pg_attribute
-                      where relid = 'public.messages'::regclass
+                      where attrelid = to_regclass('public.messages')
                         and attname = 'pinned_at') then 'yes' else 'no' end),
   ('023 unsend function',
     case when to_regprocedure('public.delete_message_for_everyone(uuid)') is not null
@@ -50,21 +67,20 @@ from (
     case when to_regclass('public.study_book_highlights') is not null then 'yes' else 'no' end),
   ('025 featured shelf + published column',
     case when exists (select 1 from pg_attribute
-                      where relid = 'public.site_shortcuts'::regclass
+                      where attrelid = to_regclass('public.site_shortcuts')
                         and attname = 'published') then 'yes' else 'no' end),
   ('025 starter featured sites',
-    (select (case when count(*) > 0 then 'yes' else 'no (' || count(*)::text || ')' end)::text
-      from public.site_shortcuts where category = 'featured')),
+    connexa_probe_count('public.site_shortcuts', 'category = ''featured''')),
   ('026 worldwide location columns',
     case when exists (select 1 from pg_attribute
-                      where relid = 'public.profiles'::regclass
+                      where attrelid = to_regclass('public.profiles')
                         and attname = 'country_code') then 'yes' else 'no' end),
   ('027 displayed followers + PRO expiry columns',
     case when exists (select 1 from pg_attribute
-                      where relid = 'public.profiles'::regclass
+                      where attrelid = to_regclass('public.profiles')
                         and attname = 'display_followers')
          and  exists (select 1 from pg_attribute
-                      where relid = 'public.profiles'::regclass
+                      where attrelid = to_regclass('public.profiles')
                         and attname = 'pro_expires_at') then 'yes' else 'no' end),
   ('027 privilege guard trigger',
     case when exists (select 1 from pg_trigger
@@ -90,9 +106,11 @@ from (
           and to_regclass('public.events') is not null
           and to_regclass('public.badges') is not null
           and to_regclass('public.listings') is not null then 'yes' else 'no' end),
-  ('031 pro-media bucket + starter badges',
+  ('031 pro-media bucket (audio uploads need it)',
     case when exists (select 1 from storage.buckets where id = 'pro-media')
-          and (select count(*) from public.badges) >= 8 then 'yes' else 'no' end),
+         then 'yes' else 'no' end),
+  ('031 starter badges (want 8 or more)',
+    connexa_probe_count('public.badges')),
   ('032 streaming permissions + admin rights',
     case when to_regclass('public.stream_permissions') is not null
           and to_regprocedure('public.stream_allowed(uuid)') is not null then 'yes' else 'no' end),
@@ -138,17 +156,13 @@ from (
     case when to_regprocedure('public.admin_find_users(text,integer,integer)') is not null then 'yes' else 'no' end),
   ('035 PRO subscription plans',
     case when to_regclass('public.pro_plans') is not null then 'yes' else 'no' end),
-  ('035 plans published',
-    (select case when to_regclass('public.pro_plans') is null then 'table missing'
-                 else (select count(*)::text from public.pro_plans where active) end)),
+  ('035 plans published (want 3)',
+    connexa_probe_count('public.pro_plans', 'active')),
   ('036 featured slideshow table',
     case when to_regclass('public.featured_slides') is not null then 'yes' else 'no' end),
   ('036 slideshow live slides',
-    (select case when to_regclass('public.featured_slides') is null then 'table missing'
-                 else (select count(*)::text from public.featured_slides
-                        where active
-                          and (starts_at is null or starts_at <= now())
-                          and (ends_at is null or ends_at > now())) end)),
+    connexa_probe_count('public.featured_slides',
+      'active and (starts_at is null or starts_at <= now()) and (ends_at is null or ends_at > now())')),
   ('037 message reactions table',
     case when to_regclass('public.message_reactions') is not null then 'yes' else 'no' end),
   ('037 story reactions table',
@@ -165,17 +179,16 @@ from (
     case when to_regprocedure('public.profile_friend_ids(uuid,integer,integer)') is not null
          then 'yes' else 'no' end),
   ('seed: book covers filled in',
-    (select (case when count(*) > 0 then 'yes' else 'no' end)::text
-      from public.study_books where cover_url is not null)),
+    connexa_probe_count('public.study_books', 'cover_url is not null')),
   ('seed: book descriptions filled in',
-    (select (case when count(*) > 0 then 'yes' else 'no' end)::text
-      from public.study_books
-      where description is not null and description <> '')),
+    connexa_probe_count('public.study_books', 'char_length(description) > 0')),
   ('how many profiles',
-    (select count(*)::text from public.profiles)),
+    connexa_probe_count('public.profiles')),
   ('how many posts',
-    (select count(*)::text from public.posts)),
+    connexa_probe_count('public.posts')),
   ('how many messages',
-    (select count(*)::text from public.messages))
+    connexa_probe_count('public.messages'))
 ) as q(item, result)
 order by 1;
+
+drop function if exists connexa_probe_count(text, text);
