@@ -13,9 +13,18 @@ interface AvatarProps {
   userId?: string;
 }
 
-export function Avatar({ src, name, size = 40, className, ring = false, online = false, userId }: AvatarProps) {
+export function Avatar({
+  src,
+  name,
+  size = 40,
+  className,
+  ring = false,
+  online = false,
+  userId,
+}: AvatarProps) {
   const fallback = getAvatarUrl(name, size * 2);
   const imgSrc = src || fallback;
+
   const storyRings = useStoryRings();
   const hasStory = !!userId && storyRings.has(userId);
   const showRing = ring || hasStory;
@@ -27,14 +36,21 @@ export function Avatar({ src, name, size = 40, className, ring = false, online =
     >
       {showRing && (
         <span
-          className="story-ring absolute rounded-full"
+          className="absolute rounded-full"
           style={{
-            width: size + 4, height: size + 4, top: -2, left: -2,
-            ...(hasStory ? { background: "#22c55e" } : {}),
+            width: size + 5,
+            height: size + 5,
+            top: -2.5,
+            left: -2.5,
+            border: "2px solid var(--brand-gold)",
+            boxShadow: "0 0 5px rgba(214, 184, 117, 0.35)",
+            pointerEvents: "none",
           }}
           aria-hidden="true"
         />
       )}
+
+      {/* Profile picture */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={imgSrc}
@@ -42,18 +58,26 @@ export function Avatar({ src, name, size = 40, className, ring = false, online =
         width={size}
         height={size}
         className="rounded-full object-cover bg-gray-100"
-        style={{ width: size, height: size }}
+        style={{
+          width: size,
+          height: size,
+        }}
         onError={(e) => {
           const target = e.currentTarget;
-          if (target.src !== fallback) target.src = fallback;
+          if (target.src !== fallback) {
+            target.src = fallback;
+          }
         }}
         loading="lazy"
       />
+
+      {/* Online indicator */}
       {online && (
         <span
           className="absolute bottom-0 right-0 rounded-full border-2"
           style={{
-            width: 10, height: 10,
+            width: 10,
+            height: 10,
             backgroundColor: "rgb(var(--a-500))",
             borderColor: "var(--bg-card)",
           }}
