@@ -95,20 +95,80 @@ export function StoriesClient({ stories: initStories, profile, currentUserId, op
   }
 
   function goNext() {
-    if (viewing === null) return;
-    const next = viewing + 1;
-    setProgress(0);
-    if (next < stories.length) { setViewing(next); void handleView(stories[next].id); }
-    else setViewing(null);
+  if (viewing === null) return;
+
+  const currentStory = stories[viewing];
+  if (!currentStory) {
+    setViewing(null);
+    return;
   }
 
-  function goPrev() {
-    if (viewing === null) return;
-    const prev = viewing - 1;
+  const sameAuthor = stories
+    .map((story, index) => ({ story, index }))
+    .filter(({ story }) => story.author_id === currentStory.author_id);
+
+  const currentPosition = sameAuthor.findIndex(
+    ({ story }) => story.id === currentStory.id
+  );
+
+  // Finish this author's stories before moving to another author.
+  if (currentPosition < sameAuthor.length - 1) {
+    const nextIndex = sameAuthor[currentPosition + 1].index;
     setProgress(0);
-    if (prev >= 0) { setViewing(prev); void handleView(stories[prev].id); }
-    else setViewing(null);
+    setViewing(nextIndex);
+    void handleView(stories[nextIndex].id);
+    return;
   }
+
+  // Move to the next author's stories.
+  const nextAuthorStory = stories.findIndex(
+    (story, index) =>
+      index > viewing &&
+      story.author_id !== currentStory.author_id
+  );
+
+  setProgress(0);
+
+  if (nextAuthorStory !== -1) {
+    setViewing(nextAuthorStory);
+    void handleView(stories[nextAuthorStory].id);
+  } else {
+    setViewing(null);
+  }
+}
+
+function goPrev() {
+  if (viewing === null) return;
+
+  const currentStory = stories[viewing];
+  if (!currentStory) return;
+
+  const sameAuthor = stories
+    .map((story, index) => ({ story, index }))
+    .filter(({ story }) => story.author_id === currentStory.author_id);
+
+  const currentPosition = sameAuthor.findIndex(
+    ({ story }) => story.id === currentStory.id
+  );
+
+  if (currentPosition > 0) {
+    const previousIndex = sameAuthor[currentPosition - 1].index;
+    setProgress(0);
+    setViewing(previousIndex);
+    void handleView(stories[previousIndex].id);
+    return;
+  }
+
+  setProgress(0);
+
+  if (viewing > 0) {
+    const previousIndex = viewing - 1;
+    setViewing(previousIndex);
+    void handleView(stories[previousIndex].id);
+  } else {
+    setViewing(null);
+  }
+}
 
   // Photo stories run on a 5s timer; videos drive the bar themselves and call
   // goNext when they end.
