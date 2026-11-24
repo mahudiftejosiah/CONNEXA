@@ -1,18 +1,26 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
 import { createClient } from "@/lib/supabase/client";
 import { storyAuthorIds } from "@/lib/story-audience";
 
 const StoryRingContext = createContext<Set<string>>(new Set());
 
-// People whose avatar should wear the green "has a story you haven't seen" ring.
 export function useStoryRings() {
   return useContext(StoryRingContext);
 }
 
 export function refreshStoryRings() {
-  window.dispatchEvent(new Event("connexa-story-refresh"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("connexa-story-refresh"));
+  }
 }
 
 export function StoryRingProvider({
@@ -24,43 +32,107 @@ export function StoryRingProvider({
 }) {
   const [ringIds, setRingIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!userId) { setRingIds(new Set()); return; }
-    const uid = userId;
-    const supabase = createClient();
-    let cancelled = false;
-
-    async function refresh() {
-      // Stories from me, my friends and the people I follow — the same circle
-      // the Stories tray shows.
-      const ids = await storyAuthorIds(supabase, uid);
-      const { data: stories } = await supabase
-        .from("stories").select("id, author_id")
-        .in("author_id", ids)
-        .gt("expires_at", new Date().toISOString());
-      const rows = stories || [];
-      const storyIds = rows.map((s) => s.id);
-      const { data: views } = storyIds.length
-        ? await supabase.from("story_views").select("story_id").eq("viewer_id", uid).in("story_id", storyIds)
-        : { data: [] };
-      const viewed = new Set((views || []).map((v) => v.story_id));
-      const next = new Set<string>();
-      rows.forEach((s) => { if (!viewed.has(s.id)) next.add(s.author_id); });
-      if (!cancelled) setRingIds(next);
+  const refresh = useCallback(async () => {
+    if (!userId) {
+      setRingIds(new Set());
+      return;
     }
 
-    void refresh();
-    const onFocus = () => void refresh();
-    const poll = setInterval(refresh, 60_000);
+    const supabase = createClient();
+
+    try {
+      const authorIds = await storyAuthorIds(supabase, userId);
+
+      if (authorIds.length === 0) {
+        setRingIds(new Set());
+        return;
+      }
+
+      const { data: stories, error: storiesError } = await supabase
+        .from("stories")
+        .select("id, author_id")
+        .in("author_id", authorIds)
+        .gt("expires_at", new Date().toISOString());
+
+      if (storiesError) {
+        console.error("Story ring loading failed:", storiesError);
+        return;
+      }
+
+      const activeStories = stories || [];
+      const storyIds = activeStories.map((story) => story.id);
+
+      if (storyIds.length === 0) {
+        setRingIds(new Set());
+        return;
+      }
+
+      const { data: views, error: viewsError } = await supabase
+        .from("story_views")
+        .select("story_id")
+        .eq("viewer_id", userId)
+        .in("story_id", storyIds);
+
+      if (viewsError) {
+        console.error("Story view loading failed:", viewsError);
+        return;
+      }
+
+      const viewedIds = new Set(
+        (views || []).map((view) => view.story_id)
+      );
+
+      const nextRingIds = new Set<string>();
+
+      activeStories.forEach((story) => {
+        if (!viewedIds.has(story.id)) {
+          nextRingIds.add(story.author_id);
+        }
+      });
+
+      setRingIds(nextRingIds);
+    } catch (error) {
+      console.error("Unable to refresh story rings:", error);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      setRingIds(new Set());
+      return;
+    }
+
+    let cancelled = false;
+
+    const safeRefresh = async () => {
+      if (cancelled) return;
+      await refresh();
+    };
+
+    void safeRefresh();
+
+    const onFocus = () => {
+      void safeRefresh();
+    };
+
+    const poll = window.setInterval(() => {
+      void safeRefresh();
+    }, 30_000);
+
     window.addEventListener("focus", onFocus);
     window.addEventListener("connexa-story-refresh", onFocus);
+
     return () => {
       cancelled = true;
-      clearInterval(poll);
+      window.clearInterval(poll);
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("connexa-story-refresh", onFocus);
     };
-  }, [userId]);
+  }, [userId, refresh]);
 
-  return <StoryRingContext.Provider value={ringIds}>{children}</StoryRingContext.Provider>;
+  return (
+    <StoryRingContext.Provider value={ringIds}>
+      {children}
+    </StoryRingContext.Provider>
+  );
 }
