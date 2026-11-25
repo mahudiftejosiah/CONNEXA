@@ -5,6 +5,8 @@ import { MessagesClient } from "./MessagesClient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Messages" };
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function MessagesPage({
   searchParams,
@@ -27,7 +29,7 @@ export default async function MessagesPage({
 
   if (!profile) redirect("/login");
 
-  // Get conversations visible in this user's inbox.
+  // Load every conversation belonging to this user.
   const filtered = await supabase
     .from("conversation_participants")
     .select("conversation_id")
@@ -62,24 +64,8 @@ export default async function MessagesPage({
     lightRows.push(...((data || []) as LightConv[]));
   }
 
-  const recentIds = lightRows
-    .sort(
-      (a, b) =>
-        new Date(b.last_message_at || b.created_at).getTime() -
-        new Date(a.last_message_at || a.created_at).getTime()
-    )
-    .slice(0, 30);
-
-  // Fetch conversations and participant rows.
-  const { data: conversations } = recentIds.length
-    ? await supabase
-        .from("conversations")
-        .select("*, participants:conversation_participants(*)")
-        .in(
-          "id",
-          recentIds.map((conversation) => conversation.id)
-        )
-    : { data: [] };
+  // Do not silently discard older conversations using a 30-thread limit.
+  const conversationIds = lightRows.map((row) => row.id);
 
   const { with: withParam, tab: tabParam } = await searchParams;
 
@@ -165,16 +151,30 @@ export default async function MessagesPage({
     }
   }
 
-  // Combine normal and directly opened conversations.
+  // Fetch all conversation records in batches.
+  const loadedConversations: any[] = [];
+
+  for (let i = 0; i < conversationIds.length; i += 100) {
+    const batch = conversationIds.slice(i, i + 100);
+
+    const { data } = await supabase
+      .from("conversations")
+      .select("*, participants:conversation_participants(*)")
+      .in("id", batch);
+
+    loadedConversations.push(...(data || []));
+  }
+
+  // Include directly opened conversations without duplicating them.
   const allConversations = [
     ...forced,
-    ...(conversations || []).filter(
+    ...loadedConversations.filter(
       (conversation: any) =>
         !forced.some((item) => item.id === conversation.id)
     ),
   ];
 
-  // Fetch participant profiles separately.
+  // Load every participant's profile.
   const participantIds = Array.from(
     new Set(
       allConversations.flatMap((conversation: any) =>
@@ -198,7 +198,7 @@ export default async function MessagesPage({
     }
   }
 
-  // Attach profiles to each participant.
+  // Attach profiles to participant rows.
   const enrichedConversations = allConversations.map(
     (conversation: any) => ({
       ...conversation,
@@ -211,7 +211,7 @@ export default async function MessagesPage({
     })
   );
 
-  // Load latest message and unread count for each conversation.
+  // Load the latest message and unread count.
   const threads = await Promise.all(
     enrichedConversations.map(async (conversation: any) => {
       const { data: lastMessage } = await supabase
@@ -236,6 +236,19 @@ export default async function MessagesPage({
       };
     })
   );
+
+  // Sort newest conversations first.
+  threads.sort((a: any, b: any) => {
+    const dateA = new Date(
+      a.last_message_at || a.last_message?.created_at || a.created_at
+    ).getTime();
+
+    const dateB = new Date(
+      b.last_message_at || b.last_message?.created_at || b.created_at
+    ).getTime();
+
+    return dateB - dateA;
+  });
 
   // Load friends for the All, Active and Offline tabs.
   const { data: friendRows } = await supabase
