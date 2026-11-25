@@ -29,22 +29,17 @@ export default async function MessagesPage({
 
   if (!profile) redirect("/login");
 
-  // Load every conversation belonging to this user.
-  const filtered = await supabase
+  // Load all of this user's conversation memberships, including
+  // previously deleted conversations. A new message should restore a chat.
+  const { data: participantRows } = await supabase
     .from("conversation_participants")
-    .select("conversation_id")
-    .eq("user_id", user.id)
-    .is("deleted_at", null);
+    .select("conversation_id, deleted_at")
+    .eq("user_id", user.id);
 
-  const { data: participantRows } = filtered.error
-    ? await supabase
-        .from("conversation_participants")
-        .select("conversation_id")
-        .eq("user_id", user.id)
-    : filtered;
+  const memberships = participantRows || [];
 
   const myIds = Array.from(
-    new Set((participantRows || []).map((row) => row.conversation_id))
+    new Set(memberships.map((row) => row.conversation_id))
   );
 
   type LightConv = {
@@ -64,8 +59,25 @@ export default async function MessagesPage({
     lightRows.push(...((data || []) as LightConv[]));
   }
 
-  // Do not silently discard older conversations using a 30-thread limit.
-  const conversationIds = lightRows.map((row) => row.id);
+  // Restore a previously deleted chat in the inbox when a newer message
+  // has arrived after the user's deletion timestamp.
+  const membershipByConversation = new Map(
+    memberships.map((row) => [row.conversation_id, row.deleted_at])
+  );
+
+  const conversationIds = lightRows
+    .filter((conversation) => {
+      const deletedAt = membershipByConversation.get(conversation.id);
+
+      if (!deletedAt) return true;
+
+      const lastActivity = conversation.last_message_at
+        ? new Date(conversation.last_message_at).getTime()
+        : 0;
+
+      return lastActivity > new Date(deletedAt).getTime();
+    })
+    .map((row) => row.id);
 
   const { with: withParam, tab: tabParam } = await searchParams;
 
