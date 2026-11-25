@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import type { StoryWithAuthor, Profile } from "@/lib/supabase/types";
@@ -11,28 +10,6 @@ interface StoriesTrayProps {
   currentUserId: string;
   onCreate?: () => void;
   onOpen?: (authorId: string) => void;
-}
-
-function TrayTile({
-  href,
-  onClick,
-  className,
-  children,
-}: {
-  href: string;
-  onClick?: () => void;
-  className: string;
-  children: React.ReactNode;
-}) {
-  return onClick ? (
-    <button type="button" onClick={onClick} className={className}>
-      {children}
-    </button>
-  ) : (
-    <Link href={href} className={className}>
-      {children}
-    </Link>
-  );
 }
 
 export function StoriesTray({
@@ -76,16 +53,6 @@ export function StoriesTray({
     (story) => story.author_id === currentUserId
   );
 
-  function handleOwnStory() {
-    if (hasOwnStory) {
-      if (onOpen) onOpen(currentUserId);
-      else window.location.href = "/stories";
-    } else {
-      if (onCreate) onCreate();
-      else window.location.href = "/stories";
-    }
-  }
-
   return (
     <div className="card p-3">
       <div className="rail flex items-start gap-4 pb-1">
@@ -93,7 +60,13 @@ export function StoriesTray({
         {/* Your story */}
         <button
           type="button"
-          onClick={handleOwnStory}
+          onClick={() => {
+            if (hasOwnStory) {
+              onOpen?.(currentUserId);
+            } else {
+              onCreate?.();
+            }
+          }}
           className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16"
         >
           <span
@@ -134,16 +107,12 @@ export function StoriesTray({
           </span>
         </button>
 
-        {/* Friends' and followed users' stories */}
+        {/* Friends' stories */}
         {groups.map((group) => (
-          <TrayTile
+          <button
             key={group.author.id}
-            href="/stories"
-            onClick={
-              onOpen
-                ? () => onOpen(group.author.id)
-                : undefined
-            }
+            type="button"
+            onClick={() => onOpen?.(group.author.id)}
             className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16"
           >
             <span
@@ -169,7 +138,7 @@ export function StoriesTray({
             >
               {group.author.display_name.split(" ")[0]}
             </span>
-          </TrayTile>
+          </button>
         ))}
 
       </div>
