@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { StoriesClient } from "@/app/Stories/StoriesClient";
+import { StoriesClient } from "@/app/stories/StoriesClient";
 import { CreatePost } from "@/components/posts/CreatePost";
 import { FeaturedSlideshow } from "@/components/feed/FeaturedSlideshow";
 import { PostCard } from "@/components/posts/PostCard";
