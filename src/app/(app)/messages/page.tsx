@@ -27,7 +27,7 @@ const { data: profile } = await supabase
 
 if (!profile) redirect(”/login”);
 
-// Get conversations that are visible in this user’s inbox.
+// Get conversations visible in this user’s inbox.
 const filtered = await supabase
 .from(“conversation_participants”)
 .select(“conversation_id”)
@@ -71,8 +71,7 @@ new Date(a.last_message_at || a.created_at).getTime()
 )
 .slice(0, 30);
 
-// Fetch conversations and participant rows without relying on a nested
-// profiles relationship.
+// Fetch conversations and participants separately from profiles.
 const { data: conversations } = recentIds.length
 ? await supabase
 .from(“conversations”)
@@ -91,7 +90,7 @@ tabParam === “active” || tabParam === “offline” ? tabParam : “all”;
 let openPeerId: string | null = null;
 let forced: any[] = [];
 
-// /messages?with= — open or create a conversation.
+// Open or create a conversation when /messages?with= is used.
 if (withParam && withParam !== user.id) {
 const peerId = withParam;
 
@@ -162,7 +161,7 @@ const allConversations = [
 ),
 ];
 
-// Fetch every participant profile separately.
+// Fetch participant profiles separately.
 const participantIds = Array.from(
 new Set(
 allConversations.flatMap((conversation: any) =>
@@ -187,8 +186,9 @@ for (const participantProfile of participantProfiles || []) {
 
 }
 
-// Attach profiles to participant rows explicitly.
-const enrichedConversations = allConversations.map((conversation: any) => ({
+// Attach profiles to each participant.
+const enrichedConversations = allConversations.map(
+(conversation: any) => ({
 …conversation,
 participants: (conversation.participants || []).map(
 (participant: any) => ({
@@ -196,9 +196,10 @@ participants: (conversation.participants || []).map(
 profile: profileMap.get(participant.user_id) || null,
 })
 ),
-}));
+})
+);
 
-// Fetch the latest message and unread count for each conversation.
+// Load latest message and unread count for every conversation.
 const threads = await Promise.all(
 enrichedConversations.map(async (conversation: any) => {
 const { data: lastMessage } = await supabase
@@ -224,7 +225,7 @@ const { data: lastMessage } = await supabase
 
 );
 
-// Load friends for the All / Active / Offline tabs.
+// Load friends for the All, Active and Offline tabs.
 const { data: friendRows } = await supabase
 .from(“friendships”)
 .select(“friend_id”)
