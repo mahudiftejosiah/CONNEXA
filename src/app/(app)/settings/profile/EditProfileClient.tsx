@@ -6,6 +6,7 @@ import { Camera, Save } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { LocationPicker, type PlaceSelection } from "@/components/ui/LocationPicker";
+import { GenderSilhouette } from "@/components/ui/GenderSilhouette";
 import { updateProfile, uploadAvatar, uploadCover } from "@/lib/actions/profile";
 import type { Profile, UserPreferences } from "@/lib/supabase/types";
 import toast from "react-hot-toast";

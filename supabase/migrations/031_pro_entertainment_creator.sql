@@ -7,6 +7,18 @@
 --
 -- Paste into Supabase → SQL Editor → Run. Safe to run more than once.
 -- ============================================================
+-- Preflight: this migration relies on CONNEXA's existing core schema.
+DO $preflight$
+BEGIN
+  IF to_regclass('public.profiles') IS NULL THEN
+    RAISE EXCEPTION 'CONNEXA prerequisite missing: public.profiles table does not exist.';
+  END IF;
+  IF to_regprocedure('public.is_admin()') IS NULL THEN
+    RAISE EXCEPTION 'CONNEXA prerequisite missing: public.is_admin() function does not exist.';
+  END IF;
+END;
+$preflight$;
+
 BEGIN;
 
 -- ---------- Music corner ----------
@@ -149,14 +161,27 @@ AS $$
    LIMIT 40;
 $$;
 
-CREATE OR REPLACE FUNCTION public.open_quiz(p_quiz UUID)
-RETURNS TABLE (id UUID, prompt TEXT, options JSONB, position INT)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+-- PostgreSQL cannot change a function's OUT/RETURNS TABLE row type with
+-- CREATE OR REPLACE. Drop this exact signature first, then recreate it.
+DROP FUNCTION IF EXISTS public.open_quiz(UUID);
+
+CREATE FUNCTION public.open_quiz(p_quiz UUID)
+RETURNS TABLE (
+  id UUID,
+  prompt TEXT,
+  options JSONB,
+  question_position INT
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT qq.id, qq.prompt, qq.options, qq.position
-    FROM quiz_questions qq
-    JOIN quizzes q ON q.id = qq.quiz_id
-   WHERE qq.quiz_id = p_quiz AND q.published
+    FROM public.quiz_questions AS qq
+    JOIN public.quizzes AS q ON q.id = qq.quiz_id
+   WHERE qq.quiz_id = p_quiz
+     AND q.published = TRUE
    ORDER BY qq.position;
 $$;
 
@@ -200,7 +225,7 @@ BEGIN
     v_count := v_count + 1;
     v_pick := NULL;
     BEGIN
-      v_pick := (p_answers -> v_count - 1 ->> 'choice')::int;
+      v_pick := (p_answers -> (v_count - 1) ->> 'choice')::int;
     EXCEPTION WHEN OTHERS THEN
       v_pick := NULL;
     END;
@@ -363,18 +388,18 @@ DECLARE
   out JSONB;
 BEGIN
   SELECT jsonb_build_object(
-    'posts', (SELECT count(*) FROM posts WHERE author_id = p_user),
-    'comments', (SELECT count(*) FROM comments WHERE author_id = p_user),
+    'posts', (SELECT count(*) FROM public.posts WHERE author_id = p_user),
+    'comments', (SELECT count(*) FROM public.comments WHERE author_id = p_user),
     'reactions_received', (
-      SELECT count(*) FROM reactions r
-        JOIN posts po ON po.id = r.post_id
+      SELECT count(*) FROM public.reactions r
+        JOIN public.posts po ON po.id = r.post_id
        WHERE po.author_id = p_user
     ),
-    'friends', (SELECT count(*) FROM friendships WHERE user_id = p_user),
-    'followers', (SELECT count(*) FROM followers WHERE following_id = p_user),
-    'stories', (SELECT count(*) FROM stories WHERE author_id = p_user),
-    'events', (SELECT count(*) FROM events WHERE owner_id = p_user),
-    'quizzes_taken', (SELECT count(*) FROM quiz_attempts WHERE user_id = p_user)
+    'friends', (SELECT count(*) FROM public.friendships WHERE user_id = p_user),
+    'followers', (SELECT count(*) FROM public.followers WHERE following_id = p_user),
+    'stories', (SELECT count(*) FROM public.stories WHERE author_id = p_user),
+    'events', (SELECT count(*) FROM public.events WHERE owner_id = p_user),
+    'quizzes_taken', (SELECT count(*) FROM public.quiz_attempts WHERE user_id = p_user)
   ) INTO out;
   RETURN out;
 END;
@@ -443,6 +468,19 @@ CREATE POLICY "pro_media_remove" ON storage.objects FOR DELETE TO authenticated
     AND (public.is_admin() OR (storage.foldername(name))[1] = auth.uid()::text)
   );
 
+-- Starter badges, so the shelf is not empty on day one. Real counts decide who
+-- earns them; nothing here hands anybody a badge.
+INSERT INTO public.badges (name, description, condition_key, threshold) VALUES
+  ('First Words',      'Wrote 10 posts that people read.',            'posts', 10),
+  ('Conversationalist','Left 25 comments on other people''s posts.',  'comments', 25),
+  ('Appreciated',      'Collected 100 reactions across your posts.',  'reactions_received', 100),
+  ('Well Connected',   'Made 25 friends on CONNEXA.',                 'friends', 25),
+  ('Widely Followed',  'Grew an audience of 100 followers.',           'followers', 100),
+  ('Storyteller',      'Published 20 stories.',                        'stories', 20),
+  ('Host',             'Held 3 events in the Events Hub.',             'events', 3),
+  ('Quick Thinker',    'Finished 10 quiz battles.',                    'quizzes_taken', 10)
+ON CONFLICT (name) DO NOTHING;
+
 COMMIT;
 
 NOTIFY pgrst, 'reload schema';
@@ -458,16 +496,3 @@ SELECT
   (SELECT CASE WHEN to_regclass('public.badges') IS NOT NULL THEN 'yes' ELSE 'no' END) AS badges,
   (SELECT CASE WHEN to_regclass('public.user_badges') IS NOT NULL THEN 'yes' ELSE 'no' END) AS awarded,
   (SELECT count(*) FROM storage.buckets WHERE id = 'pro-media') AS bucket;
-
--- Starter badges, so the shelf is not empty on day one. Real counts decide who
--- earns them; nothing here hands anybody a badge.
-INSERT INTO public.badges (name, description, condition_key, threshold) VALUES
-  ('First Words',      'Wrote 10 posts that people read.',            'posts', 10),
-  ('Conversationalist','Left 25 comments on other people''s posts.',  'comments', 25),
-  ('Appreciated',      'Collected 100 reactions across your posts.',  'reactions_received', 100),
-  ('Well Connected',   'Made 25 friends on CONNEXA.',                 'friends', 25),
-  ('Widely Followed',  'Grew an audience of 100 followers.',           'followers', 100),
-  ('Storyteller',      'Published 20 stories.',                        'stories', 20),
-  ('Host',             'Held 3 events in the Events Hub.',             'events', 3),
-  ('Quick Thinker',    'Finished 10 quiz battles.',                    'quizzes_taken', 10)
-ON CONFLICT (name) DO NOTHING;

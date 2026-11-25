@@ -7,6 +7,7 @@ export type Json =
   | Json[]
 
 export type PostVisibility = "public" | "friends" | "only_me"
+export type Gender = "male" | "female" | "other"
 export type MessageAttachmentKind = "image" | "video" | "file"
 export type FriendRequestStatus = "pending" | "accepted" | "rejected"
 export type GroupRole = "owner" | "admin" | "member"
@@ -23,6 +24,8 @@ export type NotificationType =
   | "group_invite"
   | "group_joined"
   | "story_view"
+  | "story_reaction"
+  | "story_reply"
   | "game_request"
   | "game_turn"
 
@@ -47,6 +50,7 @@ export interface Database {
           city?: string | null
           is_admin: boolean
           is_verified: boolean
+          gender?: Gender | null
           pro_expires_at?: string | null
           display_followers?: number | null
           hide_visit_activity?: boolean | null
@@ -157,6 +161,12 @@ export interface Database {
           caption: string | null
           expires_at: string
           audience: "public" | "friends"
+          // Migration 039 adds these. They are optional because a database
+          // that has not taken that paste yet simply has no such columns.
+          published_at?: string | null
+          overlay_position?: "top" | "center" | "bottom" | null
+          overlay_color?: string | null
+          overlay_size?: "sm" | "md" | "lg" | null
           view_count: number
           created_at: string
         }
@@ -975,6 +985,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      mark_story_viewed: {
+        Args: { p_story: string }
+        Returns: boolean
+      }
       unread_message_count: {
         Args: { p_user: string }
         Returns: number

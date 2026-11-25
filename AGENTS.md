@@ -137,6 +137,8 @@ Practical consequences:
 | 035 | `035_pro_plans.sql` | `pro_plans` + the three published plans |
 | 036 | `036_featured_slides.sql` | `featured_slides` (homepage slideshow) |
 | 037 | `037_social_upgrades.sql` | `message_reactions`, `story_reactions`, `messages.story_id`, `stories.audience`, `profile_friend_ids()`, the tightened `stories_select` policy |
+| 038 | `038_profile_gender.sql` | `profiles.gender` (male/female/other) + the silhouette avatar |
+| 039 | `039_stories_upgrade.sql` | story `published_at` + the enforced 24h expiry trigger, `overlay_*` columns, `mark_story_viewed()`, the story realtime publication, `purge_expired_stories()` |
 
 Data/seed files: `seed_profiles_1000.sql` (1000 demo accounts + their posts), `seed_activity.sql`,
 `seed_study_books.sql`, `seed_book_covers.sql`, `seed_book_descriptions.sql`; `demo-names.json`
@@ -156,10 +158,15 @@ both learned from a paste that returned nothing:
 
 ---
 
-## 4. State as of 2026-11-22 — where work stopped
+## 4. State as of 2026-11-25 — where work stopped
 
 Latest commits (all pushed and confirmed live on Vercel):
 
+- **Stories rebuilt (2026-11-25)** — golden champagne ring everywhere, the composer opens as a
+  full-screen sheet with capture/gallery, text position + colour + size and a real upload progress
+  bar, the viewer plays one author at a time and opens **in place** (no redirect to `/stories`), and a
+  friend's new story reaches the homepage without a refresh. Files: `src/lib/stories.ts`,
+  `src/lib/useActiveStories.ts`, `src/components/stories/{StoryRing,StoryViewer,CreateStory,StoriesTray}.tsx`.
 - `33788e8` — stories tray now includes the people you follow (not just friends); inbox preview for
   an unsent newest message reads "This message was deleted".
 - `652236c` — `preflight_migrations.sql` repaired (it could not run at all before).
@@ -168,10 +175,15 @@ Latest commits (all pushed and confirmed live on Vercel):
   slideshow.
 
 **Database pastes still owed** (features coded, deployed, and currently falling back to their
-"migration not applied" message): **031**, **037**, **036**, **024**, **022**. 031 matters most —
-until it lands, no PRO audio/poster/badge upload can persist, and Go Live (022), book highlights
-(024) and the homepage slideshow (036) stay switched off. Get the preflight output first: the owner
-may have applied some of these already.
+"migration not applied" message): **031**, **037**, **036**, **024**, **022**, and now **039**.
+031 matters most — until it lands, no PRO audio/poster/badge upload can persist, and Go Live (022),
+book highlights (024) and the homepage slideshow (036) stay switched off. Get the preflight output
+first: the owner may have applied some of these already.
+
+**039 is the one that finishes Stories.** Until it is pasted: story text styling is dropped (the
+story still publishes), the expiry is worked out by the browser instead of the database, and a new
+story only reaches a friend when their page is reloaded — the realtime publication is what makes it
+appear on its own. Everything else in the story experience works without it.
 
 There is one uncommitted working change in `supabase/migrations/031_pro_entertainment_creator.sql`
 left over from an earlier session. Leave it alone unless the owner asks.

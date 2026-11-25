@@ -21,17 +21,22 @@ export const DESTINATION_TYPES = Object.keys(DESTINATION_LABELS) as SlideDestina
 // window. RLS enforces the same rule, so a hand-built query cannot leak a
 // staged or expired slide either.
 export async function getLiveSlides(supabase: SupabaseClient<Database>, limit = 15): Promise<FeaturedSlide[]> {
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from("featured_slides")
-    .select("*")
-    .eq("active", true)
-    .or(`starts_at.is.null,starts_at.lte.${now}`)
-    .or(`ends_at.is.null,ends_at.gt.${now}`)
-    .order("sort", { ascending: true })
-    .limit(limit);
-  if (error || !data) return [];
-  return data as FeaturedSlide[];
+  try {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from("featured_slides")
+      .select("*")
+      .eq("active", true)
+      .or(`starts_at.is.null,starts_at.lte.${now}`)
+      .or(`ends_at.is.null,ends_at.gt.${now}`)
+      .order("sort", { ascending: true })
+      .limit(limit);
+    if (error || !data) return [];
+    return data as FeaturedSlide[];
+  } catch {
+    // Migration 036 not yet applied — slideshow stays hidden until it is.
+    return [];
+  }
 }
 
 export type SlideStatus = "live" | "scheduled" | "expired" | "hidden";

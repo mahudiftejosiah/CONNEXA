@@ -17,6 +17,9 @@ export async function updateProfile(formData: FormData) {
   const website = (formData.get("website") as string)?.trim();
   const interestsRaw = (formData.get("interests") as string)?.trim();
   const profileVisibility = formData.get("profile_visibility") as string;
+  const sendsGender = formData.has("gender");
+  const genderRaw = ((formData.get("gender") as string) || "").trim().toLowerCase();
+  const gender = genderRaw === "male" || genderRaw === "female" || genderRaw === "other" ? genderRaw : null;
 
   if (!displayName || displayName.length < 2) return { error: "Display name must be at least 2 characters." };
   if (!username || !/^[a-z0-9_]{3,30}$/.test(username)) return { error: "Username must be 3–30 chars: letters, numbers, underscore." };
@@ -48,6 +51,12 @@ export async function updateProfile(formData: FormData) {
   const placeColumns = !sendsPlace
     || !(await supabase.from("profiles").select("country_code").eq("id", user.id).limit(1)).error;
 
+  // Migration 038 adds the gender column. Writing it before that paste has
+  // been run would fail the whole statement and cost the person their other
+  // profile edits, so the column is checked for first.
+  const genderColumns = !sendsGender
+    || !(await supabase.from("profiles").select("gender").eq("id", user.id).limit(1)).error;
+
   await supabase.from("profiles").update({
     display_name: displayName,
     username,
@@ -55,6 +64,7 @@ export async function updateProfile(formData: FormData) {
     website: website || null,
     interests,
     profile_visibility: (profileVisibility || "public") as "public" | "friends" | "private",
+    ...(sendsGender && genderColumns ? { gender } : {}),
     ...(sendsPlace && placeColumns
       ? place
         ? {
@@ -73,6 +83,9 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/settings");
   if (sendsPlace && !placeColumns) {
     return { error: "Your profile saved. The location still needs a one-time database update (migration 026) before CONNEXA can store it." };
+  }
+  if (sendsGender && !genderColumns) {
+    return { error: "Your profile saved. The gender still needs a one-time database update (migration 038) before CONNEXA can store it." };
   }
   return { success: true, username };
 }

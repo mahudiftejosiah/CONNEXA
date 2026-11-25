@@ -415,11 +415,33 @@
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
-/* Story ring gradient */
+/* Story ring — champagne gold (#D6B875).
+   The ring is drawn as a gradient circle with a transparent hole (a mask), so
+   it sits AROUND the picture: the picture itself is never covered, replaced or
+   resized. The hole is a little larger than the picture, which leaves a thin
+   band of breathing space between the two. */
 .story-ring {
-  background: linear-gradient(135deg, rgb(var(--a-800)), rgb(var(--b-400)));
-  padding: 2px;
+  position: absolute;
   border-radius: 9999px;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    #f6e9c4 0%,
+    #d6b875 22%,
+    #b8964e 48%,
+    #efdcb0 72%,
+    #c6a35e 100%
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 0 var(--story-hole), #000 var(--story-hole) var(--story-outer), transparent var(--story-outer));
+  mask-image: radial-gradient(circle, transparent 0 var(--story-hole), #000 var(--story-hole) var(--story-outer), transparent var(--story-outer));
+  filter: drop-shadow(0 0 6px rgba(214, 184, 117, 0.45));
+}
+
+/* A story the viewer has already watched keeps a quiet ring, so the tile still
+   reads as a story without shouting for attention. */
+.story-ring-seen {
+  background: var(--border);
+  filter: none;
 }
 
 /* Animations */

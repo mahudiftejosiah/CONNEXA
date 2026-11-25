@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { signPostMedia } from "@/lib/media";
+import { signPostMedia, signStoryMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
 import { isOpen } from "@/lib/live";
 import { recordProfileVisit } from "@/lib/pro-analytics";
@@ -152,6 +152,25 @@ export default async function ProfilePage({ params }: Props) {
     enrichedPosts = await signPostMedia(supabase, await attachSharedPosts(supabase, enrichedPosts));
   }
 
+  // This person's live stories. The database decides which of them the visitor
+  // is allowed to see, so a friends-only story stays out of reach of strangers.
+  const { data: profileStoryRows } = await supabase
+    .from("stories")
+    .select("*, author:profiles(*)")
+    .eq("author_id", profile.id)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+
+  const profileStoryIds = (profileStoryRows || []).map((s) => s.id);
+  const { data: profileStoryViews } = user && profileStoryIds.length
+    ? await supabase.from("story_views").select("story_id").eq("viewer_id", user.id).in("story_id", profileStoryIds)
+    : { data: [] };
+  const profileViewedSet = new Set((profileStoryViews || []).map((v) => v.story_id));
+  const profileStories = await signStoryMedia(
+    supabase,
+    (profileStoryRows || []).map((s) => ({ ...s, has_viewed: profileViewedSet.has(s.id) }))
+  );
+
   return (
     <AppLayout>
       <ProfileClient
@@ -167,6 +186,7 @@ export default async function ProfilePage({ params }: Props) {
         followingCount={followingCount.count ?? 0}
         friendsCount={friendsCount.count ?? 0}
         initialPosts={enrichedPosts as any}
+        initialStories={profileStories as any}
         initialLive={liveSession}
         initialHighlight={highlightPath}
         upgradeConfigText={upgradeConfigText}

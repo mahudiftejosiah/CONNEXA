@@ -28,7 +28,10 @@ import { AccountBadge } from "@/components/ui/ProBadge";
 import { PeopleListModal, type PeopleKind } from "@/components/profile/PeopleListModal";
 import { UpgradePanel, type UpgradeStatus, type PlanChoice } from "@/components/profile/UpgradePanel";
 import { hasActivePro } from "@/lib/pro";
-import type { LiveSession, Profile, PostWithAuthor } from "@/lib/supabase/types";
+import { StoryViewer } from "@/components/stories/StoryViewer";
+import { StoryRing } from "@/components/stories/StoryRing";
+import { refreshStoryRings } from "@/components/layout/StoryRingProvider";
+import type { LiveSession, Profile, PostWithAuthor, StoryWithAuthor } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 
 interface ProfileClientProps {
@@ -44,6 +47,7 @@ interface ProfileClientProps {
   followingCount: number;
   friendsCount: number;
   initialPosts: PostWithAuthor[];
+  initialStories?: StoryWithAuthor[];
   initialLive: LiveSession | null;
   initialHighlight?: string | null;
   upgradeConfigText: string;
@@ -56,7 +60,7 @@ export function ProfileClient({
   profile, currentProfile, isOwn,
   isFriend: initFriend, isFollowing: initFollowing, isBlocked: initBlocked,
   friendRequestStatus: initReqStatus, friendRequestId: initReqId,
-  followersCount, followingCount, friendsCount, initialPosts, initialLive, initialHighlight,
+  followersCount, followingCount, friendsCount, initialPosts, initialStories = [], initialLive, initialHighlight,
   upgradeConfigText, upgradeStatus, upgradeReference, upgradePlans = [],
 }: ProfileClientProps) {
   const [isFriend, setIsFriend] = useState(initFriend);
@@ -74,6 +78,8 @@ export function ProfileClient({
   const [highlightBroken, setHighlightBroken] = useState<string | null>(null);
   const [watching, setWatching] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
+  const [storyViewing, setStoryViewing] = useState(false);
+  const [profileStories, setProfileStories] = useState<StoryWithAuthor[]>(initialStories);
   const [listKind, setListKind] = useState<PeopleKind | null>(null);
   // The header numbers move with the actions taken on this page, so they stay
   // truthful between server renders.
@@ -279,7 +285,31 @@ export function ProfileClient({
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12">
             {/* Avatar */}
             <div className="relative w-fit">
-              <div className="w-24 h-24 rounded-full border-4 overflow-hidden" style={{ borderColor: "var(--bg-card)" }}>
+              {/* The golden ring belongs to this visitor: it is on while one of
+                  this person's stories is still unwatched, and quiet once they
+                  have seen them all. The poster keeps their own ring. */}
+              {profileStories.length > 0 && (
+                <StoryRing
+                  size={96}
+                  seen={!isOwn && !profileStories.some((s) => !s.has_viewed)}
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (profileStories.length > 0) setStoryViewing(true);
+                  else if (isOwn) setStoryOpen(true);
+                }}
+                className="block w-24 h-24 rounded-full border-4 overflow-hidden"
+                style={{ borderColor: "var(--bg-card)" }}
+                aria-label={
+                  profileStories.length > 0
+                    ? `Open ${profile.display_name}'s story`
+                    : isOwn
+                      ? "Add to your story"
+                      : profile.display_name
+                }
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={profile.avatar_url || fallbackAvatar}
@@ -289,7 +319,7 @@ export function ProfileClient({
                   className="w-full h-full object-cover"
                   onError={(e) => { e.currentTarget.src = fallbackAvatar; }}
                 />
-              </div>
+              </button>
               {isOwn && (
                 <Link
                   href="/settings/profile"
@@ -569,12 +599,29 @@ export function ProfileClient({
         />
       )}
 
+      {storyViewing && profileStories.length > 0 && (
+        <StoryViewer
+          stories={profileStories}
+          currentUserId={currentProfile?.id ?? profile.id}
+          startAuthorId={profile.id}
+          onClose={() => setStoryViewing(false)}
+          onViewed={(storyId) =>
+            setProfileStories((p) => p.map((s) => (s.id === storyId ? { ...s, has_viewed: true } : s)))
+          }
+          onDelete={(storyId) => setProfileStories((p) => p.filter((s) => s.id !== storyId))}
+        />
+      )}
+
       {isOwn && currentProfile && (
         <CreateStory
           open={storyOpen}
           onClose={() => setStoryOpen(false)}
           currentUserId={currentProfile.id}
-          onPublished={() => router.refresh()}
+          onPublished={(story) => {
+            // The new story shows on the profile straight away.
+            setProfileStories((p) => [story, ...p.filter((s) => s.id !== story.id)]);
+            refreshStoryRings();
+          }}
         />
       )}
 
