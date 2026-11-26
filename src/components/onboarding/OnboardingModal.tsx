@@ -17,13 +17,6 @@ interface OnboardingModalProps {
 type Step = "gender" | "avatar" | "cover" | "bio" | "done";
 
 const STEPS: Step[] = ["gender", "avatar", "cover", "bio", "done"];
-const STEP_LABELS: Record<Step, string> = {
-  gender: "Your gender",
-  avatar: "Profile photo",
-  cover:  "Cover photo",
-  bio:    "About you",
-  done:   "All set!",
-};
 
 export function OnboardingModal({ profile, onComplete }: OnboardingModalProps) {
   const [step, setStep] = useState<Step>("gender");
@@ -164,7 +157,7 @@ export function OnboardingModal({ profile, onComplete }: OnboardingModalProps) {
           {step === "gender" && (
             <div className="space-y-3">
               <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                What's your gender? <span className="text-red-500">*</span>
+                What&apos;s your gender? <span className="text-red-500">*</span>
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {(["male", "female"] as const).map((g) => (
