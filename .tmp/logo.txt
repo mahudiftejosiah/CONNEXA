@@ -1,0 +1,48 @@
+src/app/admin/AdminClient.tsx:82:  const [newSite, setNewSite] = useState({ title: "", url: "", logo_url: "" });
+src/app/admin/AdminClient.tsx:196:      logo_url: newSite.logo_url.trim() || null,
+src/app/admin/AdminClient.tsx:202:    setNewSite({ title: "", url: "", logo_url: "" });
+src/app/admin/AdminClient.tsx:589:              <ImageField placeholder="Logo image link (optional)" value={newSite.logo_url}
+src/app/admin/AdminClient.tsx:590:                onChange={(v) => setNewSite((p) => ({ ...p, logo_url: v }))} userId={currentAdminId} />
+src/app/admin/AdminClient.tsx:593:              No logo link? The site&apos;s own favicon is used automatically, so the icon always matches the brand.
+src/app/admin/AdminClient.tsx:620:                      <img src={s.logo_url || `https://www.google.com/s2/favicons?domain=${encodeURIComponent(s.url.replace(/^https?:\/\//, "").split("/")[0])}&sz=64`}
+src/app/globals.css:473:   The emblem is a four-sided prism: every face carries the logo, so the mark
+src/app/globals.css:477:@keyframes logoSpin {
+src/app/globals.css:481:@keyframes logoSheen {
+src/app/globals.css:486:.logo3d {
+src/app/globals.css:491:  perspective: calc(var(--logo3d, 48px) * 6);
+src/app/globals.css:493:.logo3d__tilt {
+src/app/globals.css:499:.logo3d__gyro {
+src/app/globals.css:503:  animation: logoSpin 9s linear infinite;
+src/app/globals.css:505:.logo3d__halo {
+src/app/globals.css:511:.logo3d__orbit {
+src/app/globals.css:518:.logo3d__panel {
+src/app/globals.css:537:  transform: translateZ(calc(var(--logo3d, 48px) * 0.35));
+src/app/globals.css:539:.logo3d__panel--1 { transform: rotateY(90deg)  translateZ(calc(var(--logo3d, 48px) * 0.35)); }
+src/app/globals.css:540:.logo3d__panel--2 { transform: rotateY(180deg) translateZ(calc(var(--logo3d, 48px) * 0.35)); }
+src/app/globals.css:541:.logo3d__panel--3 { transform: rotateY(270deg) translateZ(calc(var(--logo3d, 48px) * 0.35)); }
+src/app/globals.css:542:.logo3d__emblem { width: 76%; height: 76%; }
+src/app/globals.css:543:.logo3d__sheen {
+src/app/globals.css:551:  animation: logoSheen 9s linear infinite;
+src/app/globals.css:554:  .logo3d__gyro { animation-name: none; transform: rotateY(-28deg); }
+src/app/globals.css:555:  .logo3d__sheen { animation-name: none; opacity: 0.16; }
+src/app/globals.css:963:  .site-header .logo3d__word { font-size: 1rem; white-space: nowrap; }
+src/app/globals.css:970:  .site-header .logo3d__word { font-size: 0.95rem; }
+src/app/globals.css:977:  .site-header .logo3d__word { font-size: 0.875rem; }
+src/app/globals.css:984:  .site-header .logo3d__word { font-size: 0.8rem; }
+src/components/brand/Logo.tsx:24:    <svg className="logo3d__emblem" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+src/components/brand/Logo.tsx:42:      className="logo3d"
+src/components/brand/Logo.tsx:43:      style={{ "--logo3d": `${s.icon}px`, width: s.icon, height: s.icon } as CSSProperties}
+src/components/brand/Logo.tsx:46:      <span className="logo3d__halo" />
+src/components/brand/Logo.tsx:47:      <span className="logo3d__tilt">
+src/components/brand/Logo.tsx:48:        <span className="logo3d__orbit" />
+src/components/brand/Logo.tsx:49:        <span className="logo3d__gyro">
+src/components/brand/Logo.tsx:51:            <span key={face} className={cn("logo3d__panel", face > 0 && `logo3d__panel--${face}`)}>
+src/components/brand/Logo.tsx:53:              <span className="logo3d__sheen" style={{ animationDelay: `${face * -2.25 - 0.45}s` }} />
+src/components/brand/Logo.tsx:65:        <span className={cn("logo3d__word font-extrabold tracking-tight text-brand-green-800 dark:text-white", s.text)}>
+src/components/ui/SiteIconGrid.tsx:18:                src={s.logo_url || `https://www.google.com/s2/favicons?domain=${encodeURIComponent(s.url.replace(/^https?:\/\//, "").split("/")[0])}&sz=64`}
+src/lib/help-bot.ts:100:    answer: "Anywhere CONNEXA asks for a picture you can now either paste a link or press the image button to choose the file from your device — book covers, game thumbnails and site logos all accept both.",
+src/lib/supabase/types.ts:385:          logo_url: string | null
+src/lib/supabase/types.ts:391:        Insert: Omit<Database["public"]["Tables"]["site_shortcuts"]["Row"], "id" | "created_at" | "logo_url" | "description" | "created_by" | "sort"> & { logo_url?: string | null; description?: string | null; created_by?: string | null; sort?: number }
+--- svg files ---
+--- png/ico ---
+./public/images/library-wall.jpg

@@ -1,0 +1,153 @@
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 16384 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+16713	educational	Amusements in Mathematics	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 16384 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+63840	educational	The History of Oswestry: Comprising the 	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13949 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+32614	educational	The Diary of a Resurrectionist, 1811-181	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+38769	educational	A Course of Pure Mathematics: Third Edit	ERR:spawnSync curl ETIMEDOUT	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 16384 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+37354	educational	Condensation of Determinants: Being a Ne	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13949 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 14991 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13950 bytes
+curl: (28) Connection timed out after 25412 milliseconds
+curl: (23) client returned ERROR on write of 306 bytes
+11592	story	Children's Hour with Red Riding Hood and	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 16384 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+57858	story	West Irish Folk-Tales and Romances	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13949 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13949 bytes
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (23) client returned ERROR on write of 306 bytes
+77175	story	The man elephant : $b A book of African 	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13949 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+19457	story	Historic Tales: The Romance of Reality. 	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13949 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+19503	story	Historic Tales: The Romance of Reality. 	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 16384 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+10002	inspirational	The House on the Borderland	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13949 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+75897	inspirational	A new dictionary of the terms ancient an	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+10253	inspirational	The Gospel of Wealth	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13947 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13947 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+38427	inspirational	The World as Will and Idea (Vol. 1 of 3)	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13949 bytes
+curl: (23) client returned ERROR on write of 313 bytes
+curl: (23) client returned ERROR on write of 306 bytes
+32158	inspirational	Rural Wealth and Welfare: Economic Princ	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 14925 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13950 bytes
+curl: (23) client returned ERROR on write of 311 bytes
+curl: (23) client returned ERROR on write of 304 bytes
+9253	story	'Browne's Folly': (From: 'The Doliver Ro	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 16384 bytes
+curl: (23) client returned ERROR on write of 13949 bytes
+curl: (23) client returned ERROR on write of 311 bytes
+curl: (23) client returned ERROR on write of 304 bytes
+1342	(extra)	(not in seed)	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (23) client returned ERROR on write of 13948 bytes
+curl: (23) client returned ERROR on write of 6857 bytes
+curl: (28) Failed to connect to www.gutenberg.org:443 after 21176 ms: Could not connect to server
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+84	(extra)	(not in seed)	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+11	(extra)	(not in seed)	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h	ERR:Command failed: curl -sS --ssl-no-revoke -o /dev/null -w %{h
+DONE 19 books

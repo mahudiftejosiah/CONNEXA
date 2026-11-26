@@ -1,0 +1,3 @@
+[main ffda8d1] Add a dashboard preflight that reports which migrations are applied
+ 1 file changed, 56 insertions(+)
+ create mode 100644 supabase/preflight_migrations.sql

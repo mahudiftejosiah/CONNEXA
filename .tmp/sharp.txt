@@ -1,0 +1,9 @@
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'eslint-visitor-keys@5.0.1',
+npm warn EBADENGINE   required: { node: '^20.19.0 || ^22.13.0 || >=24' },
+npm warn EBADENGINE   current: { node: 'v22.11.0', npm: '10.9.0' }
+npm warn EBADENGINE }
+
+added 9 packages, removed 1 package, and changed 1 package in 10m
+npm exit=0
+sharp now OK

@@ -1,0 +1,52 @@
+warning: in the working copy of 'src/lib/supabase/types.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'supabase/preflight_migrations.sql', LF will be replaced by CRLF the next time Git touches it
+diff --git a/src/lib/supabase/types.ts b/src/lib/supabase/types.ts
+index 2ccb135..0464ed4 100644
+--- a/src/lib/supabase/types.ts
++++ b/src/lib/supabase/types.ts
+@@ -200,9 +200,15 @@ export interface Database {
+           attachment_size: number | null
+           view_once: boolean
+           viewed_at: string | null
++          edited_at: string | null
++          deleted_at: string | null
++          pinned_at: string | null
++          pinned_by: string | null
++          reply_to: string | null
++          forwarded_from: string | null
+         }
+         Insert: Partial<Omit<Database["public"]["Tables"]["messages"]["Row"], "id" | "is_read" | "created_at">>
+-        Update: Partial<Pick<Database["public"]["Tables"]["messages"]["Row"], "is_read">>
++        Update: Partial<Omit<Database["public"]["Tables"]["messages"]["Row"], "id" | "conversation_id" | "sender_id" | "created_at">>
+       }
+       groups: {
+         Row: {
+@@ -525,6 +531,10 @@ export interface Database {
+         Args: { p_message_id: string }
+         Returns: { attachment_path: string; media_kind: MessageAttachmentKind; ttl_seconds: number }[]
+       }
++      delete_message_for_everyone: {
++        Args: { p_message_id: string }
++        Returns: boolean
++      }
+     }
+     Enums: {
+       [_ in never]: never
+diff --git a/supabase/preflight_migrations.sql b/supabase/preflight_migrations.sql
+index 19b39af..48c0a14 100644
+--- a/supabase/preflight_migrations.sql
++++ b/supabase/preflight_migrations.sql
+@@ -39,6 +39,13 @@ from (
+   ('022 live video bucket',
+     case when exists (select 1 from storage.buckets where id = 'live')
+          then 'yes' else 'no' end),
++  ('023 message actions columns',
++    case when exists (select 1 from pg_attribute
++                      where relid = 'public.messages'::regclass
++                        and attname = 'pinned_at') then 'yes' else 'no' end),
++  ('023 unsend function',
++    case when to_regprocedure('public.delete_message_for_everyone(uuid)') is not null
++         then 'yes' else 'no' end),
+   ('seed: book covers filled in',
+     (select (case when count(*) > 0 then 'yes' else 'no' end)::text
+       from public.study_books where cover_url is not null)),

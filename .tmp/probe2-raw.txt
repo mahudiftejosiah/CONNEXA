@@ -1,0 +1,133 @@
+16713	https://www.gutenberg.org/cache/epub/16713/pg16713.txt	200:993284
+16713	https://www.gutenberg.org/cache/epub/16713/pg16713.txt.utf-8	404:6857
+16713	https://www.gutenberg.org/files/16713/16713-0.txt	200:951439
+16713	https://www.gutenberg.org/cache/epub/16713/pg16713.html	404:6857
+16713	https://www.gutenberg.org/cache/epub/16713/pg16713-images.html	200:1374973
+16713	https://www.gutenberg.org/ebooks/16713.epub.images	200:6385791
+16713	https://www.gutenberg.org/ebooks/16713.epub.noimages	200:494768
+63840	https://www.gutenberg.org/cache/epub/63840/pg63840.txt	200:683441
+63840	https://www.gutenberg.org/cache/epub/63840/pg63840.txt.utf-8	408:110
+63840	https://www.gutenberg.org/files/63840/63840-0.txt	200:663623
+63840	https://www.gutenberg.org/cache/epub/63840/pg63840.html	404:6857
+63840	https://www.gutenberg.org/cache/epub/63840/pg63840-images.html	200:800618
+63840	https://www.gutenberg.org/ebooks/63840.epub.images	ERR curl: (28) Operation timed out after 25222 milliseconds with 8477323 out of 9290893 bytes received
+63840	https://www.gutenberg.org/ebooks/63840.epub.noimages	200:350084
+32614	https://www.gutenberg.org/cache/epub/32614/pg32614.txt	200:229845
+32614	https://www.gutenberg.org/cache/epub/32614/pg32614.txt.utf-8	404:6857
+32614	https://www.gutenberg.org/files/32614/32614-0.txt	404:6857
+32614	https://www.gutenberg.org/cache/epub/32614/pg32614.html	404:6857
+32614	https://www.gutenberg.org/cache/epub/32614/pg32614-images.html	200:293910
+32614	https://www.gutenberg.org/ebooks/32614.epub.images	200:987301
+32614	https://www.gutenberg.org/ebooks/32614.epub.noimages	200:158722
+38769	https://www.gutenberg.org/cache/epub/38769/pg38769.txt	404:6857
+38769	https://www.gutenberg.org/cache/epub/38769/pg38769.txt.utf-8	404:6857
+38769	https://www.gutenberg.org/files/38769/38769-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+38769	https://www.gutenberg.org/cache/epub/38769/pg38769.html	404:6857
+38769	https://www.gutenberg.org/cache/epub/38769/pg38769-images.html	404:6857
+38769	https://www.gutenberg.org/ebooks/38769.epub.images	404:6857
+38769	https://www.gutenberg.org/ebooks/38769.epub.noimages	404:6857
+37354	https://www.gutenberg.org/cache/epub/37354/pg37354.txt	404:6857
+37354	https://www.gutenberg.org/cache/epub/37354/pg37354.txt.utf-8	404:6857
+37354	https://www.gutenberg.org/files/37354/37354-0.txt	404:6857
+37354	https://www.gutenberg.org/cache/epub/37354/pg37354.html	404:6857
+37354	https://www.gutenberg.org/cache/epub/37354/pg37354-images.html	200:83889
+37354	https://www.gutenberg.org/ebooks/37354.epub.images	200:737381
+37354	https://www.gutenberg.org/ebooks/37354.epub.noimages	200:399605
+11592	https://www.gutenberg.org/cache/epub/11592/pg11592.txt	200:34880
+11592	https://www.gutenberg.org/cache/epub/11592/pg11592.txt.utf-8	404:6857
+11592	https://www.gutenberg.org/files/11592/11592-0.txt	200:14991
+11592	https://www.gutenberg.org/cache/epub/11592/pg11592.html	404:6857
+11592	https://www.gutenberg.org/cache/epub/11592/pg11592-images.html	200:48698
+11592	https://www.gutenberg.org/ebooks/11592.epub.images	ERR curl: (56) schannel: server closed abruptly (missing close_notify)
+11592	https://www.gutenberg.org/ebooks/11592.epub.noimages	200:69226
+57858	https://www.gutenberg.org/cache/epub/57858/pg57858.txt	200:397446
+57858	https://www.gutenberg.org/cache/epub/57858/pg57858.txt.utf-8	404:6857
+57858	https://www.gutenberg.org/files/57858/57858-0.txt	200:397649
+57858	https://www.gutenberg.org/cache/epub/57858/pg57858.html	404:6857
+57858	https://www.gutenberg.org/cache/epub/57858/pg57858-images.html	200:449288
+57858	https://www.gutenberg.org/ebooks/57858.epub.images	200:428999
+57858	https://www.gutenberg.org/ebooks/57858.epub.noimages	200:190128
+77175	https://www.gutenberg.org/cache/epub/77175/pg77175.txt	200:67883
+77175	https://www.gutenberg.org/cache/epub/77175/pg77175.txt.utf-8	404:6857
+77175	https://www.gutenberg.org/files/77175/77175-0.txt	404:6857
+77175	https://www.gutenberg.org/cache/epub/77175/pg77175.html	ERR curl: (28) Failed to connect to www.gutenberg.org:443 after 21268 ms: Could not connect to server
+77175	https://www.gutenberg.org/cache/epub/77175/pg77175-images.html	200:129385
+77175	https://www.gutenberg.org/ebooks/77175.epub.images	200:5231160
+77175	https://www.gutenberg.org/ebooks/77175.epub.noimages	200:83662
+19457	https://www.gutenberg.org/cache/epub/19457/pg19457.txt	200:500350
+19457	https://www.gutenberg.org/cache/epub/19457/pg19457.txt.utf-8	404:6857
+19457	https://www.gutenberg.org/files/19457/19457-0.txt	408:110
+19457	https://www.gutenberg.org/cache/epub/19457/pg19457.html	404:6857
+19457	https://www.gutenberg.org/cache/epub/19457/pg19457-images.html	200:615207
+19457	https://www.gutenberg.org/ebooks/19457.epub.images	200:1860687
+19457	https://www.gutenberg.org/ebooks/19457.epub.noimages	200:283452
+19503	https://www.gutenberg.org/cache/epub/19503/pg19503.txt	ERR curl: (28) Operation timed out after 25000 milliseconds with 58828 out of 505429 bytes received
+19503	https://www.gutenberg.org/cache/epub/19503/pg19503.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+19503	https://www.gutenberg.org/files/19503/19503-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+19503	https://www.gutenberg.org/cache/epub/19503/pg19503.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+19503	https://www.gutenberg.org/cache/epub/19503/pg19503-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+19503	https://www.gutenberg.org/ebooks/19503.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+19503	https://www.gutenberg.org/ebooks/19503.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10002	https://www.gutenberg.org/cache/epub/10002/pg10002.txt	ERR curl: (28) Failed to connect to www.gutenberg.org:443 after 21173 ms: Could not connect to server
+10002	https://www.gutenberg.org/cache/epub/10002/pg10002.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10002	https://www.gutenberg.org/files/10002/10002-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10002	https://www.gutenberg.org/cache/epub/10002/pg10002.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10002	https://www.gutenberg.org/cache/epub/10002/pg10002-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10002	https://www.gutenberg.org/ebooks/10002.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10002	https://www.gutenberg.org/ebooks/10002.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+75897	https://www.gutenberg.org/cache/epub/75897/pg75897.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+75897	https://www.gutenberg.org/cache/epub/75897/pg75897.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+75897	https://www.gutenberg.org/files/75897/75897-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+75897	https://www.gutenberg.org/cache/epub/75897/pg75897.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+75897	https://www.gutenberg.org/cache/epub/75897/pg75897-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+75897	https://www.gutenberg.org/ebooks/75897.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+75897	https://www.gutenberg.org/ebooks/75897.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10253	https://www.gutenberg.org/cache/epub/10253/pg10253.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10253	https://www.gutenberg.org/cache/epub/10253/pg10253.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10253	https://www.gutenberg.org/files/10253/10253-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10253	https://www.gutenberg.org/cache/epub/10253/pg10253.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10253	https://www.gutenberg.org/cache/epub/10253/pg10253-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10253	https://www.gutenberg.org/ebooks/10253.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+10253	https://www.gutenberg.org/ebooks/10253.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+38427	https://www.gutenberg.org/cache/epub/38427/pg38427.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+38427	https://www.gutenberg.org/cache/epub/38427/pg38427.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+38427	https://www.gutenberg.org/files/38427/38427-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+38427	https://www.gutenberg.org/cache/epub/38427/pg38427.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+38427	https://www.gutenberg.org/cache/epub/38427/pg38427-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+38427	https://www.gutenberg.org/ebooks/38427.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+38427	https://www.gutenberg.org/ebooks/38427.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+32158	https://www.gutenberg.org/cache/epub/32158/pg32158.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+32158	https://www.gutenberg.org/cache/epub/32158/pg32158.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+32158	https://www.gutenberg.org/files/32158/32158-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+32158	https://www.gutenberg.org/cache/epub/32158/pg32158.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+32158	https://www.gutenberg.org/cache/epub/32158/pg32158-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+32158	https://www.gutenberg.org/ebooks/32158.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+32158	https://www.gutenberg.org/ebooks/32158.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+9253	https://www.gutenberg.org/cache/epub/9253/pg9253.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+9253	https://www.gutenberg.org/cache/epub/9253/pg9253.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+9253	https://www.gutenberg.org/files/9253/9253-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+9253	https://www.gutenberg.org/cache/epub/9253/pg9253.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+9253	https://www.gutenberg.org/cache/epub/9253/pg9253-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+9253	https://www.gutenberg.org/ebooks/9253.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+9253	https://www.gutenberg.org/ebooks/9253.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+1342	https://www.gutenberg.org/cache/epub/1342/pg1342.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+1342	https://www.gutenberg.org/cache/epub/1342/pg1342.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+1342	https://www.gutenberg.org/files/1342/1342-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+1342	https://www.gutenberg.org/cache/epub/1342/pg1342.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+1342	https://www.gutenberg.org/cache/epub/1342/pg1342-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+1342	https://www.gutenberg.org/ebooks/1342.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+1342	https://www.gutenberg.org/ebooks/1342.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+84	https://www.gutenberg.org/cache/epub/84/pg84.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+84	https://www.gutenberg.org/cache/epub/84/pg84.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+84	https://www.gutenberg.org/files/84/84-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+84	https://www.gutenberg.org/cache/epub/84/pg84.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+84	https://www.gutenberg.org/cache/epub/84/pg84-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+84	https://www.gutenberg.org/ebooks/84.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+84	https://www.gutenberg.org/ebooks/84.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+11	https://www.gutenberg.org/cache/epub/11/pg11.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+11	https://www.gutenberg.org/cache/epub/11/pg11.txt.utf-8	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+11	https://www.gutenberg.org/files/11/11-0.txt	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+11	https://www.gutenberg.org/cache/epub/11/pg11.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+11	https://www.gutenberg.org/cache/epub/11/pg11-images.html	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+11	https://www.gutenberg.org/ebooks/11.epub.images	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed
+11	https://www.gutenberg.org/ebooks/11.epub.noimages	ERR curl: (35) schannel: failed to receive handshake, SSL/TLS connection failed

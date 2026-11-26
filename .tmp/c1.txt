@@ -1,0 +1,12 @@
+[main 692b75a] Put the CONNEXA mark everywhere a device asks for an icon
+ 11 files changed, 80 insertions(+)
+ create mode 100644 public/apple-touch-icon.png
+ create mode 100644 public/favicon.ico
+ create mode 100644 public/favicon.png
+ create mode 100644 public/icon-192.png
+ create mode 100644 public/icon-512.png
+ create mode 100644 public/icon-maskable-192.png
+ create mode 100644 public/icon-maskable-512.png
+ create mode 100644 public/icon-maskable.svg
+ create mode 100644 public/icon.svg
+ create mode 100644 public/manifest.webmanifest

@@ -20,6 +20,7 @@ export async function updateProfile(formData: FormData) {
   const sendsGender = formData.has("gender");
   const genderRaw = ((formData.get("gender") as string) || "").trim().toLowerCase();
   const gender = genderRaw === "male" || genderRaw === "female" || genderRaw === "other" ? genderRaw : null;
+  const sendsOnboardingDone = formData.get("onboarding_done") === "true";
 
   if (!displayName || displayName.length < 2) return { error: "Display name must be at least 2 characters." };
   if (!username || !/^[a-z0-9_]{3,30}$/.test(username)) return { error: "Username must be 3–30 chars: letters, numbers, underscore." };
@@ -65,6 +66,7 @@ export async function updateProfile(formData: FormData) {
     interests,
     profile_visibility: (profileVisibility || "public") as "public" | "friends" | "private",
     ...(sendsGender && genderColumns ? { gender } : {}),
+    ...(sendsOnboardingDone ? { onboarding_done: true } : {}),
     ...(sendsPlace && placeColumns
       ? place
         ? {

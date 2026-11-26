@@ -1,0 +1,329 @@
+uid=7_1 RootWebArea "@jacob_harris_1000 | CONNEXA" focusable focused url="https://connexa-delta.vercel.app/profile/jacob_harris_1000"
+  uid=7_2 none
+    uid=7_3 none
+      uid=7_4 none
+        uid=7_5 banner
+          uid=7_6 none
+            uid=7_7 link "CONNEXA" focusable url="https://connexa-delta.vercel.app/"
+              uid=7_8 none
+                uid=7_9 none
+                  uid=7_10 StaticText "CONN"
+                    InlineTextBox "CONN"
+                  uid=7_11 StaticText "EXA"
+                    InlineTextBox "EXA"
+            uid=7_12 none
+            uid=7_13 none
+            uid=7_14 none
+              uid=7_15 button "Search" focusable invalid="false"
+                uid=7_16 image
+              uid=7_17 button "Switch to dark mode" focusable invalid="false"
+                uid=7_18 image
+              uid=7_19 link "Messages" focusable url="https://connexa-delta.vercel.app/messages"
+                uid=7_20 image
+              uid=7_21 link "Notifications" focusable url="https://connexa-delta.vercel.app/notifications"
+                uid=7_22 image
+              uid=7_23 link "Settings" focusable url="https://connexa-delta.vercel.app/settings"
+                uid=7_24 image
+              uid=7_25 link "1 person active now" description="See who is active" focusable url="https://connexa-delta.vercel.app/messages?tab=active"
+                uid=7_26 image
+        uid=7_27 none
+          uid=7_28 main
+            uid=7_29 none
+              uid=7_30 none
+                uid=7_31 none
+                  uid=7_32 generic
+                    uid=7_33 generic
+                      uid=7_34 button "Add to story" focusable focused invalid="false"
+                        uid=7_35 image
+                        uid=7_36 StaticText "Add to story"
+                          InlineTextBox "Add to story"
+                      uid=7_37 link "Edit cover" focusable url="https://connexa-delta.vercel.app/settings/profile"
+                        uid=7_38 image
+                        uid=7_39 StaticText "Edit cover"
+                          InlineTextBox "Edit cover"
+                  uid=7_40 none
+                    uid=7_41 none
+                      uid=7_42 generic
+                        uid=7_43 none
+                          uid=7_44 image "Jacob Harris" url="https://ui-avatars.com/api/?name=Jacob%20Harris&size=200&background=12372A&color=D6B875"
+                        uid=7_45 link focusable url="https://connexa-delta.vercel.app/settings/profile"
+                          uid=7_46 image
+                      uid=7_47 link "Edit profile" focusable url="https://connexa-delta.vercel.app/settings/profile"
+                        uid=7_48 button "Edit profile" focusable invalid="false"
+                          uid=7_49 image
+                          uid=7_50 StaticText "Edit profile"
+                            InlineTextBox "Edit profile"
+                    uid=7_51 none
+                      uid=7_52 heading "Jacob Harris" level="1"
+                        uid=7_53 StaticText "Jacob Harris"
+                          InlineTextBox "Jacob Harris"
+                      uid=7_54 paragraph
+                        uid=7_55 StaticText "@"
+                          InlineTextBox "@"
+                        uid=7_56 StaticText "jacob_harris_1000"
+                          InlineTextBox "jacob_harris_1000"
+                      uid=7_57 paragraph
+                        uid=7_58 StaticText "Coffee, code and weekend hikes."
+                          InlineTextBox "Coffee, code and weekend hikes."
+                      uid=7_59 none
+                        uid=7_60 none
+                          uid=7_61 image
+                          uid=7_62 StaticText "New York"
+                            InlineTextBox "New York"
+                        uid=7_63 none
+                          uid=7_64 image
+                          uid=7_65 StaticText "Joined"
+                            InlineTextBox "Joined"
+                          uid=7_66 StaticText "November 2026"
+                            InlineTextBox "November 2026"
+                      uid=7_67 none
+                        uid=7_68 none
+                          uid=7_69 StaticText "music"
+                            InlineTextBox "music"
+                        uid=7_70 none
+                          uid=7_71 StaticText "music"
+                            InlineTextBox "music"
+                      uid=7_72 none
+                        uid=7_73 none
+                          uid=7_74 StaticText "28"
+                            InlineTextBox "28"
+                          uid=7_75 none
+                            uid=7_76 StaticText "Friends"
+                              InlineTextBox "Friends"
+                        uid=7_77 none
+                          uid=7_78 StaticText "0"
+                            InlineTextBox "0"
+                          uid=7_79 none
+                            uid=7_80 StaticText "Followers"
+                              InlineTextBox "Followers"
+                        uid=7_81 none
+                          uid=7_82 StaticText "0"
+                            InlineTextBox "0"
+                          uid=7_83 none
+                            uid=7_84 StaticText "Following"
+                              InlineTextBox "Following"
+                  uid=7_85 none
+                    uid=7_86 button "Posts" focusable invalid="false"
+                      uid=7_87 StaticText "Posts"
+                        InlineTextBox "Posts"
+                    uid=7_88 button "About" focusable invalid="false"
+                      uid=7_89 StaticText "About"
+                        InlineTextBox "About"
+                    uid=7_90 button "Upgrade account" focusable invalid="false"
+                      uid=7_91 StaticText "Upgrade account"
+                        InlineTextBox "Upgrade account"
+                uid=7_92 none
+                  uid=7_93 none
+                    uid=7_94 none
+                      uid=7_95 generic
+                        uid=7_96 image "Jacob Harris" url="https://ui-avatars.com/api/?name=Jacob%20Harris&size=88&background=12372A&color=D6B875&bold=true"
+                      uid=7_97 generic
+                        uid=7_98 textbox "Post content" editable="plaintext" focusable invalid="false" multiline settable
+                          uid=7_99 none
+                          uid=7_100 generic editable="plaintext"
+                  uid=7_101 article
+                    uid=7_102 none
+                      uid=7_103 none
+                        uid=7_104 link "Jacob Harris" focusable url="https://connexa-delta.vercel.app/profile/jacob_harris_1000"
+                          uid=7_105 generic
+                            uid=7_106 image "Jacob Harris" url="https://ui-avatars.com/api/?name=Jacob%20Harris&size=88&background=12372A&color=D6B875&bold=true"
+                        uid=7_107 none
+                          uid=7_108 link "Jacob Harris" focusable url="https://connexa-delta.vercel.app/profile/jacob_harris_1000"
+                            uid=7_109 StaticText "Jacob Harris"
+                              InlineTextBox "Jacob Harris"
+                          uid=7_110 none
+                            uid=7_111 none
+                              uid=7_112 StaticText "2 minutes ago"
+                                InlineTextBox "2 minutes ago"
+                            uid=7_113 none
+                              uid=7_114 StaticText "·"
+                                InlineTextBox "·"
+                            uid=7_115 none
+                              uid=7_116 image
+                      uid=7_117 generic
+                        uid=7_118 button "Post options" focusable invalid="false"
+                          uid=7_119 image
+                    uid=7_120 none
+                      uid=7_121 paragraph
+                        uid=7_122 StaticText "Publishing straight from my own profile page — testing the post composer there. (verification post)"
+                          InlineTextBox "Publishing straight from my own profile page — testing the post"
+                          InlineTextBox
+                          InlineTextBox "composer there. (verification post)"
+                    uid=7_123 none
+                      uid=7_124 none
+                        uid=7_125 generic
+                          uid=7_126 button "Like" focusable invalid="false"
+                            uid=7_127 image
+                            uid=7_128 none
+                              uid=7_129 StaticText "Like"
+                                InlineTextBox "Like"
+                        uid=7_130 button "Comment" focusable invalid="false"
+                          uid=7_131 image
+                          uid=7_132 none
+                            uid=7_133 StaticText "Comment"
+                              InlineTextBox "Comment"
+                        uid=7_134 button "Repost" focusable invalid="false"
+                          uid=7_135 image
+                          uid=7_136 none
+                            uid=7_137 StaticText "Repost"
+                              InlineTextBox "Repost"
+                      uid=7_138 button "Save post" focusable invalid="false"
+                        uid=7_139 image
+                  uid=7_140 article
+                    uid=7_141 none
+                      uid=7_142 none
+                        uid=7_143 link "Jacob Harris" focusable url="https://connexa-delta.vercel.app/profile/jacob_harris_1000"
+                          uid=7_144 generic
+                            uid=7_145 image "Jacob Harris" url="https://ui-avatars.com/api/?name=Jacob%20Harris&size=88&background=12372A&color=D6B875&bold=true"
+                        uid=7_146 none
+                          uid=7_147 link "Jacob Harris" focusable url="https://connexa-delta.vercel.app/profile/jacob_harris_1000"
+                            uid=7_148 StaticText "Jacob Harris"
+                              InlineTextBox "Jacob Harris"
+                          uid=7_149 none
+                            uid=7_150 none
+                              uid=7_151 StaticText "13 days ago"
+                                InlineTextBox "13 days ago"
+                            uid=7_152 none
+                              uid=7_153 StaticText "·"
+                                InlineTextBox "·"
+                            uid=7_154 none
+                              uid=7_155 image
+                      uid=7_156 generic
+                        uid=7_157 button "Post options" focusable invalid="false"
+                          uid=7_158 image
+                    uid=7_159 none
+                      uid=7_160 paragraph
+                        uid=7_161 StaticText "Farmers market haul: too much basil, no regrets."
+                          InlineTextBox "Farmers market haul: too much basil, no regrets."
+                    uid=7_162 none
+                      uid=7_163 generic
+                        uid=7_164 image "Post media" url="https://picsum.photos/seed/connexa1000/800/600"
+                    uid=7_165 none
+                      uid=7_166 none
+                        uid=7_167 generic
+                          uid=7_168 button "Like" focusable invalid="false"
+                            uid=7_169 image
+                            uid=7_170 none
+                              uid=7_171 StaticText "Like"
+                                InlineTextBox "Like"
+                        uid=7_172 button "Comment" focusable invalid="false"
+                          uid=7_173 image
+                          uid=7_174 none
+                            uid=7_175 StaticText "Comment"
+                              InlineTextBox "Comment"
+                        uid=7_176 button "Repost" focusable invalid="false"
+                          uid=7_177 image
+                          uid=7_178 none
+                            uid=7_179 StaticText "Repost"
+                              InlineTextBox "Repost"
+                      uid=7_180 button "Save post" focusable invalid="false"
+                        uid=7_181 image
+                  uid=7_182 article
+                    uid=7_183 none
+                      uid=7_184 none
+                        uid=7_185 link "Jacob Harris" focusable url="https://connexa-delta.vercel.app/profile/jacob_harris_1000"
+                          uid=7_186 generic
+                            uid=7_187 image "Jacob Harris" url="https://ui-avatars.com/api/?name=Jacob%20Harris&size=88&background=12372A&color=D6B875&bold=true"
+                        uid=7_188 none
+                          uid=7_189 link "Jacob Harris" focusable url="https://connexa-delta.vercel.app/profile/jacob_harris_1000"
+                            uid=7_190 StaticText "Jacob Harris"
+                              InlineTextBox "Jacob Harris"
+                          uid=7_191 none
+                            uid=7_192 none
+                              uid=7_193 StaticText "16 days ago"
+                                InlineTextBox "16 days ago"
+                            uid=7_194 none
+                              uid=7_195 StaticText "·"
+                                InlineTextBox "·"
+                            uid=7_196 none
+                              uid=7_197 image
+                      uid=7_198 generic
+                        uid=7_199 button "Post options" focusable invalid="false"
+                          uid=7_200 image
+                    uid=7_201 none
+                      uid=7_202 paragraph
+                        uid=7_203 StaticText "Playlist for a rainy drive is 90 percent of why rain exists."
+                          InlineTextBox "Playlist for a rainy drive is 90 percent of why rain exists."
+                    uid=7_204 none
+                      uid=7_205 generic
+                        uid=7_206 image "Post media" url="https://picsum.photos/seed/connexa1000/800/600"
+                    uid=7_207 none
+                      uid=7_208 none
+                        uid=7_209 generic
+                          uid=7_210 button "Like" focusable invalid="false"
+                            uid=7_211 image
+                            uid=7_212 none
+                              uid=7_213 StaticText "Like"
+                                InlineTextBox "Like"
+                        uid=7_214 button "Comment" focusable invalid="false"
+                          uid=7_215 image
+                          uid=7_216 none
+                            uid=7_217 StaticText "Comment"
+                              InlineTextBox "Comment"
+                        uid=7_218 button "Repost" focusable invalid="false"
+                          uid=7_219 image
+                          uid=7_220 none
+                            uid=7_221 StaticText "Repost"
+                              InlineTextBox "Repost"
+                      uid=7_222 button "Save post" focusable invalid="false"
+                        uid=7_223 image
+                uid=7_224 generic
+                  uid=7_225 none
+                    uid=7_226 none
+                      uid=7_227 heading "Create story" level="2"
+                        uid=7_228 StaticText "Create story"
+                          InlineTextBox "Create story"
+                      uid=7_229 button "Close" focusable invalid="false"
+                        uid=7_230 image
+                    uid=7_231 button "Click to upload photo or video" focusable invalid="false"
+                      uid=7_232 image
+                      uid=7_233 paragraph
+                        uid=7_234 StaticText "Click to upload photo or video"
+                          InlineTextBox "Click to upload photo or video"
+                    uid=7_235 textbox "Caption" editable="plaintext" focusable invalid="false" settable
+                      uid=7_236 none
+                      uid=7_237 generic editable="plaintext"
+                    uid=7_238 button "Publish story" disableable disabled invalid="false"
+                      uid=7_239 StaticText "Publish story"
+                        InlineTextBox "Publish story"
+        uid=7_240 navigation "Mobile navigation"
+          uid=7_241 none
+            uid=7_242 link "Home" focusable url="https://connexa-delta.vercel.app/feed"
+              uid=7_243 image
+              uid=7_244 none
+                uid=7_245 StaticText "Home"
+                  InlineTextBox "Home"
+            uid=7_246 link "Friends" focusable url="https://connexa-delta.vercel.app/friends"
+              uid=7_247 image
+              uid=7_248 none
+                uid=7_249 StaticText "Friends"
+                  InlineTextBox "Friends"
+            uid=7_250 link "Discover" focusable url="https://connexa-delta.vercel.app/discover"
+              uid=7_251 image
+              uid=7_252 none
+                uid=7_253 StaticText "Discover"
+                  InlineTextBox "Discover"
+            uid=7_254 link "Games" focusable url="https://connexa-delta.vercel.app/games"
+              uid=7_255 image
+              uid=7_256 none
+                uid=7_257 StaticText "Games"
+                  InlineTextBox "Games"
+            uid=7_258 link "Messages" focusable url="https://connexa-delta.vercel.app/messages"
+              uid=7_259 image
+              uid=7_260 none
+                uid=7_261 StaticText "Messages"
+                  InlineTextBox "Messages"
+            uid=7_262 link "Notifications" focusable url="https://connexa-delta.vercel.app/notifications"
+              uid=7_263 image
+              uid=7_264 none
+                uid=7_265 StaticText "Notifications"
+                  InlineTextBox "Notifications"
+            uid=7_266 link "Profile" focusable url="https://connexa-delta.vercel.app/profile/jacob_harris_1000"
+              uid=7_267 image
+              uid=7_268 none
+                uid=7_269 StaticText "Profile"
+                  InlineTextBox "Profile"
+              uid=7_270 none
+      uid=7_271 generic
+      uid=7_272 generic
+        uid=7_273 alert atomic live="assertive" relevant="additions text"

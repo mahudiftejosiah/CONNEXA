@@ -1,0 +1,5 @@
+      1 sizeLimit
+      1 recencyKey
+      1 kindOfFile
+      1 isViewOnceMedia
+      1 isOnline

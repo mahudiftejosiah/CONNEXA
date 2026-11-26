@@ -1,0 +1,2 @@
+[main fba4f8b] Let the app manifest through without an auth detour
+ 1 file changed, 4 insertions(+), 1 deletion(-)

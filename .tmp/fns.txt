@@ -1,0 +1,29 @@
+25:function isOnline(lastSeen?: string | null) {
+29:function kindOfFile(file: File): MessageAttachmentKind {
+35:function sizeLimit(kind: MessageAttachmentKind) {
+39:function fileSizeLabel(bytes?: number | null) {
+46:function attachmentPreview(kind?: MessageAttachmentKind | null, viewOnce?: boolean | null) {
+58:function recencyKey(conv: ConversationWithDetails) {
+82:function isViewOnceMedia(kind: MessageAttachmentKind) {
+124:  function isPeerViewOnce(msg: Message) {
+128:  function markOpened(msgId: string) {
+133:  async function signAttachments(rows: Message[]) {
+147:  async function openViewOnce(msg: Message) {
+178:  function bumpConversation(convId: string, msg: Message) {
+223:  async function openConversation(conv: ConversationWithDetails) {
+254:  async function deleteConversation(conv: ConversationWithDetails) {
+270:  function pickFile(next: File | null) {
+284:  async function sendMessage() {
+348:  function getOtherParticipant(conv: ConversationWithDetails) {
+354:  async function startChatWith(friend: FriendLite) {
+381:  function replaceMessage(next: Message) {
+387:  function beginEdit(msg: Message) {
+393:  function cancelEdit() {
+398:  async function saveEdit() {
+417:  async function copyText(msg: Message) {
+427:  async function togglePin(msg: Message) {
+443:  function jumpTo(messageId: string) {
+447:  async function unsendMessage(msg: Message) {
+486:  async function forwardTo(msg: Message, target: ForwardTarget) {
+async
+function

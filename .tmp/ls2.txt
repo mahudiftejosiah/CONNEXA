@@ -1,0 +1,40 @@
+total 80
+drwxr-xr-x 1 MY PC None     0 Nov  9 02:41 .
+drwxr-xr-x 1 MY PC None     0 Nov  9 02:41 ..
+-rw-r--r-- 1 MY PC None 81436 Nov  9 02:41 library-wall.jpg
+add.txt
+basketball.json
+check-bot.ts
+check-scores.ts
+commit.txt
+d1.txt
+d2.txt
+ds.txt
+dup.txt
+fns.txt
+gc.txt
+gp.txt
+gs.txt
+gs2.txt
+lint.txt
+lint2.txt
+lint3.txt
+ls.json
+ls.txt
+ls2.txt
+prod-scores.json
+push.txt
+snap-profile.txt
+snap-profile2.txt
+snap-profile3.txt
+st.txt
+status.json
+stories-page.txt
+style.txt
+tennis.json
+tsc.txt
+tsc2.txt
+tsc3.txt
+tsc4.txt
+tsc5.txt
+w.txt

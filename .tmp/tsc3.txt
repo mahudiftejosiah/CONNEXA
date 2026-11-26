@@ -1,0 +1,2 @@
+src/app/(app)/messages/MessagesClient.tsx(449,42): error TS2345: Argument of type '"delete_message_for_everyone"' is not assignable to parameter of type '"unread_message_count" | "bot_inspect" | "bot_scan" | "bot_hide" | "bot_restore" | "open_view_once"'.
+tsc exit=2

@@ -1,0 +1,13 @@
+
+./src/lib/scores.ts
+71:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+74:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+75:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/(app)/messages/MessagesClient.tsx
+393:6  Warning: React Hook useEffect has missing dependencies: 'getOtherParticipant' and 'openConversation'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+569:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+744:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules

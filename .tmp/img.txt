@@ -1,0 +1,8 @@
+sharp MISSING
+jimp MISSING
+pngjs MISSING
+canvas MISSING
+sharp MISSING
+to-ico MISSING
+iconv-lite MISSING
+v22.11.0

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "wave",
+    "cat": "greetings",
+    "word": "HI!",
+    "url": "/stickers/wave.svg"
+  },
+  {
+    "id": "hello",
+    "cat": "greetings",
+    "word": "HELLO",
+    "url": "/stickers/hello.svg"
+  },
+  {
+    "id": "sun",
+    "cat": "greetings",
+    "word": "MORNING",
+    "url": "/stickers/sun.svg"
+  },
+  {
+    "id": "peace",
+    "cat": "greetings",
+    "word": "PEACE",
+    "url": "/stickers/peace.svg"
+  },
+  {
+    "id": "love",
+    "cat": "feelings",
+    "word": "LOVE",
+    "url": "/stickers/love.svg"
+  },
+  {
+    "id": "happy",
+    "cat": "feelings",
+    "word": "YAY",
+    "url": "/stickers/happy.svg"
+  },
+  {
+    "id": "cool",
+    "cat": "feelings",
+    "word": "COOL",
+    "url": "/stickers/cool.svg"
+  },
+  {
+    "id": "laugh",
+    "cat": "feelings",
+    "word": "LOL",
+    "url": "/stickers/laugh.svg"
+  },
+  {
+    "id": "sad",
+    "cat": "feelings",
+    "word": "AWW",
+    "url": "/stickers/sad.svg"
+  },
+  {
+    "id": "wow",
+    "cat": "feelings",
+    "word": "WOW",
+    "url": "/stickers/wow.svg"
+  },
+  {
+    "id": "sleepy",
+    "cat": "feelings",
+    "word": "ZZZ",
+    "url": "/stickers/sleepy.svg"
+  },
+  {
+    "id": "angry",
+    "cat": "feelings",
+    "word": "GRR",
+    "url": "/stickers/angry.svg"
+  },
+  {
+    "id": "party",
+    "cat": "celebrate",
+    "word": "PARTY",
+    "url": "/stickers/party.svg"
+  },
+  {
+    "id": "star",
+    "cat": "celebrate",
+    "word": "NICE",
+    "url": "/stickers/star.svg"
+  },
+  {
+    "id": "fire",
+    "cat": "celebrate",
+    "word": "FIRE",
+    "url": "/stickers/fire.svg"
+  },
+  {
+    "id": "clap",
+    "cat": "celebrate",
+    "word": "BRAVO",
+    "url": "/stickers/clap.svg"
+  }
+]

@@ -10,6 +10,7 @@ import { PostCard } from "@/components/posts/PostCard";
 import { CommentSection } from "@/components/posts/CommentSection";
 import { PostSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { createClient } from "@/lib/supabase/client";
 import { signPostMedia } from "@/lib/media";
 import { attachSharedPosts } from "@/lib/shared-posts";
@@ -41,6 +42,12 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
   const [activeComments, setActiveComments] = useState<string | null>(null);
   const [storyOpen, setStoryOpen] = useState(false);
   const [storyAuthor, setStoryAuthor] = useState<string | null>(null);
+  const [currentProfile, setCurrentProfile] = useState(profile);
+  // Show onboarding if gender not set OR onboarding_done is false
+  const needsOnboarding = !currentProfile.onboarding_done && (
+    currentProfile.gender !== "male" && currentProfile.gender !== "female" && currentProfile.gender !== "other"
+  );
+  const [showOnboarding, setShowOnboarding] = useState(needsOnboarding);
   const pageRef = useRef(1);
   // Stories keep coming in while the page is open: a friend publishing one
   // puts it in the tray without anybody reloading.
@@ -139,6 +146,16 @@ export function FeedClient({ initialPosts, stories, profile, currentUserId, frie
 
   return (
     <div className="space-y-4">
+      {/* Onboarding modal — shown until gender is selected and onboarding completed */}
+      {showOnboarding && (
+        <OnboardingModal
+          profile={currentProfile}
+          onComplete={(updated) => {
+            setCurrentProfile((p) => ({ ...p, ...updated }));
+            setShowOnboarding(false);
+          }}
+        />
+      )}
       {/* Home tabs */}
       <div className="card p-1 flex gap-1">
         <button onClick={() => setTab("feed")}

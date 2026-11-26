@@ -1,0 +1,42 @@
+parsed rows 340
+== educational 130
+    16713 Amusements in Mathematics
+    38769 A Course of Pure Mathematics: Third Edition
+    41568 An Introduction to Mathematics
+== story 103
+    11592 Children's Hour with Red Riding Hood and Other Stories
+    359 Good Stories for Great Holidays: Arranged for Story-Tel
+    24271 Children's Rhymes, Children's Games, Children's Songs, 
+== inspirational 107
+    10002 The House on the Borderland
+    8197 India's Love Lyrics
+    38427 The World as Will and Idea (Vol. 1 of 3)
+--- pdf-url titles (28):
+38769 educational A Course of Pure Mathematics: Third Edition
+41568 educational An Introduction to Mathematics
+31061 educational A History of Mathematics
+31246 educational A Short Account of the History of Mathematics
+36640 educational Lectures on Elementary Mathematics
+39088 educational On the study and difficulties of mathematics
+32973 educational Elements of Plane Trigonometry: For the use o
+40624 educational A Scrap-Book of Elementary Mathematics: Notes
+31076 educational Elliptic Functions: An Elementary Text-Book f
+8746 educational History of Modern Mathematics: Mathematical M
+36154 educational The Evanston Colloquium: Lectures on Mathemat
+57355 educational The Foundations of Mathematics: A Contributio
+29788 educational Four Lectures on Mathematics, Delivered at Co
+17384 educational The Foundations of Geometry
+33063 educational Plane Geometry
+29807 educational Solid Geometry with Problems and Applications
+13702 educational Non-Euclidean Geometry
+26373 educational The Elements of non-Euclidean Geometry
+33283 educational Calculus Made Easy: Being a very-simplest int
+36884 educational The Mathematical Analysis of Logic: Being an 
+39041 educational Elementary Illustrations of the Differential 
+37354 educational Condensation of Determinants: Being a New and
+19457 story Historic Tales: The Romance of Reality. Vol. 
+19503 story Historic Tales: The Romance of Reality. Vol. 
+38427 inspirational The World as Will and Idea (Vol. 1 of 3)
+40868 inspirational The World as Will and Idea (Vol. 3 of 3)
+40097 inspirational The World as Will and Idea (Vol. 2 of 3)
+32158 inspirational Rural Wealth and Welfare: Economic Principles

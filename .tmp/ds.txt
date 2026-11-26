@@ -1,0 +1,11 @@
+warning: in the working copy of 'src/app/(app)/messages/MessagesClient.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/(app)/profile/[username]/ProfileClient.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/(app)/stories/StoriesClient.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/supabase/types.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'supabase/preflight_migrations.sql', LF will be replaced by CRLF the next time Git touches it
+ src/app/(app)/messages/MessagesClient.tsx          | 531 ++++++++++++++++++++-
+ src/app/(app)/profile/[username]/ProfileClient.tsx |  44 +-
+ src/app/(app)/stories/StoriesClient.tsx            | 100 +---
+ src/lib/supabase/types.ts                          |   8 +-
+ supabase/preflight_migrations.sql                  |   7 +
+ 5 files changed, 564 insertions(+), 126 deletions(-)

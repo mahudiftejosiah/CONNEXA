@@ -1,0 +1,3 @@
+cda6467 A featured game plays inside CONNEXA instead of leaving the page
+692b75a Put the CONNEXA mark everywhere a device asks for an icon
+2a3108c Copy still works where the async clipboard is refused

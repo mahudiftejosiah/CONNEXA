@@ -1,0 +1,29 @@
+Add a dashboard preflight that reports which migrations are applied
+Every batch so far has ended with a list of SQL pastes owed, with no way to
+see from the app which ones actually landed. This one query answers it.
+
+---
+Live scores, a live broadcast on the cover, and a helper in Messages
+The sports icons on the Games tab now open a fixture board inside CONNEXA
+instead of jumping away: the server reads the same feed livescore.com's own
+app uses, and the board draws football, basketball, tennis, cricket and
+American football with yesterday/tomorrow and a minute-by-minute refresh.
+Their pages refuse to be framed and only fill in once their scripts run, so
+proxying the HTML would have shown an empty box.
+
+Going live takes the screen the moment you start, records in five-second
+clips that upload as they finish, and shows the broadcast on your profile
+cover to everyone until the session ends — then the cover photo returns by
+itself. Anything that asks for a picture now takes a file from the device as
+well as a link.
+
+A CONNEXA Helper conversation sits at the top of Messages and answers where
+everything is the instant you ask. The stories page shares the feed's tray,
+and a chat carries a photo from your device beside the document button.
+
+Needs supabase/migrations/022_live_sessions.sql applied.
+
+---
+A green ring marks the faces with a story you have not seen yet
+
+---

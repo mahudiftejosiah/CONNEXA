@@ -35,6 +35,7 @@ export function EditProfileClient({ profile, preferences }: EditProfileClientPro
     website: profile.website || "",
     interests: (profile.interests || []).join(", "),
     profile_visibility: profile.profile_visibility,
+    gender: (profile.gender === "male" || profile.gender === "female") ? profile.gender : "",
   });
 
   // Location is no longer a sentence someone types: it is a chain of choices
@@ -205,6 +206,38 @@ export function EditProfileClient({ profile, preferences }: EditProfileClientPro
           placeholder="Music, Travel, Tech (comma-separated)"
           hint="Up to 20 interests, separated by commas"
         />
+
+        {/* Gender */}
+        <div>
+          <label className="label">Gender</label>
+          <div className="grid grid-cols-2 gap-3">
+            {(["male", "female"] as const).map((g) => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, gender: f.gender === g ? "" : g }))}
+                className="relative flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left"
+                style={{
+                  borderColor: form.gender === g ? "#12372A" : "var(--border)",
+                  background: form.gender === g ? "rgba(18,55,42,0.06)" : "var(--bg)",
+                }}
+              >
+                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0" style={{ background: "var(--border)" }}>
+                  <GenderSilhouette gender={g} className="w-full h-full" />
+                </div>
+                <span className="font-semibold capitalize text-sm" style={{ color: "var(--text-primary)" }}>{g}</span>
+                {form.gender === g && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center"
+                    style={{ background: "#12372A" }}>
+                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div>
           <label className="label">Profile visibility</label>

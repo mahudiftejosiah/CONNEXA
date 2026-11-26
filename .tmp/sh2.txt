@@ -1,0 +1,8 @@
+SHARP OK 8.18.7
+LICENSE
+README.md
+dist
+install
+lib
+package.json
+src

@@ -1,0 +1,14 @@
+ M src/app/(app)/messages/MessagesClient.tsx
+ M src/app/(app)/profile/[username]/ProfileClient.tsx
+ M src/app/(app)/stories/StoriesClient.tsx
+ M src/lib/supabase/types.ts
+ M supabase/preflight_migrations.sql
+?? .tmp/
+?? src/components/messages/ForwardDialog.tsx
+?? src/components/messages/MessageMenu.tsx
+?? src/components/stories/CreateStory.tsx
+?? supabase/migrations/023_message_actions.sql
+?? tsconfig.check.json
+ffda8d1 Add a dashboard preflight that reports which migrations are applied
+0e2c250 Live scores, a live broadcast on the cover, and a helper in Messages
+d9b0594 A green ring marks the faces with a story you have not seen yet

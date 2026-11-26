@@ -1,0 +1,3062 @@
+[
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000001",
+  "category": "educational",
+  "title": "Amusements in Mathematics",
+  "author": "Dudeney, Henry Ernest",
+  "url": "https://www.gutenberg.org/ebooks/16713",
+  "gid": "16713"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000002",
+  "category": "educational",
+  "title": "A Course of Pure Mathematics: Third Edition",
+  "author": "Hardy, G. H. (Godfrey Harold)",
+  "url": "https://www.gutenberg.org/files/38769/38769-pdf.pdf",
+  "gid": "38769"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000003",
+  "category": "educational",
+  "title": "An Introduction to Mathematics",
+  "author": "Whitehead, Alfred North",
+  "url": "https://www.gutenberg.org/files/41568/41568-pdf.pdf",
+  "gid": "41568"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000004",
+  "category": "educational",
+  "title": "The philosophy of mathematics",
+  "author": "Comte, Auguste",
+  "url": "https://www.gutenberg.org/ebooks/39702",
+  "gid": "39702"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000005",
+  "category": "educational",
+  "title": "Astronomy Explained Upon Sir Isaac Newton's Principles: And made easy to those who have not studied mathematics",
+  "author": "Ferguson, James",
+  "url": "https://www.gutenberg.org/ebooks/60619",
+  "gid": "60619"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000006",
+  "category": "educational",
+  "title": "The Romance of Mathematics: Being the Original Researches of a Lady Professor of Girtham College in Polemical Science, with some Account of the Social",
+  "author": "Ditchfield, P. H. (Peter Hampson)",
+  "url": "https://www.gutenberg.org/ebooks/26481",
+  "gid": "26481"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000007",
+  "category": "educational",
+  "title": "A History of Mathematics",
+  "author": "Cajori, Florian",
+  "url": "https://www.gutenberg.org/files/31061/31061-pdf.pdf",
+  "gid": "31061"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000008",
+  "category": "educational",
+  "title": "William Oughtred: A Great Seventeenth-Century Teacher of Mathematics",
+  "author": "Cajori, Florian",
+  "url": "https://www.gutenberg.org/ebooks/46815",
+  "gid": "46815"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000009",
+  "category": "educational",
+  "title": "A Short Account of the History of Mathematics",
+  "author": "Ball, W. W. Rouse (Walter William Rouse)",
+  "url": "https://www.gutenberg.org/files/31246/31246-pdf.pdf",
+  "gid": "31246"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000010",
+  "category": "educational",
+  "title": "The Invasion of America: a fact story based on the inexorable mathematics of war",
+  "author": "Muller, J. W. (Julius Washington)",
+  "url": "https://www.gutenberg.org/ebooks/52038",
+  "gid": "52038"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000011",
+  "category": "educational",
+  "title": "Lectures on Elementary Mathematics",
+  "author": "Lagrange, J. L. (Joseph Louis)",
+  "url": "https://www.gutenberg.org/files/36640/36640-pdf.pdf",
+  "gid": "36640"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000012",
+  "category": "educational",
+  "title": "On the study and difficulties of mathematics",
+  "author": "De Morgan, Augustus",
+  "url": "https://www.gutenberg.org/files/39088/39088-pdf.pdf",
+  "gid": "39088"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000013",
+  "category": "educational",
+  "title": "Elements of Plane Trigonometry: For the use of the junior class of mathematics in the University of Glasgow",
+  "author": "Blackburn, Hugh",
+  "url": "https://www.gutenberg.org/files/32973/32973-pdf.pdf",
+  "gid": "32973"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000014",
+  "category": "educational",
+  "title": "A Scrap-Book of Elementary Mathematics: Notes, Recreations, Essays",
+  "author": "White, William Frank",
+  "url": "https://www.gutenberg.org/files/40624/40624-pdf.pdf",
+  "gid": "40624"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000015",
+  "category": "educational",
+  "title": "Elliptic Functions: An Elementary Text-Book for Students of Mathematics",
+  "author": "Baker, Arthur Latham",
+  "url": "https://www.gutenberg.org/files/31076/31076-pdf.pdf",
+  "gid": "31076"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000016",
+  "category": "educational",
+  "title": "History of Modern Mathematics: Mathematical Monographs No. 1",
+  "author": "Smith, David Eugene",
+  "url": "https://www.gutenberg.org/files/8746/8746-pdf.pdf",
+  "gid": "8746"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000017",
+  "category": "educational",
+  "title": "The Evanston Colloquium: Lectures on Mathematics: Delivered From Aug. 28 to Sept. 9, 1893 Before Members of the Congress of Mathematics Held in Connec",
+  "author": "Klein, Felix",
+  "url": "https://www.gutenberg.org/files/36154/36154-pdf.pdf",
+  "gid": "36154"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000018",
+  "category": "educational",
+  "title": "The Foundations of Mathematics: A Contribution to the Philosophy of Geometry",
+  "author": "Carus, Paul",
+  "url": "https://www.gutenberg.org/files/57355/57355-pdf.pdf",
+  "gid": "57355"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000019",
+  "category": "educational",
+  "title": "Four Lectures on Mathematics, Delivered at Columbia University in 1911",
+  "author": "Hadamard, Jacques",
+  "url": "https://www.gutenberg.org/files/29788/29788-pdf.pdf",
+  "gid": "29788"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000020",
+  "category": "educational",
+  "title": "Mechanical Drawing Self-Taught: Comprising instructions in the selection and preparation of drawing instruments, elementary instruction in practical m",
+  "author": "Rose, Joshua",
+  "url": "https://www.gutenberg.org/ebooks/23319",
+  "gid": "23319"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000021",
+  "category": "educational",
+  "title": "The Way To Geometry",
+  "author": "Ramus, Petrus",
+  "url": "https://www.gutenberg.org/ebooks/26752",
+  "gid": "26752"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000022",
+  "category": "educational",
+  "title": "The Foundations of Geometry",
+  "author": "Hilbert, David",
+  "url": "https://www.gutenberg.org/files/17384/17384-pdf.pdf",
+  "gid": "17384"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000023",
+  "category": "educational",
+  "title": "The Teaching of Geometry",
+  "author": "Smith, David Eugene",
+  "url": "https://www.gutenberg.org/ebooks/37681",
+  "gid": "37681"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000024",
+  "category": "educational",
+  "title": "An essay on the foundations of geometry",
+  "author": "Russell, Bertrand",
+  "url": "https://www.gutenberg.org/ebooks/52091",
+  "gid": "52091"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000025",
+  "category": "educational",
+  "title": "An Elementary Course in Synthetic Projective Geometry",
+  "author": "Lehmer, Derrick Norman",
+  "url": "https://www.gutenberg.org/ebooks/17001",
+  "gid": "17001"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000026",
+  "category": "educational",
+  "title": "Encyclopaedia Britannica, 11th Edition, 'Geodesy' to 'Geometry': Volume 11, Slice 6",
+  "author": "Various",
+  "url": "https://www.gutenberg.org/ebooks/37461",
+  "gid": "37461"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000027",
+  "category": "educational",
+  "title": "Marks' first lessons in geometry: In two parts. Objectively presented, and designed for the use of primary classes in grammar schools, academies, etc",
+  "author": "Marks, Bernhard",
+  "url": "https://www.gutenberg.org/ebooks/54300",
+  "gid": "54300"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000028",
+  "category": "educational",
+  "title": "Plane Geometry",
+  "author": "Wentworth, G. A. (George Albert)",
+  "url": "https://www.gutenberg.org/files/33063/33063-pdf.pdf",
+  "gid": "33063"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000029",
+  "category": "educational",
+  "title": "Solid Geometry with Problems and Applications (Revised edition)",
+  "author": "Lennes, N. J. (Nels Johann), Slaught, H. E. (Herbert Ellsworth)",
+  "url": "https://www.gutenberg.org/files/29807/29807-pdf.pdf",
+  "gid": "29807"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000030",
+  "category": "educational",
+  "title": "First notions of logic (preparatory to the study of geometry)",
+  "author": "De Morgan, Augustus",
+  "url": "https://www.gutenberg.org/ebooks/67017",
+  "gid": "67017"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000031",
+  "category": "educational",
+  "title": "Non-Euclidean Geometry",
+  "author": "Manning, Henry Parker",
+  "url": "https://www.gutenberg.org/files/13702/13702-pdf.pdf",
+  "gid": "13702"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000032",
+  "category": "educational",
+  "title": "The Elements of non-Euclidean Geometry",
+  "author": "Coolidge, Julian Lowell",
+  "url": "https://www.gutenberg.org/files/26373/26373-pdf.pdf",
+  "gid": "26373"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000033",
+  "category": "educational",
+  "title": "Calculus Made Easy: Being a very-simplest introduction to those beautiful methods which are generally called by the terrifying names of the Differenti",
+  "author": "Thompson, Silvanus P. (Silvanus Phillips)",
+  "url": "https://www.gutenberg.org/files/33283/33283-pdf.pdf",
+  "gid": "33283"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000034",
+  "category": "educational",
+  "title": "The Mathematical Analysis of Logic: Being an Essay Towards a Calculus of Deductive Reasoning",
+  "author": "Boole, George",
+  "url": "https://www.gutenberg.org/files/36884/36884-pdf.pdf",
+  "gid": "36884"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000035",
+  "category": "educational",
+  "title": "The calculus of logic",
+  "author": "Boole, George",
+  "url": "https://www.gutenberg.org/ebooks/69512",
+  "gid": "69512"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000036",
+  "category": "educational",
+  "title": "Elementary Illustrations of the Differential and Integral Calculus",
+  "author": "De Morgan, Augustus",
+  "url": "https://www.gutenberg.org/files/39041/39041-pdf.pdf",
+  "gid": "39041"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000037",
+  "category": "educational",
+  "title": "The puzzle king : $b Amusing arithmetic, book-keeping blunders, commercial comicalities, curious 'catches', peculiar problems, perplexing paradoxes,",
+  "author": "Scott, John",
+  "url": "https://www.gutenberg.org/ebooks/52052",
+  "gid": "52052"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000038",
+  "category": "educational",
+  "title": "The Psychology of Arithmetic",
+  "author": "Thorndike, Edward L. (Edward Lee)",
+  "url": "https://www.gutenberg.org/ebooks/39300",
+  "gid": "39300"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000039",
+  "category": "educational",
+  "title": "Endless Amusement: A Collection of Nearly 400 Entertaining Experiments in Various Branches of Science; Including Acoustics, Electricity, Magnetism, Ar",
+  "author": "Unknown",
+  "url": "https://www.gutenberg.org/ebooks/32492",
+  "gid": "32492"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000040",
+  "category": "educational",
+  "title": "Elements of arithmetic",
+  "author": "De Morgan, Augustus",
+  "url": "https://www.gutenberg.org/ebooks/68662",
+  "gid": "68662"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000041",
+  "category": "educational",
+  "title": "The Earliest Arithmetics in English",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/25664",
+  "gid": "25664"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000042",
+  "category": "educational",
+  "title": "Essays on Mankind and Political Arithmetic",
+  "author": "Petty, William, Sir",
+  "url": "https://www.gutenberg.org/ebooks/5619",
+  "gid": "5619"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000043",
+  "category": "educational",
+  "title": "Comic Arithmetic",
+  "author": "Leigh, Percival",
+  "url": "https://www.gutenberg.org/ebooks/46120",
+  "gid": "46120"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000044",
+  "category": "educational",
+  "title": "Fifteen Institute Lessons in Language, Arithmetic, and U.S. History",
+  "author": "Sanders, William Francis Lewis",
+  "url": "https://www.gutenberg.org/ebooks/52429",
+  "gid": "52429"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000045",
+  "category": "educational",
+  "title": "Condensation of Determinants: Being a New and Brief Method for Computing their Arithmetical Values",
+  "author": "Carroll, Lewis",
+  "url": "https://www.gutenberg.org/files/37354/37354-pdf.pdf",
+  "gid": "37354"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000046",
+  "category": "educational",
+  "title": "Arithmetical books : $b from the invention of printing to the present time",
+  "author": "De Morgan, Augustus",
+  "url": "https://www.gutenberg.org/ebooks/79706",
+  "gid": "79706"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000047",
+  "category": "educational",
+  "title": "The Principles of Biology, Volume 1 (of 2)",
+  "author": "Spencer, Herbert",
+  "url": "https://www.gutenberg.org/ebooks/54612",
+  "gid": "54612"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000048",
+  "category": "educational",
+  "title": "First course in biology",
+  "author": "Bailey, L. H. (Liberty Hyde), Coleman, Walter Moore",
+  "url": "https://www.gutenberg.org/ebooks/76851",
+  "gid": "76851"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000049",
+  "category": "educational",
+  "title": "A Civic Biology, Presented in Problems",
+  "author": "Hunter, George W. (George William)",
+  "url": "https://www.gutenberg.org/ebooks/39969",
+  "gid": "39969"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000050",
+  "category": "educational",
+  "title": "The Biology, Physiology and Sociology of Reproduction: Also Sexual Hygiene with Special Reference to the Male",
+  "author": "Hall, Winfield Scott",
+  "url": "https://www.gutenberg.org/ebooks/24708",
+  "gid": "24708"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000051",
+  "category": "educational",
+  "title": "American Addresses, with a Lecture on the Study of Biology",
+  "author": "Huxley, Thomas Henry",
+  "url": "https://www.gutenberg.org/ebooks/16136",
+  "gid": "16136"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000052",
+  "category": "educational",
+  "title": "Text Book of Biology, Part 1: Vertebrata",
+  "author": "Wells, H. G. (Herbert George)",
+  "url": "https://www.gutenberg.org/ebooks/21781",
+  "gid": "21781"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000053",
+  "category": "educational",
+  "title": "The Story of the Living Machine: A Review of the Conclusions of Modern Biology in Regard; to the Mechanism Which Controls the Phenomena of Living; Act",
+  "author": "Conn, H. W. (Herbert William)",
+  "url": "https://www.gutenberg.org/ebooks/16487",
+  "gid": "16487"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000054",
+  "category": "educational",
+  "title": "The Principles of Biology, Volume 2 (of 2)",
+  "author": "Spencer, Herbert",
+  "url": "https://www.gutenberg.org/ebooks/67282",
+  "gid": "67282"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000055",
+  "category": "educational",
+  "title": "Biology and Its Makers: With Portraits and Other Illustrations",
+  "author": "Locy, William A. (William Albert)",
+  "url": "https://www.gutenberg.org/ebooks/58867",
+  "gid": "58867"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000056",
+  "category": "educational",
+  "title": "Fathers of Biology",
+  "author": "McRae, Charles",
+  "url": "https://www.gutenberg.org/ebooks/24456",
+  "gid": "24456"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000057",
+  "category": "educational",
+  "title": "Venomous arthropod handbook : $b envenomization symptoms/treatment, identification, biology and control",
+  "author": "Biery, Terry L.",
+  "url": "https://www.gutenberg.org/ebooks/56710",
+  "gid": "56710"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000058",
+  "category": "educational",
+  "title": "Biology : $b A lecture delivered at Columbia University in the series on Science, Philosophy and Art November 20, 1907",
+  "author": "Wilson, Edmund B. (Edmund Beecher)",
+  "url": "https://www.gutenberg.org/ebooks/18911",
+  "gid": "18911"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000059",
+  "category": "educational",
+  "title": "Parallel Paths: A Study in Biology, Ethics, and Art",
+  "author": "Rolleston, T. W. (Thomas William)",
+  "url": "https://www.gutenberg.org/ebooks/45971",
+  "gid": "45971"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000060",
+  "category": "educational",
+  "title": "Greek Biology & Greek Medicine",
+  "author": "Singer, Charles",
+  "url": "https://www.gutenberg.org/ebooks/63591",
+  "gid": "63591"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000061",
+  "category": "educational",
+  "title": "The philosophy of biology",
+  "author": "Johnstone, James",
+  "url": "https://www.gutenberg.org/ebooks/61663",
+  "gid": "61663"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000062",
+  "category": "educational",
+  "title": "History of biology",
+  "author": "Miall, L. C. (Louis Compton)",
+  "url": "https://www.gutenberg.org/ebooks/58109",
+  "gid": "58109"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000063",
+  "category": "educational",
+  "title": "Biology versus Theology. The Bible: irreconcilable with Science, Experience, and even its own statements",
+  "author": "Julian",
+  "url": "https://www.gutenberg.org/ebooks/64500",
+  "gid": "64500"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000064",
+  "category": "educational",
+  "title": "Fossil plants, Vol. 2 : $b A text-book for students of botany and geology",
+  "author": "Seward, A. C. (Albert Charles)",
+  "url": "https://www.gutenberg.org/ebooks/68470",
+  "gid": "68470"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000065",
+  "category": "educational",
+  "title": "The Manual of the Botany of the Northern United States: Including the District East of the Mississippi and North of North Carolina and Tennessee",
+  "author": "Gray, Asa",
+  "url": "https://www.gutenberg.org/ebooks/39423",
+  "gid": "39423"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000066",
+  "category": "educational",
+  "title": "Fossil plants, Vol. 3 : $b A text-book for students of botany and geology",
+  "author": "Seward, A. C. (Albert Charles)",
+  "url": "https://www.gutenberg.org/ebooks/76146",
+  "gid": "76146"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000067",
+  "category": "educational",
+  "title": "The Elements of Botany, For Beginners and For Schools",
+  "author": "Gray, Asa",
+  "url": "https://www.gutenberg.org/ebooks/33757",
+  "gid": "33757"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000068",
+  "category": "educational",
+  "title": "Elementary Botany",
+  "author": "Atkinson, George Francis",
+  "url": "https://www.gutenberg.org/ebooks/64601",
+  "gid": "64601"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000069",
+  "category": "educational",
+  "title": "Ethnobotany of the Ojibwe Indians",
+  "author": "Smith, Huron H. (Huron Herbert)",
+  "url": "https://www.gutenberg.org/ebooks/49527",
+  "gid": "49527"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000070",
+  "category": "educational",
+  "title": "Makers of British Botany; a collection of biographies by living botanists",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/46415",
+  "gid": "46415"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000071",
+  "category": "educational",
+  "title": "Botany for Ladies: or, A Popular Introduction to the Natural System of Plants, According to the Classification of De Candolle.",
+  "author": "Loudon, Mrs. (Jane)",
+  "url": "https://www.gutenberg.org/ebooks/47039",
+  "gid": "47039"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000072",
+  "category": "educational",
+  "title": "Fossil plants, Vol. 1 : $b [A text-book] for students of botany and geology",
+  "author": "Seward, A. C. (Albert Charles)",
+  "url": "https://www.gutenberg.org/ebooks/68043",
+  "gid": "68043"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000073",
+  "category": "educational",
+  "title": "The Voyage of Governor Phillip to Botany Bay: With an Account of the Establishment of the Colonies of Port Jackson and Norfolk Island (1789)",
+  "author": "Phillip, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/15100",
+  "gid": "15100"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000074",
+  "category": "educational",
+  "title": "Herbals, Their Origin and Evolution: A Chapter in the History of Botany 1470-1670",
+  "author": "Arber, Agnes Robertson",
+  "url": "https://www.gutenberg.org/ebooks/46889",
+  "gid": "46889"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000075",
+  "category": "educational",
+  "title": "A handbook of systematic botany",
+  "author": "Warming, Eugenius",
+  "url": "https://www.gutenberg.org/ebooks/68580",
+  "gid": "68580"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000076",
+  "category": "educational",
+  "title": "Botany: The Science of Plant Life",
+  "author": "Taylor, Norman",
+  "url": "https://www.gutenberg.org/ebooks/49211",
+  "gid": "49211"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000077",
+  "category": "educational",
+  "title": "The History of Oswestry: Comprising the British, Saxon, Norman, and English eras; the topography of the borough; and its ecclesiastical and civic hist",
+  "author": "Cathrall, William",
+  "url": "https://www.gutenberg.org/ebooks/63840",
+  "gid": "63840"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000078",
+  "category": "educational",
+  "title": "Elements of Structural and Systematic Botany: For High Schools and Elementary College Courses",
+  "author": "Campbell, Douglas Houghton",
+  "url": "https://www.gutenberg.org/ebooks/20390",
+  "gid": "20390"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000079",
+  "category": "educational",
+  "title": "History of Botany (1530-1860)",
+  "author": "Sachs, Julius",
+  "url": "https://www.gutenberg.org/ebooks/61240",
+  "gid": "61240"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000080",
+  "category": "educational",
+  "title": "Outlines of Lessons in Botany, Part I; from Seed to Leaf: For the Use of Teachers, or Mothers Studying with Their Children",
+  "author": "Moore, Jane Newell",
+  "url": "https://www.gutenberg.org/ebooks/10726",
+  "gid": "10726"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000081",
+  "category": "educational",
+  "title": "Beginners' botany",
+  "author": "Bailey, L. H. (Liberty Hyde)",
+  "url": "https://www.gutenberg.org/ebooks/73531",
+  "gid": "73531"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000082",
+  "category": "educational",
+  "title": "A Narrative of the Expedition to Botany-Bay",
+  "author": "Tench, Watkin",
+  "url": "https://www.gutenberg.org/ebooks/3535",
+  "gid": "3535"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000083",
+  "category": "educational",
+  "title": "Introduction to the Study of Palæontological Botany",
+  "author": "Balfour, John Hutton",
+  "url": "https://www.gutenberg.org/ebooks/50882",
+  "gid": "50882"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000084",
+  "category": "educational",
+  "title": "A Guide to the Mount's Bay and the Land's End: Comprehending the topography, botany, agriculture, fisheries, antiquities, mining, mineralogy and geo",
+  "author": "Paris, John Ayrton",
+  "url": "https://www.gutenberg.org/ebooks/48116",
+  "gid": "48116"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000085",
+  "category": "educational",
+  "title": "Memoranda on Tours and Touraine: Including remarks on the climate with a sketch of the Botany And Geology of the Province also on the Wines and Minera",
+  "author": "Holdsworth, J. H.",
+  "url": "https://www.gutenberg.org/ebooks/33473",
+  "gid": "33473"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000086",
+  "category": "educational",
+  "title": "Glimpses into plant-life : $b An easy guide to the study of botany",
+  "author": "Brightwen, Mrs. (Eliza Elder)",
+  "url": "https://www.gutenberg.org/ebooks/79061",
+  "gid": "79061"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000087",
+  "category": "educational",
+  "title": "The Botanist's Companion, Volume II: Or an Introduction to the Knowledge of Practical Botany, and the Uses of Plants. Either Growing Wild in Great Br",
+  "author": "Salisbury, William",
+  "url": "https://www.gutenberg.org/ebooks/12363",
+  "gid": "12363"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000088",
+  "category": "educational",
+  "title": "A practical course in botany : $b with especial reference to its bearings on agriculture, economics, and sanitation",
+  "author": "Andrews, Eliza Frances",
+  "url": "https://www.gutenberg.org/ebooks/78430",
+  "gid": "78430"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000089",
+  "category": "educational",
+  "title": "Observations on the geology, zoology and botany of Hudson's Strait and Bay, made in 1885",
+  "author": "Bell, Robert",
+  "url": "https://www.gutenberg.org/ebooks/78889",
+  "gid": "78889"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000090",
+  "category": "educational",
+  "title": "The Florist and Horticultural Journal, Vol. II. No. 7, July, 1853: A Monthly Magazine of Horticulture, Agriculture, Botany, Agricultural Chemistry, En",
+  "author": "Various",
+  "url": "https://www.gutenberg.org/ebooks/58276",
+  "gid": "58276"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000091",
+  "category": "educational",
+  "title": "Captain Cook in New South Wales; Or, The Mystery of Naming Botany Bay",
+  "author": "Bonwick, James",
+  "url": "https://www.gutenberg.org/ebooks/57344",
+  "gid": "57344"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000092",
+  "category": "educational",
+  "title": "How Does a Tree Grow? Or, Botany for Young Australians",
+  "author": "Bonwick, James",
+  "url": "https://www.gutenberg.org/ebooks/57142",
+  "gid": "57142"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000093",
+  "category": "educational",
+  "title": "Curious Creatures in Zoology",
+  "author": "Ashton, John",
+  "url": "https://www.gutenberg.org/ebooks/42508",
+  "gid": "42508"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000094",
+  "category": "educational",
+  "title": "Elementary Zoology, Second Edition",
+  "author": "Kellogg, Vernon L. (Vernon Lyman)",
+  "url": "https://www.gutenberg.org/ebooks/41395",
+  "gid": "41395"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000095",
+  "category": "educational",
+  "title": "Journal of the Proceedings of the Linnean Society - Vol. 3: Zoology",
+  "author": "Linnean Society of London",
+  "url": "https://www.gutenberg.org/ebooks/20750",
+  "gid": "20750"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000096",
+  "category": "educational",
+  "title": "Journal of the Proceedings of the Linnean Society - Vol. 4: Zoology",
+  "author": "Linnean Society of London",
+  "url": "https://www.gutenberg.org/ebooks/46491",
+  "gid": "46491"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000097",
+  "category": "educational",
+  "title": "Quadrupeds, What They Are and Where Found: A Book of Zoology for Boys",
+  "author": "Reid, Mayne",
+  "url": "https://www.gutenberg.org/ebooks/23576",
+  "gid": "23576"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000098",
+  "category": "educational",
+  "title": "Beginners' zoology",
+  "author": "Coleman, Walter Moore",
+  "url": "https://www.gutenberg.org/ebooks/73338",
+  "gid": "73338"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000099",
+  "category": "educational",
+  "title": "The Crayfish: An Introduction to the Study of Zoology.",
+  "author": "Huxley, Thomas Henry",
+  "url": "https://www.gutenberg.org/ebooks/58924",
+  "gid": "58924"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000100",
+  "category": "educational",
+  "title": "The zoology of the voyage of H.M.S. Beagle [vol. 3 of 5] : $b Birds",
+  "author": "Gould, John",
+  "url": "https://www.gutenberg.org/ebooks/74261",
+  "gid": "74261"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000101",
+  "category": "educational",
+  "title": "A voyage to Spitzbergen: containing an account of that country, of the zoology of the North; of the Shetland Islands; and of the whale fishery",
+  "author": "Laing, John (Surgeon)",
+  "url": "https://www.gutenberg.org/ebooks/51131",
+  "gid": "51131"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000102",
+  "category": "educational",
+  "title": "Journal of Entomology and Zoology, Vol. 11, No. 4, December 1919",
+  "author": "Various",
+  "url": "https://www.gutenberg.org/ebooks/37632",
+  "gid": "37632"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000103",
+  "category": "educational",
+  "title": "A guide to the shell and starfish galleries : $b (Mollusca, Polyzoa, Brachiopoda, Tunicata, Echinoderma, and Worms)",
+  "author": "British Museum (Natural History). Department of Zoology, Bell, F. J. (Francis Jeffrey), Ki",
+  "url": "https://www.gutenberg.org/ebooks/73609",
+  "gid": "73609"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000104",
+  "category": "educational",
+  "title": "The zoology of the voyage of H.M.S. Beagle [vol. 2 of 5] : $b Mammalia",
+  "author": "Waterhouse, G. R. (George Robert)",
+  "url": "https://www.gutenberg.org/ebooks/69577",
+  "gid": "69577"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000105",
+  "category": "educational",
+  "title": "Journal of Entomology and Zoology, Vol. 11, No. 2, June 1919",
+  "author": "Various",
+  "url": "https://www.gutenberg.org/ebooks/34094",
+  "gid": "34094"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000106",
+  "category": "educational",
+  "title": "The zoology of the voyage of H.M.S. Beagle [vol. 1 of 5] : $b Fossil mammalia",
+  "author": "Owen, Richard",
+  "url": "https://www.gutenberg.org/ebooks/68925",
+  "gid": "68925"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000107",
+  "category": "educational",
+  "title": "Notes on the Mammals of Gogebic and Ontonagon Counties, Michigan, 1920: Occasional Papers of the Museum of Zoology, Number 109",
+  "author": "Dice, Lee R. (Lee Raymond), Sherman, Harley Bakwel",
+  "url": "https://www.gutenberg.org/ebooks/37753",
+  "gid": "37753"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000108",
+  "category": "educational",
+  "title": "Journal of Entomology and Zoology, Vol. 09, No. 3, September 1917",
+  "author": "Various",
+  "url": "https://www.gutenberg.org/ebooks/48122",
+  "gid": "48122"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000109",
+  "category": "educational",
+  "title": "Journal of Entomology and Zoology, Vol. 11, No. 1, March 1919",
+  "author": "Various",
+  "url": "https://www.gutenberg.org/ebooks/45597",
+  "gid": "45597"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000110",
+  "category": "educational",
+  "title": "Journal of Entomology and Zoology, Vol. 09, No. 1, March 1917",
+  "author": "Various",
+  "url": "https://www.gutenberg.org/ebooks/48101",
+  "gid": "48101"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000111",
+  "category": "educational",
+  "title": "Journal of Entomology and Zoology, Vol. 06, No. 4, December 1914",
+  "author": "Various",
+  "url": "https://www.gutenberg.org/ebooks/48031",
+  "gid": "48031"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000112",
+  "category": "educational",
+  "title": "The Mammals of Warren Woods, Berrien County, Michigan: Occasional Paper of the Museum of Zoology, Number 86",
+  "author": "Dice, Lee R. (Lee Raymond)",
+  "url": "https://www.gutenberg.org/ebooks/33648",
+  "gid": "33648"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000113",
+  "category": "educational",
+  "title": "Proceedings of the California Academy of Sciences, Series 3, Volume 4 (Zoology)",
+  "author": "Various",
+  "url": "https://www.gutenberg.org/ebooks/54240",
+  "gid": "54240"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000114",
+  "category": "educational",
+  "title": "On the Study of Zoology",
+  "author": "Huxley, Thomas Henry",
+  "url": "https://www.gutenberg.org/ebooks/2935",
+  "gid": "2935"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000115",
+  "category": "educational",
+  "title": "Agricultural zoology",
+  "author": "Ritzema Bos, J. (Jan)",
+  "url": "https://www.gutenberg.org/ebooks/77045",
+  "gid": "77045"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000116",
+  "category": "educational",
+  "title": "The Mammals of Washtenaw County, Michigan: Occasional Papers of the Museum of Zoology, No. 123",
+  "author": "Wood, Norman Asa",
+  "url": "https://www.gutenberg.org/ebooks/33507",
+  "gid": "33507"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000117",
+  "category": "educational",
+  "title": "Movement of the International Literary Exchanges, between France and North America from January 1845 to May, 1846: With Instructions for Collecting, P",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/28398",
+  "gid": "28398"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000118",
+  "category": "educational",
+  "title": "The zoology of the voyage of H.M.S. Beagle, [vol. 5 of 5] : $b Reptiles",
+  "author": "Bell, Thomas",
+  "url": "https://www.gutenberg.org/ebooks/79041",
+  "gid": "79041"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000119",
+  "category": "educational",
+  "title": "The zoology of the voyage of H.M.S. Beagle, [vol. 4 of 5] : $b Fish",
+  "author": "Jenyns, Leonard",
+  "url": "https://www.gutenberg.org/ebooks/78558",
+  "gid": "78558"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000120",
+  "category": "educational",
+  "title": "The anatomy of revolution",
+  "author": "Brinton, Crane",
+  "url": "https://www.gutenberg.org/ebooks/78065",
+  "gid": "78065"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000121",
+  "category": "educational",
+  "title": "The Anatomy of Melancholy",
+  "author": "Burton, Robert",
+  "url": "https://www.gutenberg.org/ebooks/10800",
+  "gid": "10800"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000122",
+  "category": "educational",
+  "title": "A text-book of veterinary anatomy",
+  "author": "Sisson, Septimus",
+  "url": "https://www.gutenberg.org/ebooks/75996",
+  "gid": "75996"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000123",
+  "category": "educational",
+  "title": "Surgical Anatomy",
+  "author": "Maclise, Joseph",
+  "url": "https://www.gutenberg.org/ebooks/24440",
+  "gid": "24440"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000124",
+  "category": "educational",
+  "title": "A Text-book of Entomology: Including the Anatomy, Physiology, Embryology and Metamorphoses of Insects for Use in Agricultural and Technical Schools an",
+  "author": "Packard, A. S. (Alpheus Spring)",
+  "url": "https://www.gutenberg.org/ebooks/64677",
+  "gid": "64677"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000125",
+  "category": "educational",
+  "title": "Anatomy of the Cat",
+  "author": "Reighard, Jacob, Jennings, H. S. (Herbert Spencer)",
+  "url": "https://www.gutenberg.org/ebooks/58394",
+  "gid": "58394"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000126",
+  "category": "educational",
+  "title": "The Anatomy of the Human Peritoneum and Abdominal Cavity: Considered from the Standpoint of Development and Comparative Anatomy",
+  "author": "Huntington, George S. (George Sumner)",
+  "url": "https://www.gutenberg.org/ebooks/43350",
+  "gid": "43350"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000127",
+  "category": "educational",
+  "title": "Artistic Anatomy of Animals",
+  "author": "Cuyer, Édouard",
+  "url": "https://www.gutenberg.org/ebooks/38315",
+  "gid": "38315"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000128",
+  "category": "educational",
+  "title": "The anatomy of the domestic fowl",
+  "author": "Kaupp, B. F. (Benjamin Franklyn)",
+  "url": "https://www.gutenberg.org/ebooks/71368",
+  "gid": "71368"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000129",
+  "category": "educational",
+  "title": "A Treatise on Anatomy, Physiology, and Hygiene (Revised Edition)",
+  "author": "Cutter, Calvin",
+  "url": "https://www.gutenberg.org/ebooks/30541",
+  "gid": "30541"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "ea000000-0000-4000-8000-000000000130",
+  "category": "educational",
+  "title": "The Diary of a Resurrectionist, 1811-1812: To Which Are Added an Account of the Resurrection Men in London and a Short History of the Passing of the A",
+  "author": "Bailey, James Blake",
+  "url": "https://www.gutenberg.org/ebooks/32614",
+  "gid": "32614"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000001",
+  "category": "story",
+  "title": "Children's Hour with Red Riding Hood and Other Stories",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/11592",
+  "gid": "11592"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000002",
+  "category": "story",
+  "title": "Good Stories for Great Holidays: Arranged for Story-Telling and Reading Aloud and for the Children's Own Reading",
+  "author": "Olcott, Frances Jenkins",
+  "url": "https://www.gutenberg.org/ebooks/359",
+  "gid": "359"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000003",
+  "category": "story",
+  "title": "Children's Rhymes, Children's Games, Children's Songs, Children's Stories: A Book for Bairns and Big Folk",
+  "author": "Ford, Robert",
+  "url": "https://www.gutenberg.org/ebooks/24271",
+  "gid": "24271"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000004",
+  "category": "story",
+  "title": "The Children's Book of Thanksgiving Stories",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/45114",
+  "gid": "45114"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000005",
+  "category": "story",
+  "title": "The Children's Hour, v 5. Stories From Seven Old Favorites",
+  "author": "Tappan, Eva March",
+  "url": "https://www.gutenberg.org/ebooks/13685",
+  "gid": "13685"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000006",
+  "category": "story",
+  "title": "The Children's Book of Christmas Stories",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/5061",
+  "gid": "5061"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000007",
+  "category": "story",
+  "title": "World Stories Retold for Modern Boys and Girls: One Hundred and Eighty-seven Five-minute Classic Stories for Retelling in Home, Sunday School, Childre",
+  "author": "Sly, William James",
+  "url": "https://www.gutenberg.org/ebooks/55786",
+  "gid": "55786"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000008",
+  "category": "story",
+  "title": "The Children's Hour, Volume 3 (of 10): Stories from the Classics",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/14752",
+  "gid": "14752"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000009",
+  "category": "story",
+  "title": "Good stories for great birthdays: arranged for story-telling and reading aloud and for the children's own reading",
+  "author": "Olcott, Frances Jenkins",
+  "url": "https://www.gutenberg.org/ebooks/55592",
+  "gid": "55592"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000010",
+  "category": "story",
+  "title": "Children's Stories in American Literature, 1660-1860",
+  "author": "Wright, Henrietta Christian",
+  "url": "https://www.gutenberg.org/ebooks/32172",
+  "gid": "32172"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000011",
+  "category": "story",
+  "title": "The World's Fair: Or, Children's prize gift book of the Great Exhibition of 1851 : describing the beautiful inventions and manufactures exhibited th",
+  "author": "Anonymous",
+  "url": "https://www.gutenberg.org/ebooks/14092",
+  "gid": "14092"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000012",
+  "category": "story",
+  "title": "Children's book of patriotic stories: The spirit of '76",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/69235",
+  "gid": "69235"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000013",
+  "category": "story",
+  "title": "Children's Stories in American History",
+  "author": "Wright, Henrietta Christian",
+  "url": "https://www.gutenberg.org/ebooks/42345",
+  "gid": "42345"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000014",
+  "category": "story",
+  "title": "True Stories of the Great War, Volume 2 (of 6): Tales of Adventure--Heroic Deeds--Exploits Told by the Soldiers, Officers, Nurses, Diplomats, Eye Witn",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/48941",
+  "gid": "48941"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000015",
+  "category": "story",
+  "title": "True Stories of the Great War, Volume 5 (of 6): Tales of Adventure--Heroic Deeds--Exploits Told by the Soldiers, Officers, Nurses, Diplomats, Eye Witn",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/50807",
+  "gid": "50807"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000016",
+  "category": "story",
+  "title": "True Stories of the Great War, Volume 1 (of 6): Tales of Adventure--Heroic Deeds--Exploits Told by the Soldiers, Officers, Nurses, Diplomats, Eye Witn",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/48663",
+  "gid": "48663"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000017",
+  "category": "story",
+  "title": "True Stories of the Great War, Volume 4 (of 6): Tales of Adventure--Heroic Deeds--Exploits Told by the Soldiers, Officers, Nurses, Diplomats, Eye Witn",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/49391",
+  "gid": "49391"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000018",
+  "category": "story",
+  "title": "True Stories of the Great War, Volume 3 (of 6): Tales of Adventure--Heroic Deeds--Exploits Told by the Soldiers, Officers, Nurses, Diplomats, Eye Witn",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/49099",
+  "gid": "49099"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000019",
+  "category": "story",
+  "title": "True Stories of the Great War, Volume 6 (of 6): Tales of Adventure--Heroic Deeds--Exploits Told by the Soldiers, Officers, Nurses, Diplomats, Eye Witn",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/51206",
+  "gid": "51206"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000020",
+  "category": "story",
+  "title": "The Great Galveston Disaster: Containing a Full and Thrilling Account of the Most Appalling Calamity of Modern Times Including Vivid Descriptions of t",
+  "author": "Lester, Paul",
+  "url": "https://www.gutenberg.org/ebooks/60105",
+  "gid": "60105"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000021",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 02 (of 15), American (2)",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/25103",
+  "gid": "25103"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000022",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 08 (of 15), Russian",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/25625",
+  "gid": "25625"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000023",
+  "category": "story",
+  "title": "Vikram and the Vampire: Classic Hindu Tales of Adventure, Magic, and Romance",
+  "author": "Burton, Richard Francis, Sir",
+  "url": "https://www.gutenberg.org/ebooks/2400",
+  "gid": "2400"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000024",
+  "category": "story",
+  "title": "Tales of King Arthur and the Round Table, Adapted from the Book of Romance",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/49057",
+  "gid": "49057"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000025",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 10 (of 15), Greek",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/25642",
+  "gid": "25642"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000026",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 11 (of 15), Roman",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/25673",
+  "gid": "25673"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000027",
+  "category": "story",
+  "title": "Nicanor - Teller of Tales : A Story of Roman Britain",
+  "author": "Taylor, C. Bryson",
+  "url": "https://www.gutenberg.org/ebooks/22304",
+  "gid": "22304"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000028",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 13 (of 15), King Arthur (1)",
+  "author": "Malory, Thomas, Sir, Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/31900",
+  "gid": "31900"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000029",
+  "category": "story",
+  "title": "Ireland in Fiction: A Guide to Irish Novels, Tales, Romances, and Folk-lore",
+  "author": "Brown, Stephen J. M. (Stephen James Meredith)",
+  "url": "https://www.gutenberg.org/ebooks/66638",
+  "gid": "66638"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000030",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 07 (of 15), Spanish",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/files/19457/19457-pdf.pdf",
+  "gid": "19457"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000031",
+  "category": "story",
+  "title": "Illustrations of Shakspeare, and of Ancient Manners:: with Dissertations on the Clowns and Fools of Shakspeare; on a Collection of Popular Tales Entit",
+  "author": "Douce, Francis",
+  "url": "https://www.gutenberg.org/ebooks/50228",
+  "gid": "50228"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000032",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 12 (of 15), Japanese and Chinese",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/31571",
+  "gid": "31571"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000033",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 14 (of 15), King Arthur (2)",
+  "author": "Malory, Thomas, Sir, Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/32292",
+  "gid": "32292"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000034",
+  "category": "story",
+  "title": "Moorish Literature: Comprising Romantic Ballads, Tales of the Berbers, Stories of the Kabyles, Folk-Lore, and National Traditions",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/10085",
+  "gid": "10085"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000035",
+  "category": "story",
+  "title": "Tales of Humour, Gallantry & Romance, Selected and Translated from the Italian",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/44561",
+  "gid": "44561"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000036",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 05 (of 15), German",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/16587",
+  "gid": "16587"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000037",
+  "category": "story",
+  "title": "Tales of Romance",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/33152",
+  "gid": "33152"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000038",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 09 (of 15), Scandinavian",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/20549",
+  "gid": "20549"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000039",
+  "category": "story",
+  "title": "Flute and Violin, and Other Kentucky Tales and Romances",
+  "author": "Allen, James Lane",
+  "url": "https://www.gutenberg.org/ebooks/50597",
+  "gid": "50597"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000040",
+  "category": "story",
+  "title": "Tales, Traditions and Romance of Border and Revolutionary Times",
+  "author": "Ellis, Edward Sylvester",
+  "url": "https://www.gutenberg.org/ebooks/51864",
+  "gid": "51864"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000041",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 04 (of 15), English",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/18511",
+  "gid": "18511"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000042",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 03 (of 15), Spanish American",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/files/19503/19503-pdf.pdf",
+  "gid": "19503"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000043",
+  "category": "story",
+  "title": "The Unknown Quantity: A Book of Romance and Some Half-Told Tales",
+  "author": "Van Dyke, Henry",
+  "url": "https://www.gutenberg.org/ebooks/30622",
+  "gid": "30622"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000044",
+  "category": "story",
+  "title": "Tales of the Trains: Being Some Chapters of Railroad Romance by Tilbury Tramp, Queen's Messenger",
+  "author": "Lever, Charles",
+  "url": "https://www.gutenberg.org/ebooks/34884",
+  "gid": "34884"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000045",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 01 (of 15), American (1)",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/16298",
+  "gid": "16298"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000046",
+  "category": "story",
+  "title": "Historic Tales: The Romance of Reality. Vol. 06 (of 15), French",
+  "author": "Morris, Charles",
+  "url": "https://www.gutenberg.org/ebooks/20055",
+  "gid": "20055"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000047",
+  "category": "story",
+  "title": "Tragic Romances: Re-issue of the Shorter Stories of Fiona Macleod; Rearranged, with Additional Tales",
+  "author": "Sharp, William",
+  "url": "https://www.gutenberg.org/ebooks/53839",
+  "gid": "53839"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000048",
+  "category": "story",
+  "title": "Tales of Aztlan; The Romance of a Hero of Our Late Spanish-American War, Incidents of Interest from the Life of a Western Pioneer and Other Tales",
+  "author": "Hartmann, George",
+  "url": "https://www.gutenberg.org/ebooks/4294",
+  "gid": "4294"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000049",
+  "category": "story",
+  "title": "An Old Woman's Tale: (From: 'The Doliver Romance and Other Pieces: Tales and Sketches')",
+  "author": "Hawthorne, Nathaniel",
+  "url": "https://www.gutenberg.org/ebooks/9251",
+  "gid": "9251"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000050",
+  "category": "story",
+  "title": "The Valley of Vision : A Book of Romance and Some Half-Told Tales",
+  "author": "Van Dyke, Henry",
+  "url": "https://www.gutenberg.org/ebooks/6009",
+  "gid": "6009"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000051",
+  "category": "story",
+  "title": "Fragments from the Journal of a Solitary Man: (From: 'The Doliver Romance and Other Pieces: Tales and Sketches')",
+  "author": "Hawthorne, Nathaniel",
+  "url": "https://www.gutenberg.org/ebooks/9247",
+  "gid": "9247"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000052",
+  "category": "story",
+  "title": "Tales from the Gesta Romanorum",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/58655",
+  "gid": "58655"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000053",
+  "category": "story",
+  "title": "West Irish Folk-Tales and Romances",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/57858",
+  "gid": "57858"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000054",
+  "category": "story",
+  "title": "Other Tales and Sketches: (From: 'The Doliver Romance and Other Pieces: Tales and Sketches')",
+  "author": "Hawthorne, Nathaniel",
+  "url": "https://www.gutenberg.org/ebooks/9248",
+  "gid": "9248"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000055",
+  "category": "story",
+  "title": "Time's Portraiture: (From: 'The Doliver Romance and Other Pieces: Tales and Sketches')",
+  "author": "Hawthorne, Nathaniel",
+  "url": "https://www.gutenberg.org/ebooks/9252",
+  "gid": "9252"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000056",
+  "category": "story",
+  "title": "'Browne's Folly': (From: 'The Doliver Romance and Other Pieces: Tales and Sketches')",
+  "author": "Hawthorne, Nathaniel",
+  "url": "https://www.gutenberg.org/ebooks/9253",
+  "gid": "9253"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000057",
+  "category": "story",
+  "title": "Poems and Tales from Romania",
+  "author": "Hart, Michael, Sumanaru, Simona",
+  "url": "https://www.gutenberg.org/ebooks/2538",
+  "gid": "2538"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000058",
+  "category": "story",
+  "title": "Tales of the supernatural: Six romantic stories",
+  "author": "Platt, James",
+  "url": "https://www.gutenberg.org/ebooks/69397",
+  "gid": "69397"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000059",
+  "category": "story",
+  "title": "Sketches from Memory: (From: 'The Doliver Romance and Other Pieces: Tales and Sketches')",
+  "author": "Hawthorne, Nathaniel",
+  "url": "https://www.gutenberg.org/ebooks/9246",
+  "gid": "9246"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000060",
+  "category": "story",
+  "title": "Malayan Literature: Comprising Romantic Tales, Epic Poetry and Royal Chronicles",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/7095",
+  "gid": "7095"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000061",
+  "category": "story",
+  "title": "Legendary & romantic tales of Indian history",
+  "author": "Caunter, Hobart",
+  "url": "https://www.gutenberg.org/ebooks/70300",
+  "gid": "70300"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000062",
+  "category": "story",
+  "title": "Dr. Bullivant: (From: 'The Doliver Romance and Other Pieces: Tales and Sketches')",
+  "author": "Hawthorne, Nathaniel",
+  "url": "https://www.gutenberg.org/ebooks/9249",
+  "gid": "9249"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000063",
+  "category": "story",
+  "title": "Golden Moments: Bright Stories for Young Folks",
+  "author": "Anonymous",
+  "url": "https://www.gutenberg.org/ebooks/22308",
+  "gid": "22308"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000064",
+  "category": "story",
+  "title": "Stanford Stories: Tales of a Young University",
+  "author": "Irwin, Will, Field, Charles K. (Charles Kellogg)",
+  "url": "https://www.gutenberg.org/ebooks/24735",
+  "gid": "24735"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000065",
+  "category": "story",
+  "title": "The Apple Dumpling and Other Stories for Young Boys and Girls",
+  "author": "Fanny, Aunt",
+  "url": "https://www.gutenberg.org/ebooks/22740",
+  "gid": "22740"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000066",
+  "category": "story",
+  "title": "Stories of the Gorilla Country, Narrated for Young People",
+  "author": "Du Chaillu, Paul B. (Paul Belloni)",
+  "url": "https://www.gutenberg.org/ebooks/52444",
+  "gid": "52444"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000067",
+  "category": "story",
+  "title": "Holiday Stories for Young People",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/16648",
+  "gid": "16648"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000068",
+  "category": "story",
+  "title": "Stories of the Nibelungen for Young People",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/35108",
+  "gid": "35108"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000069",
+  "category": "story",
+  "title": "The power of kindness and other stories: A book for the example and encouragement of the young",
+  "author": "Arthur, T. S. (Timothy Shay)",
+  "url": "https://www.gutenberg.org/ebooks/68158",
+  "gid": "68158"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000070",
+  "category": "story",
+  "title": "The Deaf Shoemaker: To Which Are Added Other Stories for the Young",
+  "author": "Barrett, Philip",
+  "url": "https://www.gutenberg.org/ebooks/52296",
+  "gid": "52296"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000071",
+  "category": "story",
+  "title": "Book of Mormon Stories. No. 1.: Adapted to the Capacity of Young Children, and Designed for Use in Sabbath Schools, Primary Associations, and for Home",
+  "author": "Cannon, George Q. (George Quayle)",
+  "url": "https://www.gutenberg.org/ebooks/51095",
+  "gid": "51095"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000072",
+  "category": "story",
+  "title": "The Pearl Box: Containing One Hundred Beautiful Stories for Young People, by a Pastor",
+  "author": "Anonymous",
+  "url": "https://www.gutenberg.org/ebooks/11595",
+  "gid": "11595"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000073",
+  "category": "story",
+  "title": "Thrilling Stories Of The Ocean: From Authentic Accounts Of Modern Voyagers And Travellers; Designed; For The Entertainment And Instruction Of Young Pe",
+  "author": "Park, Marmaduke",
+  "url": "https://www.gutenberg.org/ebooks/13604",
+  "gid": "13604"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000074",
+  "category": "story",
+  "title": "Strange Stories from History for Young People",
+  "author": "Eggleston, George Cary",
+  "url": "https://www.gutenberg.org/ebooks/23887",
+  "gid": "23887"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000075",
+  "category": "story",
+  "title": "The Pleasures of the Country: Simple Stories for Young People",
+  "author": "Myrtle, Harriet",
+  "url": "https://www.gutenberg.org/ebooks/37013",
+  "gid": "37013"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000076",
+  "category": "story",
+  "title": "Stories for the Young; Or, Cheap Repository Tracts: Entertaining, Moral, and Religious. Vol. VI.",
+  "author": "More, Hannah",
+  "url": "https://www.gutenberg.org/ebooks/15034",
+  "gid": "15034"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000077",
+  "category": "story",
+  "title": "The yule log : $b a series of stories for the young",
+  "author": "Bishop, Georgianna M.",
+  "url": "https://www.gutenberg.org/ebooks/47897",
+  "gid": "47897"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000078",
+  "category": "story",
+  "title": "Heroes of Israel: Text of the Hero Stories with Notes and Questions for Young Students",
+  "author": "Soares, Theodore Gerald",
+  "url": "https://www.gutenberg.org/ebooks/36956",
+  "gid": "36956"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000079",
+  "category": "story",
+  "title": "Strive and Thrive; or, Stories for the Example and Encouragement of the Young",
+  "author": "Anonymous",
+  "url": "https://www.gutenberg.org/ebooks/35177",
+  "gid": "35177"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000080",
+  "category": "story",
+  "title": "Captivating Bible Stories for Young People, Written in Simple Language",
+  "author": "Yonge, Charlotte M. (Charlotte Mary)",
+  "url": "https://www.gutenberg.org/ebooks/62126",
+  "gid": "62126"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000081",
+  "category": "story",
+  "title": "Stories and ballads for young folks",
+  "author": "Alden, Ellen Tracy",
+  "url": "https://www.gutenberg.org/ebooks/68926",
+  "gid": "68926"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000082",
+  "category": "story",
+  "title": "Silas X. Floyd's Short Stories for Colored People Both Old and Young: Entertaining, Uplifting, Interesting",
+  "author": "Floyd, Silas Xavier",
+  "url": "https://www.gutenberg.org/ebooks/60780",
+  "gid": "60780"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000083",
+  "category": "story",
+  "title": "The Gold Thread; and, Wee Davie: Two Stories for the Young",
+  "author": "Macleod, Norman",
+  "url": "https://www.gutenberg.org/ebooks/63572",
+  "gid": "63572"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000084",
+  "category": "story",
+  "title": "The toll-keepers : $b and other stories for the young",
+  "author": "Clarke, Benjamin",
+  "url": "https://www.gutenberg.org/ebooks/78722",
+  "gid": "78722"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000085",
+  "category": "story",
+  "title": "Indian Fairy Tales",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/7128",
+  "gid": "7128"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000086",
+  "category": "story",
+  "title": "Indian Tales",
+  "author": "Kipling, Rudyard",
+  "url": "https://www.gutenberg.org/ebooks/8649",
+  "gid": "8649"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000087",
+  "category": "story",
+  "title": "American Indian Fairy Tales",
+  "author": "Larned, W. T. (William Trowbridge)",
+  "url": "https://www.gutenberg.org/ebooks/19579",
+  "gid": "19579"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000088",
+  "category": "story",
+  "title": "Tibetan Tales, Derived from Indian Sources",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/66870",
+  "gid": "66870"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000089",
+  "category": "story",
+  "title": "Algonquin Indian Tales",
+  "author": "Young, Egerton Ryerson",
+  "url": "https://www.gutenberg.org/ebooks/10891",
+  "gid": "10891"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000090",
+  "category": "story",
+  "title": "Algic Researches, Comprising Inquiries Respecting the Mental Characteristics of the North American Indians, First Series. Indian Tales and Legends, Vo",
+  "author": "Schoolcraft, Henry Rowe",
+  "url": "https://www.gutenberg.org/ebooks/35152",
+  "gid": "35152"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000091",
+  "category": "story",
+  "title": "The Basket Woman: A Book of Indian Tales for Children",
+  "author": "Austin, Mary",
+  "url": "https://www.gutenberg.org/ebooks/35502",
+  "gid": "35502"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000092",
+  "category": "story",
+  "title": "The Magic Bed: A Book of East Indian Fairy-Tales",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/37708",
+  "gid": "37708"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000093",
+  "category": "story",
+  "title": "Indian tales of the great ones among men, women, and bird-people",
+  "author": "Sorabji, Cornelia",
+  "url": "https://www.gutenberg.org/ebooks/69647",
+  "gid": "69647"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000094",
+  "category": "story",
+  "title": "Indian and Other Tales",
+  "author": "Hope, M. L.",
+  "url": "https://www.gutenberg.org/ebooks/36925",
+  "gid": "36925"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000095",
+  "category": "story",
+  "title": "Treasury of American Indian Tales",
+  "author": "Ressler, Theodore Whitson",
+  "url": "https://www.gutenberg.org/ebooks/62855",
+  "gid": "62855"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000096",
+  "category": "story",
+  "title": "The Lost Giant, and Other American Indian Tales Retold",
+  "author": "Higgins, Violet Moore",
+  "url": "https://www.gutenberg.org/ebooks/65355",
+  "gid": "65355"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000097",
+  "category": "story",
+  "title": "West African Folk-Tales",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/66923",
+  "gid": "66923"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000098",
+  "category": "story",
+  "title": "South-African Folk-Tales",
+  "author": "Honey, James A.",
+  "url": "https://www.gutenberg.org/ebooks/38339",
+  "gid": "38339"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000099",
+  "category": "story",
+  "title": "Cunnie Rabbit, Mr. Spider and the Other Beef: West African Folk Tales",
+  "author": "Cronise, Florence M., Ward, Henry W.",
+  "url": "https://www.gutenberg.org/ebooks/48828",
+  "gid": "48828"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000100",
+  "category": "story",
+  "title": "Where Animals Talk: West African Folk Lore Tales",
+  "author": "Nassau, Robert Hamill",
+  "url": "https://www.gutenberg.org/ebooks/58900",
+  "gid": "58900"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000101",
+  "category": "story",
+  "title": "Outa Karel's Stories: South African Folk-Lore Tales",
+  "author": "Metelerkamp, Sanni",
+  "url": "https://www.gutenberg.org/ebooks/35557",
+  "gid": "35557"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000102",
+  "category": "story",
+  "title": "Cinderella in the South: Twenty-Five South African Tales",
+  "author": "Cripps, Arthur Shearly",
+  "url": "https://www.gutenberg.org/ebooks/22886",
+  "gid": "22886"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "5b000000-0000-4000-8000-000000000103",
+  "category": "story",
+  "title": "The man elephant : $b A book of African fairy tales",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/77175",
+  "gid": "77175"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000001",
+  "category": "inspirational",
+  "title": "The House on the Borderland",
+  "author": "Hodgson, William Hope",
+  "url": "https://www.gutenberg.org/ebooks/10002",
+  "gid": "10002"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000002",
+  "category": "inspirational",
+  "title": "India's Love Lyrics",
+  "author": "Hope, Laurence",
+  "url": "https://www.gutenberg.org/ebooks/8197",
+  "gid": "8197"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000003",
+  "category": "inspirational",
+  "title": "The World as Will and Idea (Vol. 1 of 3)",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/files/38427/38427-pdf.pdf",
+  "gid": "38427"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000004",
+  "category": "inspirational",
+  "title": "The Essays of Arthur Schopenhauer: the Wisdom of Life",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/10741",
+  "gid": "10741"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000005",
+  "category": "inspirational",
+  "title": "The Essays of Arthur Schopenhauer; Studies in Pessimism",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/10732",
+  "gid": "10732"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000006",
+  "category": "inspirational",
+  "title": "The Essays of Arthur Schopenhauer; Counsels and Maxims",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/10715",
+  "gid": "10715"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000007",
+  "category": "inspirational",
+  "title": "The prisoner of Zenda",
+  "author": "Hope, Anthony",
+  "url": "https://www.gutenberg.org/ebooks/22436",
+  "gid": "22436"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000008",
+  "category": "inspirational",
+  "title": "Essays of Schopenhauer",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/11945",
+  "gid": "11945"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000009",
+  "category": "inspirational",
+  "title": "Letters to His Son, Complete: On the Fine Art of Becoming a Man of the World and a Gentleman",
+  "author": "Chesterfield, Philip Dormer Stanhope, Earl of",
+  "url": "https://www.gutenberg.org/ebooks/3361",
+  "gid": "3361"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000010",
+  "category": "inspirational",
+  "title": "The World as Will and Idea (Vol. 3 of 3)",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/files/40868/40868-pdf.pdf",
+  "gid": "40868"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000011",
+  "category": "inspirational",
+  "title": "The Story of a Stuffed Elephant",
+  "author": "Hope, Laura Lee",
+  "url": "https://www.gutenberg.org/ebooks/22435",
+  "gid": "22435"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000012",
+  "category": "inspirational",
+  "title": "Aphorismen zur Lebensweisheit",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/47406",
+  "gid": "47406"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000013",
+  "category": "inspirational",
+  "title": "On the Fourfold Root of the Principle of Sufficient Reason, and On the Will in Nature: Two Essays (revised edition)",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/50966",
+  "gid": "50966"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000014",
+  "category": "inspirational",
+  "title": "Hopes and Fears for Art",
+  "author": "Morris, William",
+  "url": "https://www.gutenberg.org/ebooks/3773",
+  "gid": "3773"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000015",
+  "category": "inspirational",
+  "title": "The World as Will and Idea (Vol. 2 of 3)",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/files/40097/40097-pdf.pdf",
+  "gid": "40097"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000016",
+  "category": "inspirational",
+  "title": "The Essays of Arthur Schopenhauer; the Art of Controversy",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/10731",
+  "gid": "10731"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000017",
+  "category": "inspirational",
+  "title": "The Basis of Morality",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/44929",
+  "gid": "44929"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000018",
+  "category": "inspirational",
+  "title": "The Essays of Arthur Schopenhauer; On Human Nature",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/10739",
+  "gid": "10739"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000019",
+  "category": "inspirational",
+  "title": "The Essays of Arthur Schopenhauer; The Art of Literature",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/10714",
+  "gid": "10714"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000020",
+  "category": "inspirational",
+  "title": "The Night Land",
+  "author": "Hodgson, William Hope",
+  "url": "https://www.gutenberg.org/ebooks/10662",
+  "gid": "10662"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000021",
+  "category": "inspirational",
+  "title": "Studies in Pessimism",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/26586",
+  "gid": "26586"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000022",
+  "category": "inspirational",
+  "title": "Hope Mills; Or, Between Friend and Sweetheart",
+  "author": "Douglas, Amanda M.",
+  "url": "https://www.gutenberg.org/ebooks/30436",
+  "gid": "30436"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000023",
+  "category": "inspirational",
+  "title": "Heraldry for Craftsmen & Designers",
+  "author": "Hope, W. H. St. John (William Henry St. John), Sir",
+  "url": "https://www.gutenberg.org/ebooks/45181",
+  "gid": "45181"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000024",
+  "category": "inspirational",
+  "title": "The Essays of Arthur Schopenhauer; Religion, a Dialogue, Etc.",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/10833",
+  "gid": "10833"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000025",
+  "category": "inspirational",
+  "title": "Index of the Project Gutenberg Works of Arthur Schopenhauer",
+  "author": "Schopenhauer, Arthur",
+  "url": "https://www.gutenberg.org/ebooks/59024",
+  "gid": "59024"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000026",
+  "category": "inspirational",
+  "title": "Carnacki, the Ghost Finder",
+  "author": "Hodgson, William Hope",
+  "url": "https://www.gutenberg.org/ebooks/10832",
+  "gid": "10832"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000027",
+  "category": "inspirational",
+  "title": "The Bobbsey Twins: Or, Merry Days Indoors and Out",
+  "author": "Hope, Laura Lee",
+  "url": "https://www.gutenberg.org/ebooks/17412",
+  "gid": "17412"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000028",
+  "category": "inspirational",
+  "title": "Rupert of Hentzau: From The Memoirs of Fritz Von Tarlenheim: Sequel to The Prisoner of Zenda",
+  "author": "Hope, Anthony",
+  "url": "https://www.gutenberg.org/ebooks/1145",
+  "gid": "1145"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000029",
+  "category": "inspirational",
+  "title": "Surrey: Painted by Sutton Palmer; Described by A.R. Hope Moncrieff",
+  "author": "Moncrieff, A. R. Hope (Ascott Robert Hope)",
+  "url": "https://www.gutenberg.org/ebooks/46971",
+  "gid": "46971"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000030",
+  "category": "inspirational",
+  "title": "Half a Hero: A Novel",
+  "author": "Hope, Anthony",
+  "url": "https://www.gutenberg.org/ebooks/22191",
+  "gid": "22191"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000031",
+  "category": "inspirational",
+  "title": "Schopenhauer",
+  "author": "Beer, Margrieta",
+  "url": "https://www.gutenberg.org/ebooks/47136",
+  "gid": "47136"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000032",
+  "category": "inspirational",
+  "title": "The Way of Ambition",
+  "author": "Hichens, Robert",
+  "url": "https://www.gutenberg.org/ebooks/19491",
+  "gid": "19491"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000033",
+  "category": "inspirational",
+  "title": "A dreadful temptation : $b or, A young wife's ambition",
+  "author": "Miller, Alex. McVeigh, Mrs.",
+  "url": "https://www.gutenberg.org/ebooks/43911",
+  "gid": "43911"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000034",
+  "category": "inspirational",
+  "title": "Your Child: Today and Tomorrow: Some Problems for Parents Concerning Punishment, Reasoning, Lies, Ideals and Ambitions, Fear, Work and Play, Imaginati",
+  "author": "Gruenberg, Sidonie Matsner",
+  "url": "https://www.gutenberg.org/ebooks/9917",
+  "gid": "9917"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000035",
+  "category": "inspirational",
+  "title": "Rupert's Ambition",
+  "author": "Alger, Horatio, Jr.",
+  "url": "https://www.gutenberg.org/ebooks/54621",
+  "gid": "54621"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000036",
+  "category": "inspirational",
+  "title": "Ambition",
+  "author": "Bade, William L.",
+  "url": "https://www.gutenberg.org/ebooks/51274",
+  "gid": "51274"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000037",
+  "category": "inspirational",
+  "title": "Helping Himself; Or, Grant Thornton's Ambition",
+  "author": "Alger, Horatio, Jr.",
+  "url": "https://www.gutenberg.org/ebooks/5833",
+  "gid": "5833"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000038",
+  "category": "inspirational",
+  "title": "Ambition and Success",
+  "author": "Marden, Orison Swett",
+  "url": "https://www.gutenberg.org/ebooks/57651",
+  "gid": "57651"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000039",
+  "category": "inspirational",
+  "title": "Hiking Westward: Being the Story of Two Boys Whose Ambition Led Them to Face Privations and Hardships in Their Quest of a Home in the Great West",
+  "author": "Conant, Roger William",
+  "url": "https://www.gutenberg.org/ebooks/58601",
+  "gid": "58601"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000040",
+  "category": "inspirational",
+  "title": "Larry Barlow's ambition : $b or, The adventures of a young fireman",
+  "author": "Stratemeyer, Edward",
+  "url": "https://www.gutenberg.org/ebooks/77209",
+  "gid": "77209"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000041",
+  "category": "inspirational",
+  "title": "Familiar Quotations: A Collection of Passages, Phrases, and Proverbs Traced to; Their Sources in Ancient and Modern Literature",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/27889",
+  "gid": "27889"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000042",
+  "category": "inspirational",
+  "title": "Dictionary of Quotations from Ancient and Modern, English and Foreign Sources: Including Phrases, Mottoes, Maxims, Proverbs, Definitions, Aphorisms, a",
+  "author": "Wood, James, Rev.",
+  "url": "https://www.gutenberg.org/ebooks/48105",
+  "gid": "48105"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000043",
+  "category": "inspirational",
+  "title": "Proverbs of All Nations, Compared, Explained, and Illustrated",
+  "author": "Kelly, Walter K. (Walter Keating)",
+  "url": "https://www.gutenberg.org/ebooks/63190",
+  "gid": "63190"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000044",
+  "category": "inspirational",
+  "title": "A dictionary of English proverbs and proverbial phrases : $b with a copious index of principal words",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/39281",
+  "gid": "39281"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000045",
+  "category": "inspirational",
+  "title": "French Idioms and Proverbs: A Companion to Deshumbert's 'Dictionary of Difficulties'",
+  "author": "V. Payen-Payne, de (Vinchelés Payen-Payne)",
+  "url": "https://www.gutenberg.org/ebooks/48130",
+  "gid": "48130"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000046",
+  "category": "inspirational",
+  "title": "A Polyglot of Foreign Proverbs: Comprising French, German, Dutch, Spanish, Portuguese and Danish, with English Translations and a General Index",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/51090",
+  "gid": "51090"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000047",
+  "category": "inspirational",
+  "title": "The Proverbs of Scotland",
+  "author": "Hislop, Alexander",
+  "url": "https://www.gutenberg.org/ebooks/26150",
+  "gid": "26150"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000048",
+  "category": "inspirational",
+  "title": "The Bible, King James version, Book 20: Proverbs",
+  "author": "Anonymous",
+  "url": "https://www.gutenberg.org/ebooks/8020",
+  "gid": "8020"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000049",
+  "category": "inspirational",
+  "title": "Guernsey Folk Lore: a collection of popular superstitions, legendary tales, peculiar customs, proverbs, weather sayings, etc., of the people of that i",
+  "author": "MacCulloch, Edgar, Sir",
+  "url": "https://www.gutenberg.org/ebooks/52834",
+  "gid": "52834"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000050",
+  "category": "inspirational",
+  "title": "The Preacher's Complete Homiletic Commentary on the Books of the Bible, Volume 13 (of 32): The Preacher's Complete Homiletic Commentary on the Book ",
+  "author": "Harris, W., Rev.",
+  "url": "https://www.gutenberg.org/ebooks/58767",
+  "gid": "58767"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000051",
+  "category": "inspirational",
+  "title": "'Gombo Zhèbes.' Little Dictionary of Creole Proverbs",
+  "author": "Hearn, Lafcadio",
+  "url": "https://www.gutenberg.org/ebooks/44866",
+  "gid": "44866"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000052",
+  "category": "inspirational",
+  "title": "The Expositor's Bible: The Book of Proverbs",
+  "author": "Horton, Robert F. (Robert Forman)",
+  "url": "https://www.gutenberg.org/ebooks/42189",
+  "gid": "42189"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000053",
+  "category": "inspirational",
+  "title": "Proverbs and Their Lessons: Being the Subject of Lectures Delivered to Young Men's Societies at Portsmouth and Elsewhere",
+  "author": "Trench, Richard Chenevix",
+  "url": "https://www.gutenberg.org/ebooks/56504",
+  "gid": "56504"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000054",
+  "category": "inspirational",
+  "title": "Studies in Life from Jewish Proverbs",
+  "author": "Elmslie, W. A. L. (William Alexander Leslie)",
+  "url": "https://www.gutenberg.org/ebooks/60228",
+  "gid": "60228"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000055",
+  "category": "inspirational",
+  "title": "A new dictionary of the terms ancient and modern of the canting crew in its several tribes of gypsies, beggers, thieves, cheats, &c. : $b With an addi",
+  "author": "B. E.",
+  "url": "https://www.gutenberg.org/ebooks/75897",
+  "gid": "75897"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000056",
+  "category": "inspirational",
+  "title": "Dumpy proverbs",
+  "author": "Appleton, Honor C.",
+  "url": "https://www.gutenberg.org/ebooks/24610",
+  "gid": "24610"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000057",
+  "category": "inspirational",
+  "title": "Expositions of Holy Scripture: Second Kings Chapters VIII to End and Chronicles, Ezra, and Nehemiah. Esther, Job, Proverbs, and Ecclesiastes",
+  "author": "Maclaren, Alexander",
+  "url": "https://www.gutenberg.org/ebooks/7883",
+  "gid": "7883"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000058",
+  "category": "inspirational",
+  "title": "Perverted Proverbs: A Manual of Immorals for the Many",
+  "author": "Graham, Harry",
+  "url": "https://www.gutenberg.org/ebooks/34790",
+  "gid": "34790"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000059",
+  "category": "inspirational",
+  "title": "Weather proverbs",
+  "author": "Dunwoody, H. H. C. (Henry Harrison Chase)",
+  "url": "https://www.gutenberg.org/ebooks/74916",
+  "gid": "74916"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000060",
+  "category": "inspirational",
+  "title": "A Collection of Scotch Proverbs",
+  "author": "Stampoy, Pappity",
+  "url": "https://www.gutenberg.org/ebooks/7018",
+  "gid": "7018"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000061",
+  "category": "inspirational",
+  "title": "The World English Bible (WEB): Proverbs",
+  "author": "Anonymous",
+  "url": "https://www.gutenberg.org/ebooks/8247",
+  "gid": "8247"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000062",
+  "category": "inspirational",
+  "title": "Scots proverbs, ancient and modern, selected from Allan Ramsay and others",
+  "author": "Ramsay, Allan",
+  "url": "https://www.gutenberg.org/ebooks/75667",
+  "gid": "75667"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000063",
+  "category": "inspirational",
+  "title": "The folk-lore of the Isle of Man : $b Being an account of its myths, legends, superstitions, customs, & proverbs",
+  "author": "Moore, A. W. (Arthur William)",
+  "url": "https://www.gutenberg.org/ebooks/77469",
+  "gid": "77469"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000064",
+  "category": "inspirational",
+  "title": "Precepts in Practice; or, Stories Illustrating the Proverbs",
+  "author": "A. L. O. E.",
+  "url": "https://www.gutenberg.org/ebooks/58791",
+  "gid": "58791"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000065",
+  "category": "inspirational",
+  "title": "The Bible, Douay-Rheims, Book 22: Proverbs: The Challoner Revision",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/8322",
+  "gid": "8322"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000066",
+  "category": "inspirational",
+  "title": "An Inquiry into the Nature and Causes of the Wealth of Nations",
+  "author": "Smith, Adam",
+  "url": "https://www.gutenberg.org/ebooks/3300",
+  "gid": "3300"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000067",
+  "category": "inspirational",
+  "title": "Franklin's Way to Wealth; or, 'Poor Richard Improved'",
+  "author": "Franklin, Benjamin",
+  "url": "https://www.gutenberg.org/ebooks/43855",
+  "gid": "43855"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000068",
+  "category": "inspirational",
+  "title": "Cicero's Tusculan Disputations: Also, Treatises On The Nature Of The Gods, And On The Commonwealth",
+  "author": "Cicero, Marcus Tullius",
+  "url": "https://www.gutenberg.org/ebooks/14988",
+  "gid": "14988"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000069",
+  "category": "inspirational",
+  "title": "Progress and Poverty, Volumes I and II: An Inquiry into the Cause of Industrial Depressions and of Increase of Want with Increase of Wealth",
+  "author": "George, Henry",
+  "url": "https://www.gutenberg.org/ebooks/55308",
+  "gid": "55308"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000070",
+  "category": "inspirational",
+  "title": "The Saxons in England, Volume 1 (of 2): A history of the English commonwealth till the period of the Norman conquest",
+  "author": "Kemble, John Mitchell",
+  "url": "https://www.gutenberg.org/ebooks/61161",
+  "gid": "61161"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000071",
+  "category": "inspirational",
+  "title": "The secret commonwealth of elves, fauns & fairies",
+  "author": "Kirk, Robert",
+  "url": "https://www.gutenberg.org/ebooks/75485",
+  "gid": "75485"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000072",
+  "category": "inspirational",
+  "title": "The Wizard of Wall Street and His Wealth; or, The Life and Deeds of Jay Gould",
+  "author": "White, Trumbull",
+  "url": "https://www.gutenberg.org/ebooks/66148",
+  "gid": "66148"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000073",
+  "category": "inspirational",
+  "title": "The Commonwealth of Oceana",
+  "author": "Harrington, James",
+  "url": "https://www.gutenberg.org/ebooks/2801",
+  "gid": "2801"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000074",
+  "category": "inspirational",
+  "title": "The Saxons in England, Volume 2 (of 2): A history of the English commonwealth till the period of the Norman conquest",
+  "author": "Kemble, John Mitchell",
+  "url": "https://www.gutenberg.org/ebooks/61331",
+  "gid": "61331"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000075",
+  "category": "inspirational",
+  "title": "King and commonwealth : $b A history of Charles I. and the great rebellion",
+  "author": "Phillpotts, J. Surtees (James Surtees), Gardiner, Bertha Meriton",
+  "url": "https://www.gutenberg.org/ebooks/76676",
+  "gid": "76676"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000076",
+  "category": "inspirational",
+  "title": "Ideal Commonwealths",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/18638",
+  "gid": "18638"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000077",
+  "category": "inspirational",
+  "title": "Rural Wealth and Welfare: Economic Principles Illustrated and Applied in Farm Life",
+  "author": "Fairchild, Geo. T. (George Thompson)",
+  "url": "https://www.gutenberg.org/files/32158/32158-pdf.pdf",
+  "gid": "32158"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000078",
+  "category": "inspirational",
+  "title": "The Digger Movement in the Days of the Commonwealth: As Revealed in the Writings of Gerrard Winstanley, the Digger, Mystic and Rationalist, Communist",
+  "author": "Berens, Lewis Henry",
+  "url": "https://www.gutenberg.org/ebooks/17480",
+  "gid": "17480"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000079",
+  "category": "inspirational",
+  "title": "Ecclesiastical History of England, Volume 2—The Church of the Commonwealth",
+  "author": "Stoughton, John",
+  "url": "https://www.gutenberg.org/ebooks/64226",
+  "gid": "64226"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000080",
+  "category": "inspirational",
+  "title": "Wealth of the World's Waste Places and Oceania",
+  "author": "Gilson, Jewett C. (Jewett Castello)",
+  "url": "https://www.gutenberg.org/ebooks/23546",
+  "gid": "23546"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000081",
+  "category": "inspirational",
+  "title": "An inquiry into the permanent causes of the decline and fall of powerful and wealthy nations : $b Designed to shew how the prosperity of the British e",
+  "author": "Playfair, William",
+  "url": "https://www.gutenberg.org/ebooks/16575",
+  "gid": "16575"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000082",
+  "category": "inspirational",
+  "title": "Explanatory Notes of a Pack of Cavalier Playing Cards, Temp. Charles II.: Forming a Complete Political Satire of the Commonwealth",
+  "author": "Goldsmid, Edmund",
+  "url": "https://www.gutenberg.org/ebooks/44594",
+  "gid": "44594"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000083",
+  "category": "inspirational",
+  "title": "Mastery of Self for Wealth, Power, Success",
+  "author": "Haddock, Frank C. (Frank Channing)",
+  "url": "https://www.gutenberg.org/ebooks/4286",
+  "gid": "4286"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000084",
+  "category": "inspirational",
+  "title": "The Winning of the West, Volume 3: The Founding of the Trans-Alleghany Commonwealths, 1784-1790",
+  "author": "Roosevelt, Theodore",
+  "url": "https://www.gutenberg.org/ebooks/11943",
+  "gid": "11943"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000085",
+  "category": "inspirational",
+  "title": "Distributive Justice: The Right and Wrong of Our Present Distribution of Wealth",
+  "author": "Ryan, John A. (John Augustine)",
+  "url": "https://www.gutenberg.org/ebooks/42759",
+  "gid": "42759"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000086",
+  "category": "inspirational",
+  "title": "The impending crisis : $b conditions resulting from the concentration of wealth in the United States",
+  "author": "Bouroff, Basil A.",
+  "url": "https://www.gutenberg.org/ebooks/50424",
+  "gid": "50424"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000087",
+  "category": "inspirational",
+  "title": "The Rise of Canada, from Barbarism to Wealth and Civilisation. Volume 1",
+  "author": "Roger, Charles",
+  "url": "https://www.gutenberg.org/ebooks/24550",
+  "gid": "24550"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000088",
+  "category": "inspirational",
+  "title": "Wealth against commonwealth",
+  "author": "Lloyd, Henry Demarest",
+  "url": "https://www.gutenberg.org/ebooks/60473",
+  "gid": "60473"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000089",
+  "category": "inspirational",
+  "title": "The Fathers of New England: A Chronicle of the Puritan Commonwealths",
+  "author": "Andrews, Charles McLean",
+  "url": "https://www.gutenberg.org/ebooks/29853",
+  "gid": "29853"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000090",
+  "category": "inspirational",
+  "title": "Observations on the Effects of the Corn Laws, and of a Rise or Fall in the Price of Corn on the Agriculture and General Wealth of the Country",
+  "author": "Malthus, T. R. (Thomas Robert)",
+  "url": "https://www.gutenberg.org/ebooks/4334",
+  "gid": "4334"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000091",
+  "category": "inspirational",
+  "title": "The Canadian Commonwealth",
+  "author": "Laut, Agnes C.",
+  "url": "https://www.gutenberg.org/ebooks/18032",
+  "gid": "18032"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000092",
+  "category": "inspirational",
+  "title": "The Interlude of Wealth and Health",
+  "author": "Anonymous",
+  "url": "https://www.gutenberg.org/ebooks/17270",
+  "gid": "17270"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000093",
+  "category": "inspirational",
+  "title": "Aristocracy & Evolution: A Study of the Rights, the Origin, and the Social Functions of the Wealthier Classes",
+  "author": "Mallock, W. H. (William Hurrell)",
+  "url": "https://www.gutenberg.org/ebooks/58968",
+  "gid": "58968"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000094",
+  "category": "inspirational",
+  "title": "From Wealth to Poverty; Or, the Tricks of the Traffic. A Story of the Drink Curse",
+  "author": "Potter, Austin",
+  "url": "https://www.gutenberg.org/ebooks/6907",
+  "gid": "6907"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000095",
+  "category": "inspirational",
+  "title": "The Co-opolitan : $b a story of the Co-operative Commonwealth of Idaho",
+  "author": "Forbush, Zebina",
+  "url": "https://www.gutenberg.org/ebooks/67321",
+  "gid": "67321"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000096",
+  "category": "inspirational",
+  "title": "The commonwealth of cells : $b Some popular essays on human physiology",
+  "author": "Spurrell, H. G. F. (Herbert George Flaxman)",
+  "url": "https://www.gutenberg.org/ebooks/74813",
+  "gid": "74813"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000097",
+  "category": "inspirational",
+  "title": "The Wealth of Echindul",
+  "author": "Loomis, Noel M.",
+  "url": "https://www.gutenberg.org/ebooks/31326",
+  "gid": "31326"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000098",
+  "category": "inspirational",
+  "title": "An Address to a Wealthy Libertine: or, the Melancholy Effects of Seduction; with a Letter from an Unfortunate Farmer's Daughter, to her Parents in No",
+  "author": "Parkerson, James",
+  "url": "https://www.gutenberg.org/ebooks/33456",
+  "gid": "33456"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000099",
+  "category": "inspirational",
+  "title": "True Riches; Or, Wealth Without Wings",
+  "author": "Arthur, T. S. (Timothy Shay)",
+  "url": "https://www.gutenberg.org/ebooks/15389",
+  "gid": "15389"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000100",
+  "category": "inspirational",
+  "title": "Knott's pop-corn book: Dedicated to the health the happiness the wealth of all people",
+  "author": "",
+  "url": "https://www.gutenberg.org/ebooks/64494",
+  "gid": "64494"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000101",
+  "category": "inspirational",
+  "title": "Other Worlds: A story concerning the wealth earned by American citizens and showing how it can be secured to them instead of to the trusts",
+  "author": "Fry, Lena Jane",
+  "url": "https://www.gutenberg.org/ebooks/64241",
+  "gid": "64241"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000102",
+  "category": "inspirational",
+  "title": "A Sermon Delivered before His Excellency Levi Lincoln, Governor, His Honor Thomas L. Winthrop, Lieutenant Governor, the Hon. Council, the Senate, and",
+  "author": "Walker, James",
+  "url": "https://www.gutenberg.org/ebooks/43927",
+  "gid": "43927"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000103",
+  "category": "inspirational",
+  "title": "On both sides of the sea : $b A story of the Commonwealth and the Restoration",
+  "author": "Charles, Elizabeth Rundle",
+  "url": "https://www.gutenberg.org/ebooks/75741",
+  "gid": "75741"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000104",
+  "category": "inspirational",
+  "title": "The Threefold Commonwealth",
+  "author": "Steiner, Rudolf",
+  "url": "https://www.gutenberg.org/ebooks/59257",
+  "gid": "59257"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000105",
+  "category": "inspirational",
+  "title": "The sword of wealth",
+  "author": "Thomas, Henry Wilton",
+  "url": "https://www.gutenberg.org/ebooks/68448",
+  "gid": "68448"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000106",
+  "category": "inspirational",
+  "title": "The negro workers : $b address delivered Tuesday, October 30, 1923, at Commonwealth Casino, 135th Street and Madison Avenue, N.Y.C.",
+  "author": "Debs, Eugene V. (Eugene Victor)",
+  "url": "https://www.gutenberg.org/ebooks/74184",
+  "gid": "74184"
+ },
+ {
+  "file": "supabase/seed_study_books.sql",
+  "uuid": "1c000000-0000-4000-8000-000000000107",
+  "category": "inspirational",
+  "title": "The Gospel of Wealth",
+  "author": "Carnegie, Andrew",
+  "url": "https://www.gutenberg.org/ebooks/10253",
+  "gid": "10253"
+ }
+]

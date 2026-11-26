@@ -1,0 +1,9 @@
+(node:11456) ExperimentalWarning: Importing JSON modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+public/favicon.png 32px 1070 bytes
+public/icon-192.png 192px 6683 bytes
+public/icon-512.png 512px 23760 bytes
+public/apple-touch-icon.png 180px 6262 bytes
+public/icon-maskable-192.png 192px 6000 bytes
+public/icon-maskable-512.png 512px 20795 bytes
+public/favicon.ico 16/32/48px 3119 bytes

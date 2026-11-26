@@ -31,6 +31,7 @@ import { hasActivePro } from "@/lib/pro";
 import { StoryViewer } from "@/components/stories/StoryViewer";
 import { StoryRing } from "@/components/stories/StoryRing";
 import { refreshStoryRings } from "@/components/layout/StoryRingProvider";
+import { ProfileCompletionBar } from "@/components/profile/ProfileCompletionBar";
 import type { LiveSession, Profile, PostWithAuthor, StoryWithAuthor } from "@/lib/supabase/types";
 import toast from "react-hot-toast";
 
@@ -465,6 +466,11 @@ export function ProfileClient({
       </div>
 
       {/* Posts tab */}
+      {/* Profile completion progress bar — only on the owner's own profile */}
+      {isOwn && activeTab === "posts" && (
+        <ProfileCompletionBar profile={profile} />
+      )}
+
       {activeTab === "posts" && (
         <div className="space-y-4">
           {/* Your own profile is as good a place as any to publish, so the feed

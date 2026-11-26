@@ -1,0 +1,20 @@
+public:
+images
+
+public/images:
+library-wall.jpg
+(app)
+(auth)
+about
+admin
+api
+contact
+cookies
+globals.css
+help
+layout.tsx
+page.tsx
+privacy
+search
+terms
+--- package deps ---

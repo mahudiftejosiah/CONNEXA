@@ -1,0 +1,3 @@
+src/components/study/StudyRoom.tsx(150,14): error TS2448: Block-scoped variable 'needle' used before its declaration.
+src/components/study/StudyRoom.tsx(150,14): error TS2454: Variable 'needle' is used before being assigned.
+exit=2

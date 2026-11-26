@@ -1,0 +1,7 @@
+[main 298aeb8] Act on a message in a chat, and publish from the profile
+ 9 files changed, 873 insertions(+), 124 deletions(-)
+ create mode 100644 src/components/messages/ForwardDialog.tsx
+ create mode 100644 src/components/messages/MessageMenu.tsx
+ create mode 100644 src/components/stories/CreateStory.tsx
+ create mode 100644 supabase/migrations/023_message_actions.sql
+298aeb8 Act on a message in a chat, and publish from the profile

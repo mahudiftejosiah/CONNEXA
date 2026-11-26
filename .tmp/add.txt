@@ -1,0 +1,20 @@
+warning: in the working copy of 'src/app/(app)/messages/MessagesClient.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/(app)/profile/[username]/ProfileClient.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/(app)/stories/StoriesClient.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/supabase/types.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'supabase/preflight_migrations.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/messages/ForwardDialog.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/messages/MessageMenu.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/stories/CreateStory.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'supabase/migrations/023_message_actions.sql', LF will be replaced by CRLF the next time Git touches it
+M  src/app/(app)/messages/MessagesClient.tsx
+M  src/app/(app)/profile/[username]/ProfileClient.tsx
+M  src/app/(app)/stories/StoriesClient.tsx
+A  src/components/messages/ForwardDialog.tsx
+A  src/components/messages/MessageMenu.tsx
+A  src/components/stories/CreateStory.tsx
+M  src/lib/supabase/types.ts
+A  supabase/migrations/023_message_actions.sql
+M  supabase/preflight_migrations.sql
+?? .tmp/
+?? tsconfig.check.json

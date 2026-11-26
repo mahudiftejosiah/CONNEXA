@@ -51,6 +51,7 @@ export interface Database {
           is_admin: boolean
           is_verified: boolean
           gender?: Gender | null
+          onboarding_done?: boolean
           pro_expires_at?: string | null
           display_followers?: number | null
           hide_visit_activity?: boolean | null

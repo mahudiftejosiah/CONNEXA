@@ -1,0 +1,992 @@
+[
+ {
+  "id": "84",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/84",
+   "v": "200 html(26350b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/84/pg84.txt",
+   "v": "200 text(-b)"
+  },
+  "cache-utf8": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/84/pg84.txt",
+   "v": "200 text(-b)"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/84.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "870",
+   "finalUrl": "https://www.gutenberg.org/ebooks/84.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/files/84/84-h/84-h.htm",
+   "v": "200 html(16360b read)"
+  }
+ },
+ {
+  "id": "1342",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/1342",
+   "v": "200 html(25579b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/1342/pg1342.txt",
+   "v": "200 text(-b)"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/1342/pg1342.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/1342/pg1342.txt",
+   "v": "200 text(-b)"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/1342.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "872",
+   "finalUrl": "https://www.gutenberg.org/ebooks/1342.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/files/1342/1342-h/1342-h.htm",
+   "v": "200 html(16320b read)"
+  }
+ },
+ {
+  "id": "1661",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "7085",
+   "finalUrl": "https://www.gutenberg.org/ebooks/1661",
+   "v": "200 html(25766b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/1661/pg1661.txt",
+   "v": "200 text(-b)"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/1661/pg1661.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/1661/pg1661.txt",
+   "v": "200 text(-b)"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/1661.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "872",
+   "finalUrl": "https://www.gutenberg.org/ebooks/1661.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/files/1661/1661-h/1661-h.htm",
+   "v": "200 html(16384b read)"
+  }
+ },
+ {
+  "id": "2701",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/2701",
+   "v": "200 html(25247b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/2701/pg2701.txt",
+   "v": "200 text(-b)"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/2701/pg2701.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/2701/pg2701.txt",
+   "v": "200 text(-b)"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/2701.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "872",
+   "finalUrl": "https://www.gutenberg.org/ebooks/2701.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/files/2701/2701-h/2701-h.htm",
+   "v": "200 html(16384b read)"
+  }
+ },
+ {
+  "id": "359",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/359",
+   "v": "200 html(25008b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/359/pg359.txt",
+   "v": "200 text(-b)"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/359/pg359.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/359/pg359.txt",
+   "v": "200 text(-b)"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/359.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "871",
+   "finalUrl": "https://www.gutenberg.org/ebooks/359.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/files/359/359-h/359-h.htm",
+   "v": "200 html(16384b read)"
+  }
+ },
+ {
+  "id": "1145",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/1145",
+   "v": "200 html(25377b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/1145/pg1145.txt",
+   "v": "200 text(-b)"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/1145/pg1145.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/1145/pg1145.txt",
+   "v": "200 text(-b)"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/1145.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "872",
+   "finalUrl": "https://www.gutenberg.org/ebooks/1145.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/files/1145/1145-h/1145-h.htm",
+   "v": "200 html(16384b read)"
+  }
+ },
+ {
+  "id": "38769",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/38769",
+   "v": "200 html(17803b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/38769/pg38769.txt",
+   "v": "404"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/38769/pg38769.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/38769/pg38769.txt",
+   "v": "404"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/38769.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/38769.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/files/38769/38769-h/38769-h.htm",
+   "v": "404"
+  }
+ },
+ {
+  "id": "33283",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/33283",
+   "v": "200 html(24858b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/33283/pg33283.txt",
+   "v": "404"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/33283/pg33283.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/33283/pg33283.txt",
+   "v": "404"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/33283.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/33283.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/files/33283/33283-h/33283-h.htm",
+   "v": "200 html(16380b read)"
+  }
+ },
+ {
+  "id": "17384",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/17384",
+   "v": "200 html(18030b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/17384/pg17384.txt",
+   "v": "404"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/17384/pg17384.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/17384/pg17384.txt",
+   "v": "404"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/17384.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/17384.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/files/17384/17384-h/17384-h.htm",
+   "v": "404"
+  }
+ },
+ {
+  "id": "36154",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/36154",
+   "v": "200 html(17361b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/36154/pg36154.txt",
+   "v": "404"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/36154/pg36154.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/36154/pg36154.txt",
+   "v": "404"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/36154.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/36154.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/files/36154/36154-h/36154-h.htm",
+   "v": "404"
+  }
+ },
+ {
+  "id": "57355",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/57355",
+   "v": "200 html(16825b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/57355/pg57355.txt",
+   "v": "404"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/57355/pg57355.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/57355/pg57355.txt",
+   "v": "404"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/57355.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/57355.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/files/57355/57355-h/57355-h.htm",
+   "v": "404"
+  }
+ },
+ {
+  "id": "10253",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/10253",
+   "v": "200 html(16357b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/10253/pg10253.txt",
+   "v": "404"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/10253/pg10253.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/10253/pg10253.txt",
+   "v": "404"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/10253.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/10253.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/files/10253/10253-h/10253-h.htm",
+   "v": "404"
+  }
+ },
+ {
+  "id": "60619",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/60619",
+   "v": "200 html(24592b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/60619/pg60619.txt",
+   "v": "200 text(-b)"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/60619/pg60619.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/60619/pg60619.txt",
+   "v": "200 text(-b)"
+  },
+  "ebook-txt": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/60619.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/files/60619/60619-h/60619-h.htm",
+   "v": "200 html(16333b read)"
+  }
+ },
+ {
+  "id": "52038",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/52038",
+   "v": "200 html(25834b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/52038/pg52038.txt",
+   "v": "200 text(-b)"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/52038/pg52038.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/52038/pg52038.txt",
+   "v": "200 text(-b)"
+  },
+  "ebook-txt": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  },
+  "ebook-html.utf8": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  },
+  "files-h": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  }
+ },
+ {
+  "id": "67017",
+  "catalog": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/67017/pg67017.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "26041",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/67017/pg67017.txt",
+   "v": "200 text(26041b)"
+  },
+  "ebook-txt": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  },
+  "ebook-html.utf8": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  },
+  "files-h": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  }
+ },
+ {
+  "id": "69512",
+  "catalog": {
+   "status": "ERR TypeError",
+   "type": "-",
+   "len": "-",
+   "finalUrl": "-",
+   "v": "ERR TypeError"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/69512/pg69512.txt",
+   "v": "404"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/69512/pg69512.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/69512/pg69512.txt",
+   "v": "404"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/69512.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/69512.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "22122",
+   "finalUrl": "https://www.gutenberg.org/files/69512/69512-h/69512-h.htm",
+   "v": "200 html(16384b read)"
+  }
+ },
+ {
+  "id": "54300",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/54300",
+   "v": "200 html(24435b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "35061",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/54300/pg54300.txt",
+   "v": "200 text(35061b)"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/54300/pg54300.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "35061",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/54300/pg54300.txt",
+   "v": "200 text(35061b)"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/54300.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/54300.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "35404",
+   "finalUrl": "https://www.gutenberg.org/files/54300/54300-h/54300-h.htm",
+   "v": "200 html(16363b read)"
+  }
+ },
+ {
+  "id": "37461",
+  "catalog": {
+   "status": 200,
+   "type": "text/html;charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/ebooks/37461",
+   "v": "200 html(24884b read)"
+  },
+  "catalogFormats": [],
+  "catalogLooksError": false,
+  "catalogTitle": "",
+  "cache-txt": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/37461/pg37461.txt",
+   "v": "200 text(-b)"
+  },
+  "cache-utf8": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/37461/pg37461.txt.utf-8",
+   "v": "404"
+  },
+  "ebook-txt.utf8": {
+   "status": 200,
+   "type": "text/plain; charset=utf-8",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/cache/epub/37461/pg37461.txt",
+   "v": "200 text(-b)"
+  },
+  "ebook-txt": {
+   "status": 404,
+   "type": "text/html",
+   "len": "6559",
+   "finalUrl": "https://www.gutenberg.org/ebooks/37461.txt",
+   "v": "404"
+  },
+  "ebook-html.utf8": {
+   "status": 404,
+   "type": "text/html;charset=utf-8",
+   "len": "873",
+   "finalUrl": "https://www.gutenberg.org/ebooks/37461.html.utf-8",
+   "v": "404"
+  },
+  "files-h": {
+   "status": 200,
+   "type": "text/html",
+   "len": "-",
+   "finalUrl": "https://www.gutenberg.org/files/37461/37461-h/37461-h.htm",
+   "v": "200 html(16384b read)"
+  }
+ }
+]
