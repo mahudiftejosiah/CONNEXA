@@ -230,14 +230,16 @@ export function StoryViewer({
     }));
     // Notify the story author (skip if reacting to your own story)
     if (target.author_id !== currentUserId) {
-      await supabase.from("notifications").insert({
-        user_id: target.author_id,
-        actor_id: currentUserId,
-        type: "story_reaction",
-        entity_id: target.id,
-        entity_type: "story",
-        message: `Someone reacted ${emoji} to your story`,
-      }).then(() => {}).catch(() => {});
+      void Promise.resolve(
+        supabase.from("notifications").insert({
+          user_id: target.author_id,
+          actor_id: currentUserId,
+          type: "story_reaction",
+          entity_id: target.id,
+          entity_type: "story",
+          message: `Someone reacted ${emoji} to your story`,
+        })
+      ).catch(() => {});
     }
   }
 
@@ -277,14 +279,16 @@ export function StoryViewer({
       }
     }
     // Notify the story author
-    await supabase.from("notifications").insert({
-      user_id: story.author_id,
-      actor_id: currentUserId,
-      type: "story_reply",
-      entity_id: story.id,
-      entity_type: "story",
-      message: `${story.author.display_name === story.author.display_name ? "Someone" : story.author.display_name} replied to your story`,
-    }).then(() => {/* best-effort */}).catch(() => {});
+    void Promise.resolve(
+      supabase.from("notifications").insert({
+        user_id: story.author_id,
+        actor_id: currentUserId,
+        type: "story_reply",
+        entity_id: story.id,
+        entity_type: "story",
+        message: `Someone replied to your story`,
+      })
+    ).catch(() => {});
     setReplyOpen(false);
     setReplyText("");
     toast.success(`Reply sent to ${story.author.display_name}.`);
