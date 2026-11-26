@@ -22,13 +22,16 @@ export default async function ProfilePage({ params }: Props) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from("profiles").select("*").eq("username", username).single();
+  // Parallelise profile + current user's profile lookup
+  const [profileRes, currentProfileRes] = await Promise.all([
+    supabase.from("profiles").select("*").eq("username", username).single(),
+    user ? supabase.from("profiles").select("*").eq("id", user.id).single() : Promise.resolve({ data: null }),
+  ]);
+
+  const profile = profileRes.data;
   if (!profile) notFound();
 
-  const { data: currentProfile } = user
-    ? await supabase.from("profiles").select("*").eq("id", user.id).single()
-    : { data: null };
+  const currentProfile = currentProfileRes.data;
 
   const isOwn = user?.id === profile.id;
 

@@ -223,31 +223,46 @@ export default async function MessagesPage({
     })
   );
 
-  // Load the latest message and unread count.
-  const threads = await Promise.all(
-    enrichedConversations.map(async (conversation: any) => {
-      const { data: lastMessage } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversation.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+  // Load the latest message and unread count — single bulk queries instead of N+1.
+  const convIds = enrichedConversations.map((c: any) => c.id);
 
-      const { count: unreadCount } = await supabase
-        .from("messages")
-        .select("id", { count: "exact", head: true })
-        .eq("conversation_id", conversation.id)
-        .neq("sender_id", user.id)
-        .eq("is_read", false);
+  const [allMessagesRes, unreadRes] = convIds.length > 0
+    ? await Promise.all([
+        // Fetch recent messages for all conversations at once, then pick the latest per conv
+        supabase
+          .from("messages")
+          .select("*")
+          .in("conversation_id", convIds)
+          .order("created_at", { ascending: false })
+          .limit(convIds.length * 2), // 2 per conv is enough to find the latest
+        supabase
+          .from("messages")
+          .select("conversation_id, id")
+          .in("conversation_id", convIds)
+          .neq("sender_id", user.id)
+          .eq("is_read", false),
+      ])
+    : [{ data: [] }, { data: [] }];
 
-      return {
-        ...conversation,
-        last_message: lastMessage || null,
-        unread_count: unreadCount || 0,
-      };
-    })
-  );
+  // Build a map: conversation_id -> last message
+  const lastMsgMap = new Map<string, any>();
+  for (const msg of allMessagesRes.data || []) {
+    if (!lastMsgMap.has(msg.conversation_id)) {
+      lastMsgMap.set(msg.conversation_id, msg);
+    }
+  }
+
+  // Build a map: conversation_id -> unread count
+  const unreadMap = new Map<string, number>();
+  for (const msg of unreadRes.data || []) {
+    unreadMap.set(msg.conversation_id, (unreadMap.get(msg.conversation_id) ?? 0) + 1);
+  }
+
+  const threads = enrichedConversations.map((conversation: any) => ({
+    ...conversation,
+    last_message: lastMsgMap.get(conversation.id) || null,
+    unread_count: unreadMap.get(conversation.id) || 0,
+  }));
 
   // Sort newest conversations first.
   threads.sort((a: any, b: any) => {
