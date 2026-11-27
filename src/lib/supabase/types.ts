@@ -201,9 +201,10 @@ export interface Database {
           created_at: string
           updated_at: string
           last_message_at: string | null
+          direct_key: string | null
         }
         Insert: Partial<Omit<Database["public"]["Tables"]["conversations"]["Row"], "id" | "created_at" | "updated_at">>
-        Update: Partial<Pick<Database["public"]["Tables"]["conversations"]["Row"], "last_message_at" | "updated_at">>
+        Update: Partial<Pick<Database["public"]["Tables"]["conversations"]["Row"], "last_message_at" | "updated_at" | "direct_key">>
       }
       conversation_participants: {
         Row: {
@@ -1018,6 +1019,10 @@ export interface Database {
         Args: { p_message_id: string }
         Returns: boolean
       }
+      get_or_create_direct_conversation: {
+        Args: { p_other: string }
+        Returns: string
+      }
       list_open_quizzes: {
         Args: Record<string, never>
         Returns: { id: string; title: string; description: string | null; category: string | null; difficulty: string; time_limit_seconds: number; questions: number }[]
@@ -1089,6 +1094,18 @@ export type Follower = Database["public"]["Tables"]["followers"]["Row"]
 export type Story = Database["public"]["Tables"]["stories"]["Row"]
 export type StoryView = Database["public"]["Tables"]["story_views"]["Row"]
 export type StoryReaction = Database["public"]["Tables"]["story_reactions"]["Row"]
+
+/**
+ * A story reaction joined to the profile of the friend who made it. The name
+ * and the avatar come from the profile row, so a reaction always points at
+ * one real person — never at a name typed into a text field.
+ */
+export type StoryReactionWithProfile = StoryReaction & {
+  reactor?: Pick<
+    Profile,
+    "id" | "username" | "display_name" | "avatar_url"
+  > | null
+}
 export type Conversation = Database["public"]["Tables"]["conversations"]["Row"]
 export type ConversationParticipant = Database["public"]["Tables"]["conversation_participants"]["Row"]
 export type Message = Database["public"]["Tables"]["messages"]["Row"]

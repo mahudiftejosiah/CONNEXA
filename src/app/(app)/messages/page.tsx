@@ -100,60 +100,72 @@ export default async function MessagesPage({
     if (peer) {
       openPeerId = peerId;
 
-      const { data: mine } = await supabase
-        .from("conversation_participants")
-        .select("conversation_id")
-        .eq("user_id", user.id);
-
-      const myConvIds = Array.from(
-        new Set((mine || []).map((row) => row.conversation_id))
+      // One atomic call for "the thread between these two people". The old
+      // code searched for a shared conversation here and minted a new id
+      // itself, which could race with the same search in the API route and
+      // leave two threads for one pair of people.
+      const { data: convId, error: rpcError } = await supabase.rpc(
+        "get_or_create_direct_conversation",
+        { p_other: peerId }
       );
 
-      let convId: string | null = null;
+      let resolvedConvId: string | null = convId ?? null;
 
-      for (let i = 0; i < myConvIds.length && !convId; i += 100) {
-        const { data } = await supabase
+      // Migration 041 has not been pasted yet — fall back to a search.
+      if (rpcError || !resolvedConvId) {
+        const { data: mine } = await supabase
           .from("conversation_participants")
           .select("conversation_id")
-          .in("conversation_id", myConvIds.slice(i, i + 100))
-          .eq("user_id", peerId)
-          .limit(1);
+          .eq("user_id", user.id);
 
-        convId = data?.[0]?.conversation_id ?? null;
-      }
+        const myConvIds = Array.from(
+          new Set((mine || []).map((row) => row.conversation_id))
+        );
 
-      if (!convId) {
-        const newId = crypto.randomUUID();
-
-        const { error: convError } = await supabase
-          .from("conversations")
-          .insert({ id: newId } as any);
-
-        if (!convError) {
-          const { error: participantError } = await supabase
+        for (let i = 0; i < myConvIds.length && !resolvedConvId; i += 100) {
+          const { data } = await supabase
             .from("conversation_participants")
-            .insert([
-              { conversation_id: newId, user_id: user.id },
-              { conversation_id: newId, user_id: peerId },
-            ]);
+            .select("conversation_id")
+            .in("conversation_id", myConvIds.slice(i, i + 100))
+            .eq("user_id", peerId)
+            .limit(1);
 
-          if (!participantError) {
-            convId = newId;
+          resolvedConvId = data?.[0]?.conversation_id ?? null;
+        }
+
+        if (!resolvedConvId) {
+          const newId = crypto.randomUUID();
+
+          const { error: convError } = await supabase
+            .from("conversations")
+            .insert({ id: newId } as any);
+
+          if (!convError) {
+            const { error: participantError } = await supabase
+              .from("conversation_participants")
+              .insert([
+                { conversation_id: newId, user_id: user.id },
+                { conversation_id: newId, user_id: peerId },
+              ]);
+
+            if (!participantError) {
+              resolvedConvId = newId;
+            }
           }
         }
       }
 
-      if (convId) {
+      if (resolvedConvId) {
         await supabase
           .from("conversation_participants")
           .update({ deleted_at: null })
-          .eq("conversation_id", convId)
+          .eq("conversation_id", resolvedConvId)
           .eq("user_id", user.id);
 
         const { data: conversation } = await supabase
           .from("conversations")
           .select("*, participants:conversation_participants(*)")
-          .eq("id", convId)
+          .eq("id", resolvedConvId)
           .single();
 
         if (conversation) {
@@ -210,21 +222,62 @@ export default async function MessagesPage({
     }
   }
 
-  // Attach profiles to participant rows.
+  // Attach profiles to participant rows. A participant whose profile row is
+  // missing still gets a stable placeholder, so the person is identified by
+  // their user id and never by a name that could change.
   const enrichedConversations = allConversations.map(
     (conversation: any) => ({
       ...conversation,
       participants: (conversation.participants || []).map(
         (participant: any) => ({
           ...participant,
-          profile: profileMap.get(participant.user_id) || null,
+          profile: profileMap.get(participant.user_id) || {
+            id: participant.user_id,
+            username: "",
+            display_name: "Member",
+            avatar_url: null,
+          },
         })
       ),
     })
   );
 
+  // One inbox row per person. The database used to be able to hold two
+  // threads for the same pair of people, and the inbox listed both, which is
+  // what made one friend look like several accounts. The busier thread wins.
+  const seenPeers = new Map<string, any>();
+
+  for (const conversation of enrichedConversations) {
+    const participants = conversation.participants || [];
+    const peerId = participants.find(
+      (participant: any) => participant.user_id !== user.id
+    )?.user_id;
+
+    // A group conversation has no single other person, so it keeps its own row.
+    const key =
+      participants.length === 2 && peerId ? `peer:${peerId}` : `conv:${conversation.id}`;
+
+    const existing = seenPeers.get(key);
+
+    if (!existing) {
+      seenPeers.set(key, conversation);
+      continue;
+    }
+
+    const incomingAt = new Date(
+      conversation.last_message_at || conversation.created_at
+    ).getTime();
+    const existingAt = new Date(
+      existing.last_message_at || existing.created_at
+    ).getTime();
+
+    if (incomingAt > existingAt) seenPeers.set(key, conversation);
+  }
+
+  const uniqueConversations = Array.from(seenPeers.values());
+
   // Load the latest message and unread count — single bulk queries instead of N+1.
-  const convIds = enrichedConversations.map((c: any) => c.id);
+  const convIds = uniqueConversations.map((c: any) => c.id);
 
   const [allMessagesRes, unreadRes] = convIds.length > 0
     ? await Promise.all([
@@ -258,7 +311,7 @@ export default async function MessagesPage({
     unreadMap.set(msg.conversation_id, (unreadMap.get(msg.conversation_id) ?? 0) + 1);
   }
 
-  const threads = enrichedConversations.map((conversation: any) => ({
+  const threads = uniqueConversations.map((conversation: any) => ({
     ...conversation,
     last_message: lastMsgMap.get(conversation.id) || null,
     unread_count: unreadMap.get(conversation.id) || 0,

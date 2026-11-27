@@ -9,7 +9,12 @@ import { Modal } from "@/components/ui/Modal";
 import { createClient } from "@/lib/supabase/client";
 import { groupStories, playbackSequence, markStoryViewed } from "@/lib/stories";
 import { refreshStoryRings } from "@/components/layout/StoryRingProvider";
-import type { StoryWithAuthor, Profile, StoryReaction } from "@/lib/supabase/types";
+import type {
+  StoryWithAuthor,
+  Profile,
+  StoryReaction,
+  StoryReactionWithProfile,
+} from "@/lib/supabase/types";
 import { formatRelativeTime } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -48,7 +53,8 @@ export function StoryViewer({ stories, currentUserId, startAuthorId, onClose, on
   const [progress,       setProgress]       = useState(0);
   const [mediaLoading,   setMediaLoading]   = useState(false);
   const [mediaError,     setMediaError]     = useState(false);
-  const [storyReactions, setStoryReactions] = useState<Record<string, StoryReaction[]>>({});
+  const [storyReactions, setStoryReactions] = useState<Record<string, StoryReactionWithProfile[]>>({});
+  const [rxPanelOpen, setRxPanelOpen] = useState(false);
   const [replyOpen,      setReplyOpen]      = useState(false);
   const [replyText,      setReplyText]      = useState("");
   const [emojiOpen,      setEmojiOpen]      = useState(false);
@@ -98,6 +104,7 @@ export function StoryViewer({ stories, currentUserId, startAuthorId, onClose, on
     setProgress(0);
     setEmojiOpen(false);
     setReplyOpen(false);
+    setRxPanelOpen(false);
     void recordView(story.id, story.author_id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story?.id]);
@@ -146,6 +153,32 @@ export function StoryViewer({ stories, currentUserId, startAuthorId, onClose, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, sequence, emojiOpen, replyOpen]);
 
+  /**
+   * Puts one reaction into the map, with the profile of the person who made
+   * it. The name and the avatar always come from the profile row, so a
+   * reaction is always attached to one real person.
+   */
+  async function applyReactionRow(row: StoryReaction) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .eq("id", row.user_id)
+      .maybeSingle();
+
+    const withProfile: StoryReactionWithProfile = {
+      ...row,
+      reactor: profile ?? null,
+    };
+
+    setStoryReactions((p) => ({
+      ...p,
+      [row.story_id]: [
+        ...(p[row.story_id] || []).filter((r) => r.user_id !== row.user_id),
+        withProfile,
+      ],
+    }));
+  }
+
   // Load reactions for visible author
   useEffect(() => {
     if (!story) return;
@@ -154,16 +187,80 @@ export function StoryViewer({ stories, currentUserId, startAuthorId, onClose, on
     void (async () => {
       const { data } = await supabase
         .from("story_reactions")
-        .select("*, reactor:profiles!story_reactions_user_id_fkey(id, username, display_name, avatar_url)")
+        .select("*")
         .in("story_id", ids);
-      const grouped: Record<string, StoryReaction[]> = {};
-      (data || []).forEach((r: StoryReaction) => {
-        grouped[r.story_id] = [...(grouped[r.story_id] || []), r];
+
+      const rows = (data || []) as StoryReaction[];
+
+      // The reactor's profile is fetched on its own rather than through a
+      // join, so the panel does not depend on the name of a foreign key.
+      const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
+
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .in("id", userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"]);
+
+      const byId = new Map((profiles || []).map((p: any) => [p.id, p]));
+
+      const grouped: Record<string, StoryReactionWithProfile[]> = {};
+
+      rows.forEach((r) => {
+        grouped[r.story_id] = [
+          ...(grouped[r.story_id] || []),
+          { ...r, reactor: byId.get(r.user_id) ?? null },
+        ];
       });
-      setStoryReactions(grouped);
+
+      setStoryReactions((p) => ({ ...p, ...grouped }));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story?.id]);
+
+  // A reaction made by somebody else has to appear on this screen without a
+  // refresh, so the panel listens to the table itself.
+  useEffect(() => {
+    const channel = supabase
+      .channel("story-reactions-live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "story_reactions" },
+        (payload) => {
+          void applyReactionRow(payload.new as StoryReaction);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "story_reactions" },
+        (payload) => {
+          void applyReactionRow(payload.new as StoryReaction);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "story_reactions" },
+        (payload) => {
+          const old = payload.old as StoryReaction;
+          if (!old?.id) return;
+
+          setStoryReactions((p) => {
+            const next: Record<string, StoryReactionWithProfile[]> = {};
+
+            for (const key of Object.keys(p)) {
+              next[key] = p[key].filter((r) => r.id !== old.id);
+            }
+
+            return next;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
 
   async function toggleReaction(target: StoryWithAuthor, emoji: string) {
     setEmojiOpen(false);
@@ -180,7 +277,14 @@ export function StoryViewer({ stories, currentUserId, startAuthorId, onClose, on
       return;
     }
 
-    const optimistic: StoryReaction = { id: `tmp-${Date.now()}`, story_id: target.id, user_id: currentUserId, emoji, created_at: new Date().toISOString() };
+    const optimistic: StoryReactionWithProfile = {
+      id: `tmp-${Date.now()}`,
+      story_id: target.id,
+      user_id: currentUserId,
+      emoji,
+      created_at: new Date().toISOString(),
+      reactor: null,
+    };
     setStoryReactions((p) => ({ ...p, [target.id]: [...(p[target.id] || []), optimistic] }));
 
     const { data, error } = await supabase
@@ -273,14 +377,13 @@ export function StoryViewer({ stories, currentUserId, startAuthorId, onClose, on
   if (!story) return null;
   const overlay = overlayText(story);
 
-  // Build reaction summary for the owner view
-  const ownerRx    = storyReactions[story.id] || [];
-  const rxSummary  = ownerRx.reduce<Record<string, { count: number; reactors: (StoryReaction & { reactor?: Profile })[] }>>((acc, r) => {
-    if (!acc[r.emoji]) acc[r.emoji] = { count: 0, reactors: [] };
-    acc[r.emoji].count += 1;
-    acc[r.emoji].reactors.push(r as StoryReaction & { reactor?: Profile });
-    return acc;
-  }, {});
+  // Everyone who reacted to the story on screen. The panel lists them by
+  // name; the compact indicator shows how many there are.
+  const reactorList = storyReactions[story.id] || [];
+  const reactionCount = reactorList.length;
+  const reactionEmojis = Array.from(
+    new Set(reactorList.map((r) => r.emoji))
+  ).slice(0, 3);
 
   return (
     <div className="fixed inset-0 z-[70] bg-black flex items-center justify-center select-none" role="dialog" aria-label="Story viewer">
@@ -372,30 +475,11 @@ export function StoryViewer({ stories, currentUserId, startAuthorId, onClose, on
       {/* Footer */}
       <div className="absolute bottom-3 left-3 right-3 z-30">
         {isOwnStory ? (
-          /* Owner view: Facebook-style reaction chips with reactor avatars */
-          <div className="space-y-2">
-            {Object.keys(rxSummary).length === 0 ? (
-              <p className="text-xs text-white/60 px-1">No reactions yet.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(rxSummary).map(([emoji, { count, reactors }]) => (
-                  <div key={emoji} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-white text-sm"
-                    style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)" }}>
-                    <span className="text-base leading-none">{emoji}</span>
-                    <span className="font-semibold text-xs">{count}</span>
-                    {/* Show up to 3 reactor avatars */}
-                    <div className="flex -space-x-1 ml-0.5">
-                      {reactors.slice(0, 3).map((r) => (
-                        <Avatar key={r.user_id} src={(r as any).reactor?.avatar_url ?? null}
-                          name={(r as any).reactor?.display_name ?? "User"} size={18}
-                          className="border border-white/40 rounded-full" />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          /* The owner's own reactions are shown in the panel at the
+             bottom-left, so the footer only speaks up when there are none. */
+          reactionCount === 0 ? (
+            <p className="text-xs text-white/60 px-1">No reactions yet.</p>
+          ) : null
         ) : replyOpen ? (
           /* Reply input */
           <div className="flex items-center gap-2">
@@ -419,38 +503,118 @@ export function StoryViewer({ stories, currentUserId, startAuthorId, onClose, on
               Reply to {story.author.display_name.split(" ")[0]}…
             </button>
 
-            {/* Facebook-style emoji picker button — shows current reaction or smiley */}
-            <div className="relative z-[72]">
-              {emojiOpen && (
-                <div className="absolute bottom-10 right-0 flex gap-1.5 px-3 py-2.5 rounded-full shadow-xl"
-                  style={{ background: "rgba(30,30,30,0.95)", backdropFilter: "blur(8px)" }}>
-                  {REACTION_EMOJIS.map((e) => {
-                    const isSelected = (storyReactions[story.id] || []).find((r) => r.user_id === currentUserId)?.emoji === e;
-                    return (
-                      <button key={e} onClick={() => void toggleReaction(story, e)}
-                        aria-label={`React with ${e}`}
-                        className="relative text-2xl leading-none transition-transform hover:scale-125 active:scale-110"
-                        style={{ transform: isSelected ? "scale(1.3)" : undefined }}>
-                        {e}
-                        {isSelected && (
-                          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: STORY_GOLD }} />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              <button
-                onClick={() => setEmojiOpen((o) => !o)}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-xl transition-transform hover:scale-110"
-                style={{ background: "rgba(255,255,255,0.15)" }}
-                aria-label="React to story">
-                {(storyReactions[story.id] || []).find((r) => r.user_id === currentUserId)?.emoji ?? "😊"}
-              </button>
-            </div>
+            {/* Facebook-style emoji picker button — shows current reaction or smiley.
+                The picker itself is rendered above the footer, because inside it
+                the click-away overlay would cover it and eat every click. */}
+            <button
+              onClick={() => setEmojiOpen((o) => !o)}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-xl transition-transform hover:scale-110 flex-shrink-0"
+              style={{ background: "rgba(255,255,255,0.15)" }}
+              aria-label="React to story">
+              {(storyReactions[story.id] || []).find((r) => r.user_id === currentUserId)?.emoji ?? "😊"}
+            </button>
           </div>
         )}
       </div>
+
+      {/* Click-away layer for the reaction panel. */}
+      {rxPanelOpen && (
+        <div className="fixed inset-0 z-[72]" onClick={() => setRxPanelOpen(false)} />
+      )}
+
+      {/* The emoji picker lives above the footer so the click-away overlay
+          cannot cover it — while it was inside the footer, every click on an
+          emoji was taken by the overlay and the reaction never happened. */}
+      {emojiOpen && (
+        <div
+          className="absolute bottom-16 right-3 z-[73] flex gap-1.5 px-3 py-2.5 rounded-full shadow-xl"
+          style={{ background: "rgba(30,30,30,0.95)", backdropFilter: "blur(8px)" }}
+        >
+          {REACTION_EMOJIS.map((e) => {
+            const isSelected =
+              (storyReactions[story.id] || []).find(
+                (r) => r.user_id === currentUserId
+              )?.emoji === e;
+
+            return (
+              <button
+                key={e}
+                onClick={() => void toggleReaction(story, e)}
+                aria-label={`React with ${e}`}
+                className="relative text-2xl leading-none transition-transform hover:scale-125 active:scale-110"
+                style={{ transform: isSelected ? "scale(1.3)" : undefined }}
+              >
+                {e}
+                {isSelected && (
+                  <span
+                    className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
+                    style={{ background: STORY_GOLD }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Reactions: a compact indicator at the bottom-left that opens a list
+          of the people who reacted, their names and their emoji. */}
+      {reactionCount > 0 && (
+        <div className="absolute bottom-16 left-3 z-[73] flex flex-col items-start gap-2">
+          {rxPanelOpen && (
+            <div
+              className="w-64 max-h-60 overflow-y-auto rounded-2xl border shadow-2xl divide-y divide-white/10"
+              style={{
+                background: "rgba(12, 28, 22, 0.96)",
+                borderColor: "rgba(214, 184, 117, 0.35)",
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              {reactorList.map((r) => (
+                <div
+                  key={r.user_id}
+                  className="flex items-center gap-2.5 px-3 py-2"
+                >
+                  <Avatar
+                    src={r.reactor?.avatar_url ?? null}
+                    name={r.reactor?.display_name || "Member"}
+                    size={30}
+                    userId={r.user_id}
+                  />
+
+                  <span className="min-w-0 flex-1 truncate text-sm text-white">
+                    {r.reactor?.display_name || "Member"}
+                  </span>
+
+                  <span className="text-lg leading-none flex-shrink-0">
+                    {r.emoji}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button
+            onClick={() => setRxPanelOpen((o) => !o)}
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-white transition-transform hover:scale-105"
+            style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)" }}
+            aria-label={
+              rxPanelOpen
+                ? "Hide reactions"
+                : `Show ${reactionCount} reaction${reactionCount === 1 ? "" : "s"}`
+            }
+            aria-expanded={rxPanelOpen}
+          >
+            {reactionEmojis.map((e) => (
+              <span key={e} className="text-base leading-none">
+                {e}
+              </span>
+            ))}
+
+            <span className="font-semibold text-xs">{reactionCount}</span>
+          </button>
+        </div>
+      )}
 
       {/* Viewers modal */}
       <Modal open={viewersOpen} onClose={() => setViewersOpen(false)} title="Who watched" size="sm">

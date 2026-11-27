@@ -21,9 +21,20 @@ export async function POST(req: NextRequest) {
     .single();
   if (block) return NextResponse.json({ error: "Cannot message this user" }, { status: 403 });
 
-  // Look for a thread that already covers these two people. The peer's ids are
-  // checked in batches because a 1000-conversation account puts a request URL
-  // past PostgREST's limit if the whole list goes into one in().
+  // One atomic call finds the thread between these two people or creates it.
+  // The database holds a unique key per pair, so two people opening a chat at
+  // the same moment end up in the same thread instead of two.
+  const { data: conversationId, error: rpcError } = await supabase.rpc(
+    "get_or_create_direct_conversation",
+    { p_other: participantId }
+  );
+
+  if (!rpcError && conversationId) {
+    return NextResponse.json({ conversationId });
+  }
+
+  // Migration 041 has not been pasted yet. Fall back to the old find-then-
+  // create so the feature still works, minus the duplicate protection.
   const { data: peerConvs } = await supabase
     .from("conversation_participants")
     .select("conversation_id")
@@ -56,19 +67,19 @@ export async function POST(req: NextRequest) {
 
   // Create new conversation. The id is minted here because a thread with no
   // participants is invisible to RLS, so reading the insert back would fail.
-  const conversationId = crypto.randomUUID();
+  const newId = crypto.randomUUID();
   const { error: convError } = await supabase
     .from("conversations")
-    .insert({ id: conversationId } as any);
+    .insert({ id: newId } as any);
 
   if (convError) return NextResponse.json({ error: "Failed to create conversation" }, { status: 500 });
 
   const { error: partError } = await supabase.from("conversation_participants").insert([
-    { conversation_id: conversationId, user_id: user.id },
-    { conversation_id: conversationId, user_id: participantId },
+    { conversation_id: newId, user_id: user.id },
+    { conversation_id: newId, user_id: participantId },
   ]);
 
   if (partError) return NextResponse.json({ error: "Failed to create conversation" }, { status: 500 });
 
-  return NextResponse.json({ conversationId });
+  return NextResponse.json({ conversationId: newId });
 }

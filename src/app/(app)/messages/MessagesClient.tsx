@@ -19,6 +19,7 @@ import { isStickerPath, isVoiceNote, type Sticker } from "@/lib/stickers";
 import { MessageMenu, type MessageAction } from "@/components/messages/MessageMenu";
 import { ForwardDialog, type ForwardTarget } from "@/components/messages/ForwardDialog";
 import { createClient } from "@/lib/supabase/client";
+import { signStoryMedia } from "@/lib/media";
 import type { ConversationWithDetails, Profile, Message, MessageAttachmentKind, MessageReaction } from "@/lib/supabase/types";
 import {
   formatMessageTime, formatRelativeTime,
@@ -189,12 +190,22 @@ export function MessagesClient({
   const [peerTyping, setPeerTyping] = useState(false);
   const [chatSearch, setChatSearch] = useState(false);
   const [chatQuery, setChatQuery] = useState("");
+  // Ids of messages that are on screen but not in the database yet.
+  const [pendingIds, setPendingIds] = useState<string[]>([]);
+  // The story a reply was written against, shown as a small preview.
+  const [storyPreviews, setStoryPreviews] = useState<
+    Record<string, { media_url: string | null; caption: string | null; author_name: string | null }>
+  >({});
 
   const typingChannelRef = useRef<RealtimeChannel | null>(null);
   const typingTimerRef = useRef<number>(0);
   const lastTypingSentRef = useRef<number>(0);
   const convsRef = useRef<ConversationWithDetails[]>(initConvs);
   const urlsRef = useRef<Record<string, string>>({});
+  const pendingRef = useRef<Map<string, { content: string; conversation_id: string }>>(new Map());
+  const storyPreviewsRef = useRef<
+    Record<string, { media_url: string | null; caption: string | null; author_name: string | null }>
+  >({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
@@ -276,6 +287,165 @@ export function MessagesClient({
     if (changed) setUrls({ ...urlsRef.current });
   }
 
+  /**
+   * Pulls a conversation into the inbox when a message arrives for one the
+   * client has never seen — a brand new thread, or a thread created by a
+   * story reply. Without this the message had nowhere to live and the inbox
+   * only learned about it on the next full page load.
+   */
+  async function ensureConversation(convId: string): Promise<ConversationWithDetails | null> {
+    const known = convsRef.current.find((c) => c.id === convId);
+    if (known) return known;
+
+    const { data } = await supabase
+      .from("conversations")
+      .select("*, participants:conversation_participants(*)")
+      .eq("id", convId)
+      .maybeSingle();
+
+    if (!data) return null;
+
+    const participantIds = (data.participants || []).map((p: any) => p.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("*")
+      .in("id", participantIds.length ? participantIds : ["00000000-0000-0000-0000-000000000000"]);
+
+    const byId = new Map((profiles || []).map((p: any) => [p.id, p]));
+
+    const conversation = {
+      ...data,
+      participants: (data.participants || []).map((p: any) => ({
+        ...p,
+        profile: byId.get(p.user_id) || {
+          id: p.user_id,
+          username: "",
+          display_name: "Member",
+          avatar_url: null,
+        },
+      })),
+      last_message: null,
+      unread_count: 0,
+    } as unknown as ConversationWithDetails;
+
+    setConversations((prev) =>
+      prev.some((c) => c.id === conversation.id) ? prev : [conversation, ...prev]
+    );
+
+    convsRef.current = [conversation, ...convsRef.current];
+
+    return conversation;
+  }
+
+  /**
+   * Re-reads an open conversation. Called when the realtime socket reconnects:
+   * anything sent while the socket was down was never pushed to us, so it has
+   * to be asked for.
+   */
+  async function refetchActiveMessages(convId: string) {
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", convId)
+      .order("created_at", { ascending: true })
+      .limit(200);
+
+    if (!data) return;
+
+    const rows = data as Message[];
+
+    setMessages((prev) => {
+      // A message still being sent stays on screen; everything else comes
+      // from the database, which is the truth.
+      const pending = prev.filter(
+        (m) => m.id.startsWith("pending-") && !rows.some((r) => r.id === m.id)
+      );
+
+      return [...rows, ...pending].sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    });
+
+    void signAttachments(rows);
+    void loadStoryPreviews(rows);
+  }
+
+  /**
+   * Loads the story behind a story reply so the chat can show what was being
+   * answered. A story that has expired is simply left without a preview.
+   */
+  async function loadStoryPreviews(rows: Message[]) {
+    const ids = Array.from(
+      new Set(rows.map((r) => r.story_id).filter((id): id is string => !!id))
+    );
+
+    if (ids.length === 0) return;
+
+    const missing = ids.filter((id) => !storyPreviewsRef.current[id]);
+    if (missing.length === 0) return;
+
+    const { data: storyRows } = await supabase
+      .from("stories")
+      .select("id, media_url, caption, author_id")
+      .in("id", missing);
+
+    if (!storyRows || storyRows.length === 0) return;
+
+    const authorIds = Array.from(
+      new Set(storyRows.map((s: any) => s.author_id).filter(Boolean))
+    );
+
+    const { data: authorRows } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", authorIds.length ? authorIds : ["00000000-0000-0000-0000-000000000000"]);
+
+    const names = new Map((authorRows || []).map((p: any) => [p.id, p.display_name]));
+
+    // signStoryMedia rewrites media_url in place, so it works on copies.
+    const signed = await signStoryMedia(
+      supabase,
+      storyRows.map((s: any) => ({ ...s }))
+    );
+
+    const next: Record<string, { media_url: string | null; caption: string | null; author_name: string | null }> = {};
+
+    for (const s of signed as any[]) {
+      next[s.id] = {
+        media_url: s.media_url ?? null,
+        caption: s.caption ?? null,
+        author_name: names.get(s.author_id) ?? null,
+      };
+    }
+
+    storyPreviewsRef.current = { ...storyPreviewsRef.current, ...next };
+    setStoryPreviews(storyPreviewsRef.current);
+  }
+
+  /**
+   * A message that is still being sent sits on screen straight away. When the
+   * realtime echo of that same message arrives, the placeholder is taken back
+   * out — otherwise the sender would see their own message twice.
+   */
+  function reconcileOptimistic(row: Message) {
+    if (row.sender_id !== currentUserId) return;
+    if (pendingRef.current.size === 0) return;
+
+    const match = Array.from(pendingRef.current.entries()).find(
+      ([, info]) =>
+        info.conversation_id === row.conversation_id &&
+        info.content === row.content
+    );
+
+    if (!match) return;
+
+    pendingRef.current.delete(match[0]);
+    setPendingIds((p) => p.filter((id) => id !== match[0]));
+    setMessages((p) => p.filter((m) => m.id !== match[0]));
+  }
+
   async function openViewOnce(msg: Message) {
     if (!msg.attachment_url || openingId) return;
 
@@ -325,7 +495,28 @@ export function MessagesClient({
     const existing = convsRef.current.find((c) => c.id === convId);
 
     if (!existing) {
-      router.refresh();
+      // A conversation this client has never seen — a brand new thread, or one
+      // opened by a story reply. Pull it in rather than waiting for a reload.
+      void ensureConversation(convId).then((conversation) => {
+        if (!conversation) return;
+
+        setConversations((previous) => {
+          const current = previous.find((c) => c.id === convId);
+          if (!current) return previous;
+
+          const updated = {
+            ...current,
+            last_message: msg,
+            last_message_at: msg.created_at,
+          };
+
+          return [
+            updated,
+            ...previous.filter((c) => c.id !== convId),
+          ];
+        });
+      });
+
       return;
     }
 
@@ -364,14 +555,19 @@ export function MessagesClient({
         (payload) => {
           const row = payload.new as Message;
 
+          // A conversation this client has never seen (a new thread, or one
+          // opened by a story reply) is pulled in by bumpConversation.
           bumpConversation(row.conversation_id, row);
 
           if (row.conversation_id === activeIdRef.current) {
+            reconcileOptimistic(row);
+
             setMessages((p) =>
               p.some((m) => m.id === row.id) ? p : [...p, row]
             );
 
             void signAttachments([row]);
+            void loadStoryPreviews([row]);
             bottomRef.current?.scrollIntoView({ behavior: "smooth" });
           } else if (row.sender_id !== currentUserId) {
             const conv = convsRef.current.find(
@@ -441,7 +637,18 @@ export function MessagesClient({
           );
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // SUBSCRIBED fires on the first connect and again after every
+        // reconnect. Messages sent while the socket was down were never
+        // pushed to us, so the open conversation is re-read and the inbox is
+        // re-synced with the server.
+        if (status === "SUBSCRIBED") {
+          const convId = activeIdRef.current;
+
+          if (convId) void refetchActiveMessages(convId);
+          else router.refresh();
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -568,6 +775,7 @@ export function MessagesClient({
 
     setMessages(data || []);
     void signAttachments(data || []);
+    void loadStoryPreviews(data || []);
 
     const msgIds = (data || []).map((m) => m.id);
 
@@ -796,15 +1004,6 @@ export function MessagesClient({
     const heldFile = file;
     const heldVoice = voiceDraft;
 
-    setInput("");
-    setFile(null);
-    setVoiceDraft(null);
-    setViewOnce(false);
-    setReplyTo(null);
-
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    if (photoInputRef.current) photoInputRef.current.value = "";
-
     const payload = {
       conversation_id: active.id,
       sender_id: currentUserId,
@@ -816,6 +1015,50 @@ export function MessagesClient({
       ...(asViewOnce ? { view_once: true } : {}),
       ...(quoted ? { reply_to: quoted } : {}),
     };
+
+    // The message goes on screen before the database has answered, so it
+    // feels instant. If the insert fails the placeholder is taken back out
+    // and the text is returned to the box.
+    const tempId = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    const optimistic: Message = {
+      id: tempId,
+      conversation_id: active.id,
+      sender_id: currentUserId,
+      content,
+      is_read: false,
+      created_at: new Date().toISOString(),
+      attachment_url: attachment?.url ?? null,
+      attachment_kind: attachment?.kind ?? null,
+      attachment_name: attachment?.name ?? null,
+      attachment_size: attachment?.size ?? null,
+      view_once: asViewOnce,
+      viewed_at: null,
+      edited_at: null,
+      deleted_at: null,
+      pinned_at: null,
+      pinned_by: null,
+      reply_to: quoted,
+      forwarded_from: null,
+      story_id: null,
+    };
+
+    pendingRef.current.set(tempId, {
+      content,
+      conversation_id: active.id,
+    });
+
+    setPendingIds((p) => [...p, tempId]);
+    setMessages((p) => [...p, optimistic]);
+
+    setInput("");
+    setFile(null);
+    setVoiceDraft(null);
+    setViewOnce(false);
+    setReplyTo(null);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (photoInputRef.current) photoInputRef.current.value = "";
 
     const { data, error } = await supabase
       .from("messages")
@@ -834,6 +1077,10 @@ export function MessagesClient({
           : "Failed to send message."
       );
 
+      pendingRef.current.delete(tempId);
+      setPendingIds((p) => p.filter((id) => id !== tempId));
+      setMessages((p) => p.filter((m) => m.id !== tempId));
+
       setInput(content);
       setFile(heldFile);
       setVoiceDraft(heldVoice);
@@ -848,11 +1095,22 @@ export function MessagesClient({
       return;
     }
 
+    pendingRef.current.delete(tempId);
+    setPendingIds((p) => p.filter((id) => id !== tempId));
+
     if (heldVoice) URL.revokeObjectURL(heldVoice.url);
     if (attachment) void signAttachments([data]);
 
+    // Replace the placeholder with the row the database actually stored, and
+    // drop any copy the realtime echo already delivered.
     setMessages((p) =>
-      p.some((m) => m.id === data.id) ? p : [...p, data]
+      [
+        ...p.filter((m) => m.id !== tempId && m.id !== data.id),
+        data,
+      ].sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      )
     );
 
     bumpConversation(active.id, data);
@@ -1784,10 +2042,23 @@ export function MessagesClient({
                   <MessageSkeleton />
                 </>
               ) : (
-                visibleMessages.map((msg) => {
+                visibleMessages.map((msg, msgIndex) => {
                   const isMe = msg.sender_id === currentUserId;
                   const peerViewOnce = isPeerViewOnce(msg);
                   const opened = peerViewOnce && !!msg.viewed_at;
+                  const isPending = pendingIds.includes(msg.id);
+
+                  // The person who sent this, resolved through their user id
+                  // so the same person always looks the same.
+                  const senderProfile = active?.participants.find(
+                    (p) => p.user_id === msg.sender_id
+                  )?.profile;
+
+                  // The avatar appears once per run of messages from the same
+                  // person, the way a chat groups a speaker.
+                  const previous = msgIndex > 0 ? visibleMessages[msgIndex - 1] : null;
+                  const showAvatar =
+                    !isMe && (!previous || previous.sender_id !== msg.sender_id);
 
                   const media =
                     msg.attachment_url && !peerViewOnce
@@ -1997,6 +2268,20 @@ export function MessagesClient({
                     >
                       {!isMe && menu}
 
+                      {!isMe && (
+                        showAvatar ? (
+                          <Avatar
+                            src={senderProfile?.avatar_url ?? null}
+                            name={senderProfile?.display_name || "Member"}
+                            size={28}
+                            userId={msg.sender_id}
+                            className="flex-shrink-0 mt-1"
+                          />
+                        ) : (
+                          <div className="w-7 flex-shrink-0" aria-hidden="true" />
+                        )
+                      )}
+
                       <div
                         className={`max-w-[80%] md:max-w-[75%] flex flex-col gap-1 ${
                           isMe ? "items-end" : "items-start"
@@ -2085,16 +2370,46 @@ export function MessagesClient({
                               )}
 
                               {msg.story_id && (
-                                <p
-                                  className={`flex items-center gap-1.5 px-4 pt-2.5 text-[11px] ${
+                                <div
+                                  className={`mx-4 mt-2.5 flex items-center gap-2 rounded-lg overflow-hidden ${
                                     isMe
-                                      ? "text-white/70"
-                                      : "text-[var(--text-secondary)]"
+                                      ? "bg-black/15 border-l-2 border-white/50"
+                                      : "bg-[var(--bg-card)] border-l-2 border-[rgb(var(--a-700))]"
                                   }`}
                                 >
-                                  <ImageIcon className="w-3 h-3 flex-shrink-0" />
-                                  Story reply
-                                </p>
+                                  {storyPreviews[msg.story_id]?.media_url && (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={storyPreviews[msg.story_id].media_url!}
+                                      alt="The story this reply answers"
+                                      className="w-11 h-11 object-cover flex-shrink-0"
+                                    />
+                                  )}
+
+                                  <div className="min-w-0 py-1.5 pr-2">
+                                    <p
+                                      className={`flex items-center gap-1.5 text-[11px] font-semibold ${
+                                        isMe ? "text-white/90" : "text-[var(--text-primary)]"
+                                      }`}
+                                    >
+                                      <ImageIcon className="w-3 h-3 flex-shrink-0" />
+                                      Story reply
+                                    </p>
+
+                                    <p
+                                      className={`truncate text-[10px] ${
+                                        isMe
+                                          ? "text-white/70"
+                                          : "text-[var(--text-secondary)]"
+                                      }`}
+                                    >
+                                      {storyPreviews[msg.story_id]?.caption ||
+                                        (storyPreviews[msg.story_id]?.author_name
+                                          ? `to ${storyPreviews[msg.story_id].author_name}`
+                                          : "The story this answers")}
+                                    </p>
+                                  </div>
+                                </div>
                               )}
 
                               {msg.content && (
@@ -2121,7 +2436,9 @@ export function MessagesClient({
                                 {msg.edited_at && <span>· edited</span>}
 
                                 {isMe &&
-                                  (msg.is_read ? (
+                                  (isPending ? (
+                                    <span className="opacity-80">Sending…</span>
+                                  ) : msg.is_read ? (
                                     <CheckCheck
                                       className="w-3.5 h-3.5 text-sky-300 flex-shrink-0"
                                       aria-label="Read"

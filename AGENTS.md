@@ -139,6 +139,8 @@ Practical consequences:
 | 037 | `037_social_upgrades.sql` | `message_reactions`, `story_reactions`, `messages.story_id`, `stories.audience`, `profile_friend_ids()`, the tightened `stories_select` policy |
 | 038 | `038_profile_gender.sql` | `profiles.gender` (male/female/other) + the silhouette avatar |
 | 039 | `039_stories_upgrade.sql` | story `published_at` + the enforced 24h expiry trigger, `overlay_*` columns, `mark_story_viewed()`, the story realtime publication, `purge_expired_stories()` |
+| 040 | `040_onboarding.sql` | `profiles.onboarding_done` — stops the first-login prompt coming back |
+| 041 | `041_messaging_repair.sql` | **`messages` in the realtime publication**, `conversations.direct_key` + the merge of duplicate threads, `get_or_create_direct_conversation()`, the tightened `conv_participants_insert` policy, `story_reactions` table, `messages.story_id` |
 
 Data/seed files: `seed_profiles_1000.sql` (1000 demo accounts + their posts), `seed_activity.sql`,
 `seed_study_books.sql`, `seed_book_covers.sql`, `seed_book_descriptions.sql`; `demo-names.json`
@@ -158,10 +160,18 @@ both learned from a paste that returned nothing:
 
 ---
 
-## 4. State as of 2026-11-25 — where work stopped
+## 4. State as of 2026-11-27 — where work stopped
 
 Latest commits (all pushed and confirmed live on Vercel):
 
+- **Messaging + story reaction repair (2026-11-27)** — `messages` added to the realtime publication
+  (migration 041, still owed by the owner), one canonical thread per pair of people with the
+  duplicates already in the database merged, an atomic `get_or_create_direct_conversation()` used by
+  every "open a chat" path, optimistic sending with rollback, a reconnect that re-reads the open
+  conversation, a sender avatar on every received message, a story preview inside the chat, and a
+  story reaction panel that opens upward and lists who reacted. Files: `src/app/(app)/messages/*`,
+  `src/components/stories/StoryViewer.tsx`, `src/app/api/conversations/route.ts`,
+  `supabase/migrations/041_messaging_repair.sql`.
 - **Stories rebuilt (2026-11-25)** — golden champagne ring everywhere, the composer opens as a
   full-screen sheet with capture/gallery, text position + colour + size and a real upload progress
   bar, the viewer plays one author at a time and opens **in place** (no redirect to `/stories`), and a
@@ -185,16 +195,24 @@ story still publishes), the expiry is worked out by the browser instead of the d
 story only reaches a friend when their page is reloaded — the realtime publication is what makes it
 appear on its own. Everything else in the story experience works without it.
 
+**041 is the one that fixes the chat.** Until it is pasted the app still works, but the database is
+missing the one thing that makes a message arrive: `messages` was never added to the
+`supabase_realtime` publication, so Postgres never emitted a single message event and the recipient
+only ever saw a message after a manual reload. 041 also merges the duplicate threads that already
+exist between the same two people (it moves the messages across first, so nothing is lost) and puts
+a unique key behind the pair so it cannot happen again. The preflight now reports
+`041 MESSAGES IN REALTIME PUBLICATION` — if that row does not read `yes`, the chat is still blind.
+
 There is one uncommitted working change in `supabase/migrations/031_pro_entertainment_creator.sql`
 left over from an earlier session. Leave it alone unless the owner asks.
 
 Deliberately deferred (verified still open in the audit of 2026-10-27 — re-check the code, several
 neighbours on that old list have since been fixed): delete paths orphan storage objects; the
 notifications page marks everything read on GET; reels pool filters client-side and can come back
-sparse; conversations/participants `INSERT ... WITH CHECK (TRUE)` lets a user join any conversation
-by id; expired story rows are filtered by `expires_at` but never physically deleted (no cron);
+sparse; expired story rows are filtered by `expires_at` but never physically deleted (no cron);
 account deletion and admin "ban" write rows rather than removing the auth user. Present these as a
-menu, do not start them unprompted.
+menu, do not start them unprompted. (The `conversation_participants INSERT ... WITH CHECK (TRUE)`
+hole is now closed by 041 — it is no longer on this list.)
 
 ---
 

@@ -178,6 +178,42 @@ from (
   ('037 friend list RPC',
     case when to_regprocedure('public.profile_friend_ids(uuid,integer,integer)') is not null
          then 'yes' else 'no' end),
+  ('039 stories upgrade columns',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.stories')
+                        and attname = 'published_at')
+          and exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.stories')
+                        and attname = 'overlay_position') then 'yes' else 'no' end),
+  ('039 story view RPC',
+    case when to_regprocedure('public.mark_story_viewed(uuid)') is not null
+         then 'yes' else 'no' end),
+  ('039 stories in realtime publication',
+    case when exists (select 1 from pg_publication_tables
+                      where pubname = 'supabase_realtime' and schemaname = 'public'
+                        and tablename = 'stories') then 'yes' else 'no' end),
+  ('040 onboarding done column',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.profiles')
+                        and attname = 'onboarding_done') then 'yes' else 'no' end),
+  ('041 MESSAGES IN REALTIME PUBLICATION',
+    case when exists (select 1 from pg_publication_tables
+                      where pubname = 'supabase_realtime' and schemaname = 'public'
+                        and tablename = 'messages') then 'yes' else 'NO - messages never arrive live' end),
+  ('041 canonical pair key column',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.conversations')
+                        and attname = 'direct_key') then 'yes' else 'no' end),
+  ('041 duplicate conversation pairs (want 0)',
+    connexa_probe_count('public.conversations',
+      'direct_key in (select direct_key from public.conversations group by direct_key having count(*) > 1)')),
+  ('041 atomic chat opener RPC',
+    case when to_regprocedure('public.get_or_create_direct_conversation(uuid)') is not null
+         then 'yes' else 'no' end),
+  ('041 story replies column on messages',
+    case when exists (select 1 from pg_attribute
+                      where attrelid = to_regclass('public.messages')
+                        and attname = 'story_id') then 'yes' else 'no' end),
   ('seed: book covers filled in',
     connexa_probe_count('public.study_books', 'cover_url is not null')),
   ('seed: book descriptions filled in',
