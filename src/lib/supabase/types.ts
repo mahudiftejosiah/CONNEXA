@@ -1023,6 +1023,10 @@ export interface Database {
         Args: { p_other: string }
         Returns: string
       }
+      conversation_last_messages: {
+        Args: { p_conversation_ids: string[] }
+        Returns: Database["public"]["Tables"]["messages"]["Row"][]
+      }
       list_open_quizzes: {
         Args: Record<string, never>
         Returns: { id: string; title: string; description: string | null; category: string | null; difficulty: string; time_limit_seconds: number; questions: number }[]

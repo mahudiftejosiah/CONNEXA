@@ -279,15 +279,16 @@ export default async function MessagesPage({
   // Load the latest message and unread count — single bulk queries instead of N+1.
   const convIds = uniqueConversations.map((c: any) => c.id);
 
-  const [allMessagesRes, unreadRes] = convIds.length > 0
+  const [lastMessagesRes, unreadRes] = convIds.length > 0
     ? await Promise.all([
-        // Fetch recent messages for all conversations at once, then pick the latest per conv
-        supabase
-          .from("messages")
-          .select("*")
-          .in("conversation_id", convIds)
-          .order("created_at", { ascending: false })
-          .limit(convIds.length * 2), // 2 per conv is enough to find the latest
+        // The newest message of every chat, exactly. The old code took a
+        // slice of the newest messages across all chats and picked the
+        // newest per chat out of it — a slice far too small, so a chat with
+        // older messages fell out of it and the inbox said "No messages
+        // yet" for a chat that was full of them.
+        supabase.rpc("conversation_last_messages", {
+          p_conversation_ids: convIds,
+        }),
         supabase
           .from("messages")
           .select("conversation_id, id")
@@ -295,11 +296,26 @@ export default async function MessagesPage({
           .neq("sender_id", user.id)
           .eq("is_read", false),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [], error: null }, { data: [], error: null }];
+
+  let lastMessageRows: any[] = lastMessagesRes.data || [];
+
+  // Migration 042 has not been pasted yet — fall back to the old slice so
+  // the inbox still shows something.
+  if (lastMessagesRes.error) {
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .in("conversation_id", convIds)
+      .order("created_at", { ascending: false })
+      .limit(convIds.length * 2);
+
+    lastMessageRows = data || [];
+  }
 
   // Build a map: conversation_id -> last message
   const lastMsgMap = new Map<string, any>();
-  for (const msg of allMessagesRes.data || []) {
+  for (const msg of lastMessageRows) {
     if (!lastMsgMap.has(msg.conversation_id)) {
       lastMsgMap.set(msg.conversation_id, msg);
     }

@@ -214,6 +214,9 @@ from (
     case when exists (select 1 from pg_attribute
                       where attrelid = to_regclass('public.messages')
                         and attname = 'story_id') then 'yes' else 'no' end),
+  ('042 inbox preview function',
+    case when to_regprocedure('public.conversation_last_messages(uuid[])') is not null
+         then 'yes' else 'no' end),
   ('seed: book covers filled in',
     connexa_probe_count('public.study_books', 'cover_url is not null')),
   ('seed: book descriptions filled in',
